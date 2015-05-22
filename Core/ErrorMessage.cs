@@ -90,6 +90,7 @@ namespace MiskoPersist.Core
 
         public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message, Object[] parameters)
         {
+        	IsSet = true;
             Class = clazz.Name;
             Method = method.Name;
             ErrorLevel = level;
@@ -121,8 +122,6 @@ namespace MiskoPersist.Core
 					hashCode += 1000000007 * Message.GetHashCode();
 				}
 				
-				hashCode += 1000000009 * Confirmed.GetHashCode();
-				
 				if (Class != null) 
 				{
 					hashCode += 1000000021 * Class.GetHashCode();
@@ -151,12 +150,18 @@ namespace MiskoPersist.Core
 		{
 			ErrorMessage other = obj as ErrorMessage;
 			
-			if (other == null)
+			if(other == null)
 			{
 				return false;
 			}
-					
-			return mErrorMessage_ == other.mErrorMessage_ && Class == other.Class && Method == other.Method && object.Equals(Parameters, other.Parameters) && object.Equals(ErrorLevel, other.ErrorLevel);
+			
+			bool parametersEqual = true;
+			if((Parameters != null && other.Parameters != null) && (Parameters.Count.Equals(other.Parameters.Count)))
+			{
+				parametersEqual = new HashSet<Object>(Parameters).SetEquals(new HashSet<Object>(other.Parameters));
+			}
+						
+			return mErrorMessage_.Equals(other.mErrorMessage_) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && parametersEqual;
 		}
 
 		public static bool operator ==(ErrorMessage lhs, ErrorMessage rhs) 

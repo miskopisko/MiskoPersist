@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiskoPersist</RootNamespace>
     <AssemblyName>MiskoPersist</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <FileUpgradeFlags>
@@ -103,6 +103,7 @@
     <Compile Include="Core\OnlineConnectionProvider.cs" />
     <Compile Include="Core\ServerConnection.cs" />
     <Compile Include="Enums\DataSource.cs" />
+    <Compile Include="Enums\MessageStatus.cs" />
     <Compile Include="Interfaces\ConnectionProvider.cs" />
     <Compile Include="Interfaces\IOController.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />

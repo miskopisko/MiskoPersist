@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Net.Mime;
-using System.Reflection;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
+using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Interfaces;
 using MiskoPersist.Message.Request;
@@ -38,6 +38,25 @@ namespace MiskoPersist.Core
 			set;
 		}
 		
+		private ConnectionProvider ConnectionProvider
+		{
+			get
+			{
+				if(IOController.DataSource.Equals(DataSource.Local))
+				{
+					return new LocalConnectionProvider();
+				}
+				else if(IOController.DataSource.Equals(DataSource.Online))
+				{
+					return new OnlineConnectionProvider();
+				}
+				else
+				{
+					throw new MiskoException("Unknown connection provider");
+				}
+			}
+		}
+		
 		#endregion
 		
 		public ServerConnection(RequestMessage request, MessageCompleteHandler successHandler, MessageCompleteHandler errorHandler)
@@ -49,19 +68,22 @@ namespace MiskoPersist.Core
 
 			mRequest_ = request;
             mSuccessHandler_ = successHandler;
-            mErrorHandler_ = errorHandler;           
+            mErrorHandler_ = errorHandler;
 		}
 		
 		#region Private Methods
 		
-		private static void Send(ServerConnection serverConnection)
+		private void Send()
 		{
 			Interlocked.Increment(ref mActive_);
 			
-			IOController.MessageSent();			
-			IOController.Debug(serverConnection.mRequest_);
+			MethodInvoker method = delegate 
+			{
+				IOController.MessageSent();	
+			};
+			Invoke(method);
 
-			serverConnection.Start();            
+			Start();            
 		}
 		
 		private void Start()
@@ -77,46 +99,44 @@ namespace MiskoPersist.Core
 		
 		private void Run()
 		{
-			ResponseMessage response = null;
+			MethodInvoker method = delegate
+			{
+				IOController.Status(MessageStatus.Processing);
+			};
+			Invoke(method);
 			
-			ConnectionProvider connectionProvider = ServerConnection.IOController.GetConnectionProvider();			
+			#if DEBUG
+				Debug.WriteLine(AbstractData.SerializeJson(mRequest_));
+            #endif
 			
-			IOController.Status(Strings.strPorcessing);
-			
-			response = connectionProvider.Send(mRequest_);
+			ResponseMessage response = ConnectionProvider.Send(mRequest_);
 				
-			IOController.Debug(response);
+			#if DEBUG
+				Debug.WriteLine(AbstractData.SerializeJson(response));
+            #endif
                 
             if(HandleErrors(response.AllMessages))
             {
             	// No errors in the message; call the successfulHandler
 	            if (!response.HasErrors && !response.HasUnconfirmed && mSuccessHandler_ != null)
 	            {
-					Control control = mSuccessHandler_.Target as System.Windows.Forms.Control;
-	            	if(control != null && control.InvokeRequired)
-	            	{
-	            		control.BeginInvoke(mSuccessHandler_, response);
-	            	}
-	            	else
-	            	{
-	            		mSuccessHandler_(response);
-	            	}
+	            	method = delegate 
+	            	{ 
+	            		mSuccessHandler_(response); 
+	            	};
+            		Invoke(method);
 	            }
             }
             
             // If errors in the message; call errorHandler            
             if ((response.HasErrors || response.HasUnconfirmed) && mErrorHandler_ != null)
             {
-				Control control = mErrorHandler_.Target as System.Windows.Forms.Control;
-            	if(control != null && control.InvokeRequired)
-            	{
-            		control.BeginInvoke(mErrorHandler_, response);	
-            	}
-            	else
-            	{
-            		mErrorHandler_(response);
-            	}
-            }          
+            	method = delegate 
+            	{ 
+            		mErrorHandler_(response); 
+            	};
+            	Invoke(method);
+            }
 			
 			Done();
 		}
@@ -125,32 +145,50 @@ namespace MiskoPersist.Core
 		{
 			Boolean continueProcessing = true;
 			
-			for (int i = 0; i < errorMessages.Count; i++)
+			foreach(ErrorMessage errorMessage in errorMessages)				
             {
-                ErrorMessage errorMessage = errorMessages[i];
-
+                MethodInvoker method = delegate {};
+                
                 if (errorMessage.ErrorLevel.Equals(ErrorLevel.Error))
                 {
-                	IOController.Status(Strings.strError);
-                    IOController.Error(errorMessage.Message);
+                	method = delegate
+        			{
+                		IOController.Status(MessageStatus.Error);
+	                    IOController.Error(errorMessage);
+                	};
+                	Invoke(method);
                 }
                 else if (errorMessage.ErrorLevel.Equals(ErrorLevel.Warning))
                 {
-                	IOController.Status(Strings.strWarning);
-                    IOController.Warning(errorMessage.Message);
+                	method = delegate
+        			{
+                		IOController.Status(MessageStatus.Warning);
+                    	IOController.Warning(errorMessage);
+                	};
+                	Invoke(method);
                 }
                 else if (errorMessage.ErrorLevel.Equals(ErrorLevel.Info))
                 {
-                	IOController.Status(Strings.strInformation);
-                    IOController.Info(errorMessage.Message);
+                	method = delegate
+        			{
+                		IOController.Status(MessageStatus.Information);
+                    	IOController.Info(errorMessage);
+                	};
+                	Invoke(method);
                 }
                 else if (errorMessage.ErrorLevel.Equals(ErrorLevel.Confirmation))
                 {
                     if (errorMessage.Confirmed.HasValue && !errorMessage.Confirmed.Value)
                     {
-                    	IOController.Status(Strings.strConfirm);
+                    	bool confirmed = false;
+                    	method = delegate
+        				{
+                    		IOController.Status(MessageStatus.Confirmation);
+                    		confirmed = IOController.Confirm(errorMessage);
+                    	};     
+                    	Invoke(method);
                     	
-                        if (IOController.Confirm(errorMessage.Message))
+                        if (confirmed)
                         {
                             errorMessage.Confirmed = true;
                             
@@ -166,11 +204,15 @@ namespace MiskoPersist.Core
                         }
                         else
                         {
-                        	IOController.Status(Strings.strError);
+                        	method = delegate
+        					{
+                				IOController.Status(MessageStatus.Error);
+                        	};
+                        	Invoke(method);
                             break;
                         }
                     }
-                }
+                }               
             }
 			
 			return continueProcessing;
@@ -180,8 +222,25 @@ namespace MiskoPersist.Core
 		{
 			Interlocked.Decrement(ref mActive_);
 			
-			IOController.Status(mActive_ == 0 ? Strings.strSuccess : Strings.strPorcessing);			
-			IOController.MessageReceived();
+			MethodInvoker method = delegate
+        	{
+            	IOController.Status(mActive_ == 0 ? MessageStatus.Success : MessageStatus.Processing);
+				IOController.MessageReceived();
+        	};			
+			Invoke(method);
+		}
+		
+		private void Invoke(MethodInvoker method)
+		{
+			Control control = IOController as System.Windows.Forms.Control;
+        	if(control != null && control.InvokeRequired)
+        	{
+        		control.Invoke(method);
+        	}
+        	else
+        	{
+        		method.Invoke();
+        	}
 		}
 		
 		#endregion
@@ -195,7 +254,7 @@ namespace MiskoPersist.Core
 
         public static void SendRequest(RequestMessage request, MessageCompleteHandler successHandler, MessageCompleteHandler errorHandler)
         {
-        	ServerConnection.Send(new ServerConnection(request, successHandler, errorHandler));
+        	new ServerConnection(request, successHandler, errorHandler).Send();
         }
 
         #endregion

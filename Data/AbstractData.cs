@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters;
 using Newtonsoft.Json;
@@ -34,7 +35,19 @@ namespace MiskoPersist.Data
 
         #region Properties
 
-
+		public bool IsSet 
+        { 
+        	get; 
+        	set; 
+        }
+        
+        public bool IsNotSet 
+        { 
+        	get 
+        	{ 
+        		return !IsSet; 
+        	} 
+        }
 
         #endregion
 
@@ -73,7 +86,6 @@ namespace MiskoPersist.Data
                 {
                     properties = GetStoredProperties();
 
-                    ((AbstractStoredData)this).IsSet = true;
                     ((AbstractStoredData)this).Id = persistence.GetPrimaryKey("Id");
                     ((AbstractStoredData)this).RowVer = persistence.GetLong("RowVer").HasValue ? persistence.GetLong("RowVer").Value : 0;
                 }
@@ -81,6 +93,8 @@ namespace MiskoPersist.Data
                 {
                     properties = GetViewedProperties();
                 }
+                
+                IsSet = true;
 
                 foreach (PropertyInfo property in properties)
                 {
@@ -301,9 +315,13 @@ namespace MiskoPersist.Data
         	{
         		result = JsonConvert.SerializeObject(obj, settings);
         	}
-        	catch
+        	catch(Exception e)
         	{
         		result = "Could not serialize object: " + obj.GetType().Name;
+        		
+        		#if DEBUG
+					Debug.WriteLine(e.StackTrace);
+				#endif
         	}
         	
         	return result;

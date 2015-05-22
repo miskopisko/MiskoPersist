@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using MiskoPersist.Data;
@@ -35,14 +36,10 @@ namespace MiskoPersist.Core
                 ResponseMessage response = null;
                 MessageWrapper wrapper = null;
                 DateTime startTime = DateTime.Now;
-                Session session = null;
-
+                Session session = new Session();				
+                	
                 try
                 {
-                	session = new Session(request.Connection ?? "Default");
-					session.MessageMode = request.MessageMode ?? MessageMode.Normal;
-					session.ErrorMessages.AddRange(request.Confirms);
-                	
                     String msgName = request.GetType().Name.Substring(0, request.GetType().Name.Length - 2);
                     String msgPath = request.GetType().FullName.Replace("Requests." + msgName + "RQ", "");
 
@@ -51,6 +48,9 @@ namespace MiskoPersist.Core
 
                     response.Page = request.Page;
 
+                    session.Connection = ServiceLocator.GetConnection(request.Connection ?? "Default");
+                	session.MessageMode = request.MessageMode ?? MessageMode.Normal;
+					session.ErrorMessages.AddRange(request.Confirms);
                     session.BeginTransaction();
 
                     Stopwatch watch = Stopwatch.StartNew();
@@ -58,7 +58,7 @@ namespace MiskoPersist.Core
                     watch.Stop();
         			long elapsedMs = watch.ElapsedMilliseconds;
                 }
-                catch (Exception e)
+                catch (TargetInvocationException e)
                 {
                     session.Status = ErrorLevel.Error;
 
@@ -80,19 +80,30 @@ namespace MiskoPersist.Core
                             session.ErrorMessages.Add(ex.ErrorMessage);
                             
                             #if DEBUG
-								Trace.Write(ActualException.StackTrace);
+								Debug.WriteLine(ActualException.StackTrace);
 							#endif                   
                         }
                     }
                     else
                     {
+                    	session.Status = ErrorLevel.Error;
+                    	
                         Log.Error("Unexpected Error: (" + ActualException.Message + ")", ActualException);
                         session.ErrorMessages.Add(new ErrorMessage(ActualException));
                         
                         #if DEBUG
-							Trace.Write(ActualException.StackTrace);
+							Debug.WriteLine(ActualException.StackTrace);
 						#endif
                     }
+                }
+                catch(Exception e)
+                {
+                	Log.Error("Unexpected Error: (" + e.Message + ")", e);
+                    session.ErrorMessages.Add(new ErrorMessage(e));
+                        
+                    #if DEBUG
+						Debug.WriteLine(e.StackTrace);
+					#endif
                 }
                 finally
                 {
@@ -110,7 +121,10 @@ namespace MiskoPersist.Core
                             response.Confirmations = session.ErrorMessages.ListOf(ErrorLevel.Confirmation);
                         }
                         
-                        session.Connection.Close();
+                        if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
+                       	{
+                        	session.Connection.Close();
+                       	}                        
                     }
                 }
                 

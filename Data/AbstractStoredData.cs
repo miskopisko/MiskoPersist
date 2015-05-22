@@ -34,20 +34,6 @@ namespace MiskoPersist.Data
         	get; 
         	set; 
         }
-        
-        public bool IsSet 
-        { 
-        	get; 
-        	set; 
-        }
-        
-        public bool IsNotSet 
-        { 
-        	get 
-        	{ 
-        		return !IsSet; 
-        	} 
-        }
 
         #endregion
 

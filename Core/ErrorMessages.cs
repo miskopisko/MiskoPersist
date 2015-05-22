@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 
@@ -33,6 +34,19 @@ namespace MiskoPersist.Core
         #endregion
 
         #region Public Methods
+        
+        public bool IsConfirmed(ErrorMessage errorMessage)
+        {
+        	foreach(ErrorMessage message in this)
+        	{
+        		if(message.Equals(errorMessage))
+        		{
+        			return message.Confirmed.HasValue && message.Confirmed.Value;
+        		}
+        	}
+        	
+        	return false;
+        }
 
         public Boolean Contains(ErrorLevel level)
         {

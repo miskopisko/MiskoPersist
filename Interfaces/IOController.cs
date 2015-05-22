@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using MiskoPersist.Core;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Interfaces
@@ -10,24 +11,20 @@ namespace MiskoPersist.Interfaces
         
         DataSource DataSource  { get; }
         
-        ConnectionProvider GetConnectionProvider();
-
-        void Debug(Object obj);
-        
-        void Status(String message);
+        void Status(MessageStatus status);
 
         void MessageReceived();
 
         void MessageSent();
 
-        void ExceptionHandler(Object sender, ThreadExceptionEventArgs e);
+        void Exception(Object sender, ThreadExceptionEventArgs e);
 
-        void Error(String message);
+        void Error(ErrorMessage message);
 
-        void Warning(String message);
+        void Warning(ErrorMessage message);
 
-        void Info(String message);
+        void Info(ErrorMessage message);
 
-        Boolean Confirm(String message);
+        Boolean Confirm(ErrorMessage message);
     }
 }

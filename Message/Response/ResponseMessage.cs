@@ -147,7 +147,7 @@ namespace MiskoPersist.Message.Response
         	{
         		ErrorMessages all = new ErrorMessages();
         		
-        		if(mErrors_ != null && mErrors_.Count > 0)
+        		if(HasErrors)
         		{
         			all.AddRange(Errors);
         		}

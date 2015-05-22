@@ -14,9 +14,6 @@ namespace MiskoPersist.Core
 
         #region Fields
 
-        private readonly DbConnection mConn_;
-        private readonly String mConnectionName_;
-        private Boolean mTransactionInProgress_ = false;
         private List<Persistence> MiskoPersistencePool_ = new List<Persistence>();
         private DbTransaction mTransaction_;
         private ErrorMessages mErrorMessages_ = new ErrorMessages();
@@ -30,26 +27,8 @@ namespace MiskoPersist.Core
 
         public DbConnection Connection
         {
-        	get
-        	{
-        		return mConn_;
-        	}
-        }
-        
-        public String ConnectionName
-        {
-        	get
-        	{
-        		return mConnectionName_;
-        	}
-        }
-        
-        public Boolean TransactionInProgress
-        {
-        	get
-        	{
-        		return mTransactionInProgress_;
-        	}
+        	get;
+        	set;
         }
         
         public List<Persistence> PersistencePool
@@ -116,10 +95,8 @@ namespace MiskoPersist.Core
 
         #region Constructors
 
-        public Session(String connectionName)
+        public Session()
         {
-            mConnectionName_ = connectionName;
-            mConn_ = ServiceLocator.GetConnection(connectionName);
         }
 
         #endregion
@@ -128,20 +105,19 @@ namespace MiskoPersist.Core
 
         public void BeginTransaction()
         {
-            if (mTransactionInProgress_)
+            if (mTransaction_ != null)
             {
                 Error(ErrorLevel.Error, ErrorStrings.errTransactionAlreadyInProgress);
             }
             else
             {
-                mTransactionInProgress_ = true;
-                mTransaction_ = mConn_.BeginTransaction();
+                mTransaction_ = Connection.BeginTransaction();
             }
         }
 
         public void EndTransaction()
         {
-            if (TransactionInProgress)
+            if (mTransaction_ != null)
             {
                 if (!Status.IsCommitable || MessageMode.Equals(MessageMode.Trial))
                 {
@@ -153,7 +129,6 @@ namespace MiskoPersist.Core
                 }
 
                 mTransaction_ = null;
-                mTransactionInProgress_ = false;
             }
         }
 
@@ -181,7 +156,7 @@ namespace MiskoPersist.Core
         {
             ErrorMessage errorMessage = new ErrorMessage(clazz, method, errorLevel, message, parameters);
 
-            if (errorLevel.Equals(ErrorLevel.Confirmation) && ErrorMessages.Contains(errorMessage) && ErrorMessages[ErrorMessages.IndexOf(errorMessage)].Confirmed.Value)
+            if (errorLevel.Equals(ErrorLevel.Confirmation) && ErrorMessages.IsConfirmed(errorMessage))
             {
                 return;
             }
