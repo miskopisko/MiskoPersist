@@ -199,7 +199,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Interfaces" />
-    <Folder Include="Libraries" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\ErrorStrings.Designer.cs">
@@ -218,11 +217,6 @@
     </Compile>
     <Compile Include="SVN\SvnDbTransaction.cs">
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Libraries\MySql.Data.dll" />
-    <None Include="Libraries\Oracle.DataAccess.dll" />
-    <None Include="Libraries\System.Data.SQLite.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

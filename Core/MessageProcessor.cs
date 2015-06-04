@@ -44,8 +44,14 @@ namespace MiskoPersist.Core
                     String msgPath = request.GetType().FullName.Replace("Requests." + msgName + "RQ", "");
 
                     response = (ResponseMessage)request.GetType().Assembly.CreateInstance(msgPath + "Responses." + msgName + "RS");
-                    wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new object[] { request, response }, null, null);
+                    wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
 
+                    // Instantiate the properties of the response message; eliminated null pointers
+                    foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) 
+                    {
+                    	property.SetValue(response, Activator.CreateInstance(property.PropertyType), BindingFlags.Default, null, null, null);
+                    }
+                    
                     response.Page = request.Page;
 
                     session.Connection = ServiceLocator.GetConnection(request.Connection ?? "Default");
@@ -116,7 +122,7 @@ namespace MiskoPersist.Core
                         {
                             response.Status = session.Status;
                             response.Errors = session.ErrorMessages.ListOf(ErrorLevel.Error);
-                            response.Infos = session.ErrorMessages.ListOf(ErrorLevel.Info);
+                            response.Infos = session.ErrorMessages.ListOf(ErrorLevel.Information);
                             response.Warnings = session.ErrorMessages.ListOf(ErrorLevel.Warning);
                             response.Confirmations = session.ErrorMessages.ListOf(ErrorLevel.Confirmation);
                         }

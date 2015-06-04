@@ -168,7 +168,7 @@ namespace MiskoPersist.Core
 
             ErrorMessages.Add(errorMessage);
 
-            if (!errorLevel.Equals(ErrorLevel.Warning) && !errorLevel.Equals(ErrorLevel.Info))
+            if (!errorLevel.Equals(ErrorLevel.Warning) && !errorLevel.Equals(ErrorLevel.Information))
             {
                 if (errorLevel.Equals(ErrorLevel.Error))
                 {

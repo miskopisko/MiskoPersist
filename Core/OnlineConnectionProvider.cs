@@ -8,10 +8,6 @@ namespace MiskoPersist.Core
 {
 	public class OnlineConnectionProvider : ConnectionProvider
 	{
-		public OnlineConnectionProvider()
-		{
-		}
-
 		#region ConnectionProvider implementation
 
 		public ResponseMessage Send(RequestMessage request)

@@ -7,10 +7,6 @@ namespace MiskoPersist.Core
 {
 	public class LocalConnectionProvider : ConnectionProvider
 	{
-		public LocalConnectionProvider()
-		{
-		}
-
 		#region ConnectionProvider implementation
 
 		public ResponseMessage Send(RequestMessage request)

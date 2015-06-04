@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,6 +16,7 @@ namespace MiskoPersist.Core
 	{
 		#region Delegates
 
+		[EditorBrowsable(EditorBrowsableState.Never)]
         public delegate void MessageCompleteHandler(ResponseMessage Response);
 
         #endregion
@@ -22,11 +24,12 @@ namespace MiskoPersist.Core
 		#region Fields
 		
 		private static int mActive_ = 0;
+		private static IOController mIOController_;
 		
 		private Thread mThread_;
-		private readonly MessageCompleteHandler mSuccessHandler_;
-        private readonly MessageCompleteHandler mErrorHandler_;
-        private readonly RequestMessage mRequest_;
+		private MessageCompleteHandler mSuccessHandler_;
+        private MessageCompleteHandler mErrorHandler_;
+        private RequestMessage mRequest_;
 		
 		#endregion
 		
@@ -34,8 +37,19 @@ namespace MiskoPersist.Core
 		
 		public static IOController IOController 
 		{
-			get;
-			set;
+			get
+			{
+				if (mIOController_ == null)
+	            {
+	                throw new MiskoException(ErrorStrings.errIOControllerIsNull);
+	            }				
+				return mIOController_;
+			}
+			set
+			{
+				mIOController_ = value;
+				Application.ThreadException += mIOController_.Exception;
+			}
 		}
 		
 		private ConnectionProvider ConnectionProvider
@@ -61,11 +75,6 @@ namespace MiskoPersist.Core
 		
 		public ServerConnection(RequestMessage request, MessageCompleteHandler successHandler, MessageCompleteHandler errorHandler)
 		{
-			if (IOController == null)
-            {
-                throw new MiskoException(ErrorStrings.errIOControllerIsNull);
-            }
-
 			mRequest_ = request;
             mSuccessHandler_ = successHandler;
             mErrorHandler_ = errorHandler;
@@ -93,8 +102,9 @@ namespace MiskoPersist.Core
 				mThread_ = new Thread(new ThreadStart(Run));
             	mThread_.Name = mRequest_.GetType().Name;
             	mThread_.IsBackground = true;
-            	mThread_.Start();
 			}
+			
+			mThread_.Start();
 		}
 		
 		private void Run()
@@ -167,7 +177,7 @@ namespace MiskoPersist.Core
                 	};
                 	Invoke(method);
                 }
-                else if (errorMessage.ErrorLevel.Equals(ErrorLevel.Info))
+                else if (errorMessage.ErrorLevel.Equals(ErrorLevel.Information))
                 {
                 	method = delegate
         			{
@@ -233,14 +243,26 @@ namespace MiskoPersist.Core
 		private void Invoke(MethodInvoker method)
 		{
 			Control control = IOController as System.Windows.Forms.Control;
-        	if(control != null && control.InvokeRequired)
-        	{
-        		control.Invoke(method);
-        	}
-        	else
-        	{
-        		method.Invoke();
-        	}
+			
+			try
+			{
+	    		if(control != null && control.InvokeRequired)
+	    		{
+	    			control.Invoke(method);
+	    		}
+	    		else
+	    		{
+	    			method.Invoke();
+	    		}
+			}
+			catch(Exception e)
+			{
+				MethodInvoker exceptionMethod = delegate
+    			{
+					IOController.Exception(method.Target, new ThreadExceptionEventArgs(e));
+            	};
+				Invoke(exceptionMethod);
+			}
 		}
 		
 		#endregion
