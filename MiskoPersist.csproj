@@ -3,14 +3,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{F538732A-122B-40BB-86B0-199F99B0386C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiskoPersist</RootNamespace>
     <AssemblyName>MiskoPersist</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <FileUpgradeFlags>
@@ -53,9 +51,14 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <FileAlignment>4096</FileAlignment>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartAction>Project</StartAction>
+    <BaseAddress>4194304</BaseAddress>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -67,6 +70,9 @@
     <FileAlignment>4096</FileAlignment>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <PlatformTarget>x86</PlatformTarget>
+    <BaseAddress>4194304</BaseAddress>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
@@ -97,14 +103,11 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Serialization" />
+    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\LocalConnectionProvider.cs" />
-    <Compile Include="Core\OnlineConnectionProvider.cs" />
     <Compile Include="Core\ServerConnection.cs" />
-    <Compile Include="Enums\DataSource.cs" />
     <Compile Include="Enums\MessageStatus.cs" />
-    <Compile Include="Interfaces\ConnectionProvider.cs" />
     <Compile Include="Interfaces\IOController.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />
     <Compile Include="SVN\SvnConnection.cs">
@@ -140,7 +143,6 @@
     <Compile Include="Money\FractionReceivers.cs" />
     <Compile Include="Money\MersenneTwister.cs" />
     <Compile Include="Money\MidpointRoundingRule.cs" />
-    <Compile Include="Money\Money.cs" />
     <Compile Include="Money\MoneyAllocationException.cs" />
     <Compile Include="Money\MoneyDistributor.cs" />
     <Compile Include="Money\MoneyExtensions.cs" />
@@ -162,6 +164,8 @@
     <Compile Include="Enums\AbstractEnum.cs" />
     <Compile Include="Enums\ErrorLevel.cs" />
     <Compile Include="Enums\UpdateMode.cs" />
+    <Compile Include="Enums\ServerLocation.cs" />
+    <Compile Include="Money\Money.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
@@ -196,9 +200,6 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interfaces" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\ErrorStrings.Designer.cs">

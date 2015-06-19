@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using MiskoPersist.Core;
@@ -75,7 +76,7 @@ namespace MiskoPersist.SVN
 		}
 		
 		// Call SVN commit to commit the changelist
-		public static Int32 Commit(FileInfo[] files, String message, String username, String password)
+		public static Int32 Commit(List<FileInfo> files, String message, String username, String password)
 		{			
 			String fileList = "";
 			foreach (FileInfo file in files)

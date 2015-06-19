@@ -44,11 +44,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected ErrorLevel()
+        public ErrorLevel()
         {
         }
 
-        protected ErrorLevel(Int64 value, String code, String description) : base(value, code, description)
+        public ErrorLevel(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

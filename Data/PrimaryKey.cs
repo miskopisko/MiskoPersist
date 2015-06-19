@@ -1,7 +1,7 @@
 using System;
+using MiskoPersist.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
@@ -263,7 +263,7 @@ namespace MiskoPersist.Data
         #endregion
     }
     
-    public class PrimaryKeySerializer : JsonConverter
+    internal class PrimaryKeySerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		
@@ -274,7 +274,12 @@ namespace MiskoPersist.Data
 		
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
-			return new PrimaryKey((Int64)reader.Value);
+            if (reader.Value != null)
+            {
+                return new PrimaryKey((Int64)reader.Value);
+            }
+
+            return null;
 		}
 		
 		public override bool CanConvert(Type objectType)

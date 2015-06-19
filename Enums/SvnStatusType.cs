@@ -59,11 +59,11 @@ namespace MiskoPersist.Enums
 
         #region Constructor
 
-        protected SvnStatusType()
+        public SvnStatusType()
         {
         }
 
-        protected SvnStatusType(Int64 id, String Code, String Description) : base(id, Code, Description)
+        public SvnStatusType(Int64 id, String Code, String Description) : base(id, Code, Description)
         {
         }
 

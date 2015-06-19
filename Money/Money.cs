@@ -13,9 +13,9 @@ namespace MiskoPersist.MoneyType
 
         #region Constants
 
-        public static readonly Money ZERO = new Money(0);
-        public static readonly Money ONE = new Money(1);
-        public static readonly Money HUNDRED = new Money(100);
+        public static readonly Money ZERO = new Money(0.00);
+        public static readonly Money ONE = new Money(1.00);
+        public static readonly Money HUNDRED = new Money(100.00);
 
         private const Decimal FractionScale = 1E9M;
 
@@ -69,7 +69,7 @@ namespace MiskoPersist.MoneyType
         #region Constructors
 
         public Money()
-            : this(0)
+            : this(0.0)
         {
         }
 
@@ -81,6 +81,11 @@ namespace MiskoPersist.MoneyType
         public Money(Decimal value)
         {
         	Value = value;
+        }
+
+        public Money(Double value)
+            : this(new Decimal(value))
+        {
         }
 
         public Money(Decimal value, Currency currency)
@@ -102,12 +107,12 @@ namespace MiskoPersist.MoneyType
 
         public static implicit operator Money(Byte value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(SByte value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(Single value)
@@ -132,32 +137,32 @@ namespace MiskoPersist.MoneyType
 
         public static implicit operator Money(Int16 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(Int32 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(Int64 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(UInt16 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(UInt32 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static implicit operator Money(UInt64 value)
         {
-            return new Money(value);
+            return new Money(new Decimal(value));
         }
 
         public static Money operator -(Money value)
@@ -172,8 +177,8 @@ namespace MiskoPersist.MoneyType
 
         public static Money operator +(Money left, Money right)
         {
-            if (object.ReferenceEquals(left, null)) left = new Money(0);
-            if (object.ReferenceEquals(right, null)) right = new Money(0);
+            if (object.ReferenceEquals(left, null)) left = Money.ZERO;
+            if (object.ReferenceEquals(right, null)) right = Money.ZERO;
 
             if (left.Currency != right.Currency)
             {
@@ -208,8 +213,8 @@ namespace MiskoPersist.MoneyType
 
         public static Money operator -(Money left, Money right)
         {
-            if (object.ReferenceEquals(left, null)) left = new Money(0);
-            if (object.ReferenceEquals(right, null)) right = new Money(0);
+            if (object.ReferenceEquals(left, null)) left = Money.ZERO;
+            if (object.ReferenceEquals(right, null)) right = Money.ZERO;
 
             if (left.Currency != right.Currency)
             {
@@ -657,32 +662,23 @@ namespace MiskoPersist.MoneyType
         #endregion
     }
 	
-	public class MoneySerializer : JsonConverter
+    internal class MoneySerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			Type type = value.GetType();
-			writer.WriteStartObject();
-		    writer.WritePropertyName("$type");
-		    serializer.Serialize(writer, type.FullName + ", " + type.Assembly.FullName.Substring(0, type.Assembly.FullName.IndexOf(',')));
-		    writer.WritePropertyName("Value");
-		    serializer.Serialize(writer, ((Money)value).Value);
-		    writer.WritePropertyName("Currency");
-		    serializer.Serialize(writer, ((Money)value).Currency.Iso3LetterCode);
-		    writer.WriteEndObject();			
+            writer.WriteValue(((Money)value).Value.ToString("F2"));
 		}
 		
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
-			JObject jsonObject = JObject.Load(reader);
-			
-			Type type = Type.GetType(jsonObject.GetValue("$type").ToString());
-			Decimal value = Decimal.Parse(jsonObject.SelectToken("Value").ToString());
-			Currency currency = Currency.FromIso3LetterCode(jsonObject.GetValue("Currency").ToString());
-			
-			return new Money(value, currency);
+            if(reader.Value != null)
+            {
+                return new Money((String)reader.Value);
+            }
+
+            return null;
 		}
 		
 		public override bool CanConvert(Type objectType)

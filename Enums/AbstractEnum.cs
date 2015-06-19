@@ -5,33 +5,37 @@ using System.Runtime.Serialization;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MiskoPersist.Data;
 
 namespace MiskoPersist.Enums
 {
 	[JsonConverter(typeof(EnumSerializer))]
-	[Serializable]
     public abstract class AbstractEnum : IComparable
     {
         #region Properties
 		
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public Int64 Value 
         { 
         	get; 
         	set; 
         }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public String Code 
         { 
         	get; 
         	set; 
         }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public String Description 
         { 
         	get; 
         	set; 
         }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsSet 
         { 
         	get 
@@ -39,7 +43,8 @@ namespace MiskoPersist.Enums
         		return Value != -1; 
         	} 
         }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsNotSet 
         { 
         	get 
@@ -70,11 +75,7 @@ namespace MiskoPersist.Enums
             return Description;
         }
 
-        public bool Equals(String codeOrDesc)
-        {
-			return codeOrDesc != null && Description.Equals(codeOrDesc) || Code.Equals(codeOrDesc);
-        }
-
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual int CompareTo(object e)
         {
             if (e is AbstractEnum)
@@ -86,6 +87,19 @@ namespace MiskoPersist.Enums
 				return string.Compare(Code, ((AbstractEnum)e).Code, StringComparison.Ordinal);
             }
             return -1;
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            AbstractEnum o = obj as AbstractEnum;
+
+            return o != null && o.GetType() == GetType() && o.Value == Value;
         }
     }
     
@@ -101,11 +115,19 @@ namespace MiskoPersist.Enums
 			{
 		    	writer.WriteValue(((AbstractEnum)value).Value);
 			}
+            else
+            {
+                writer.WriteNull();
+            }
 		}
 		
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
-			return (AbstractEnum)objectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { (Int64)reader.Value });
+            if(reader.Value != null)
+            {
+                return (AbstractEnum)objectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { (Int64)reader.Value });
+            }
+            return null;
 		}
 		
 		public override bool CanConvert(Type objectType)

@@ -103,7 +103,7 @@ namespace MiskoPersist.SVN
         {
         }
 
-        public SvnLog(SvnTarget target, SvnRevision revisionTo, Boolean stopOnCopyRename, Int16 limit)
+        public SvnLog(SvnTarget target, SvnRevision revisionTo, Boolean stopOnCopyRename, Int32 limit)
             : this(target, null, revisionTo, stopOnCopyRename, limit)
         {
         }
@@ -113,7 +113,7 @@ namespace MiskoPersist.SVN
         {
         }
 
-        public SvnLog(SvnTarget target, SvnRevision revisionFrom, SvnRevision revisionTo, Boolean stopOnCopyRename, Int16? limit)
+        public SvnLog(SvnTarget target, SvnRevision revisionFrom, SvnRevision revisionTo, Boolean stopOnCopyRename, Int32? limit)
         {
             String args = "log --xml --verbose";
 

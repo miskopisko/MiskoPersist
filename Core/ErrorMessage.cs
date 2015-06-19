@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Newtonsoft.Json;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Tools;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Core
 {
-	[JsonObjectAttribute(MemberSerialization.OptOut)]
+    [JsonConverter(typeof(ErrorSerializer))]
     public class ErrorMessage : AbstractViewedData
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessage));
@@ -40,7 +41,7 @@ namespace MiskoPersist.Core
 			set;
 		}
 		
-		public ErrorLevel ErrorLevel 
+		public ErrorLevel ErrorLevel
 		{
 			get;
 			set;
@@ -57,7 +58,7 @@ namespace MiskoPersist.Core
         		mErrorMessage_ = value;
         	} 
         }
-        
+
         public Boolean? Confirmed 
         { 
         	get  
@@ -185,5 +186,63 @@ namespace MiskoPersist.Core
 		}
 
         #endregion
+    }
+
+    internal class ErrorSerializer : JsonConverter
+    {
+        #region implemented abstract members of JsonConverter
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            ErrorMessage errorMessage = value as ErrorMessage;
+
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("$type");
+            writer.WriteValue(errorMessage.GetType().ToString() + ", " + errorMessage.GetType().Assembly.GetName().Name);
+
+            writer.WritePropertyName("Class");
+            serializer.Serialize(writer, errorMessage.Class);
+
+            writer.WritePropertyName("Method");
+            serializer.Serialize(writer, errorMessage.Method);
+
+            if(errorMessage.Parameters != null && errorMessage.Parameters.Count > 0)
+            {
+                writer.WritePropertyName("Parameters");
+                serializer.Serialize(writer, errorMessage.Parameters);    
+            }
+
+            writer.WritePropertyName("ErrorLevel");
+            serializer.Serialize(writer, errorMessage.ErrorLevel);
+
+            writer.WritePropertyName("Message");
+            serializer.Serialize(writer, errorMessage.Message);
+
+            writer.WriteEndObject();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JObject jsonObject = JObject.Load(reader);
+
+            ErrorMessage result = new ErrorMessage();
+            result.Class = (String)jsonObject["Class"];
+            result.Method = (String)jsonObject["Method"];
+            result.Parameters = jsonObject["Parameters"] != null ? jsonObject["Parameters"].ToObject<List<Object>>() : null;
+            result.ErrorLevel = ErrorLevel.GetElement((int)jsonObject["ErrorLevel"]);
+            result.Message = (String)jsonObject["Message"];
+
+            return result;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+
     }
 }

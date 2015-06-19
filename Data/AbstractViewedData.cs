@@ -1,9 +1,13 @@
 using System;
 using System.Reflection;
 using MiskoPersist.Core;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using MiskoPersist.Attributes;
 
 namespace MiskoPersist.Data
 {
+    [JsonConverter(typeof(ViewedDataSerializer))]
     public abstract class AbstractViewedData : AbstractData
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractViewedData));
@@ -58,6 +62,65 @@ namespace MiskoPersist.Data
         #region Public Methods
 
         
+
+        #endregion
+    }
+
+    internal class ViewedDataSerializer : JsonConverter
+    {
+        #region implemented abstract members of JsonConverter
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            AbstractViewedData data = value as AbstractViewedData;
+
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("$type");
+            writer.WriteValue(data.GetType().ToString() + ", " + data.GetType().Assembly.GetName().Name);
+
+            foreach (PropertyInfo property in data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if (property.GetCustomAttribute(typeof(ViewedAttribute)) != null)
+                {
+                    Object obj = property.GetValue(data);
+                    if(obj != null)
+                    {
+                        writer.WritePropertyName(property.Name);
+                        serializer.Serialize(writer, obj);
+                    }
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JObject jsonObject = JObject.Load(reader);
+
+            AbstractViewedData data = (AbstractViewedData)Activator.CreateInstance(objectType);
+            data.IsSet = true;
+
+            foreach(PropertyInfo property in data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            {
+                if(property.GetCustomAttribute(typeof(ViewedAttribute)) != null)
+                {
+                    JToken token = jsonObject.GetValue(property.Name);
+                    if(token != null)
+                    {
+                        property.SetValue(data, serializer.Deserialize(token.CreateReader(), property.PropertyType));    
+                    }
+                }
+            }
+
+            return data;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }

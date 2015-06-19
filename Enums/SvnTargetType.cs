@@ -28,11 +28,11 @@ namespace MiskoPersist.Enums
 
         #region Constructor
 
-        protected SvnTargetType()
+        public SvnTargetType()
         {
         }
 
-        protected SvnTargetType(Int64 id, String Code, String Description) : base(id, Code, Description)
+        public SvnTargetType(Int64 id, String Code, String Description) : base(id, Code, Description)
         {
         }
 

@@ -160,4 +160,7 @@ Error: {2}</value>
   <data name="errTableUpdateFailed" xml:space="preserve">
     <value>Table update failed</value>
   </data>
+  <data name="errDoNotUseArrays" xml:space="preserve">
+    <value>Do not use arrays in messages. Use List&lt;T&gt;!</value>
+  </data>
 </root>

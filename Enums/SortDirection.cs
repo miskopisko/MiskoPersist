@@ -28,11 +28,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected SortDirection()
+        public SortDirection()
         {
         }
 
-        protected SortDirection(Int64 value, String code, String description) : base(value, code, description)
+        public SortDirection(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

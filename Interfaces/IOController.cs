@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
+using Newtonsoft.Json;
+using System.ComponentModel;
 
 namespace MiskoPersist.Interfaces
 {
@@ -9,7 +11,15 @@ namespace MiskoPersist.Interfaces
     {
     	Int32 RowsPerPage { get; }
         
-        DataSource DataSource  { get; }
+        ServerLocation ServerLocation { get; }
+
+        String Host { get; }
+
+        Int16 Port { get; }
+
+        String Script { get; }
+
+        Boolean UseSSL { get; }
         
         void Status(MessageStatus status);
 

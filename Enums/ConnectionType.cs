@@ -36,11 +36,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected ConnectionType()
+        public ConnectionType()
         {
         }
 
-        protected ConnectionType(Int64 value, String code, String description) : base(value, code, description)
+        public ConnectionType(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using MiskoPersist.Data;
@@ -9,6 +13,7 @@ using MiskoPersist.Interfaces;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
 using MiskoPersist.Resources;
+using System.Web;
 
 namespace MiskoPersist.Core
 {
@@ -42,32 +47,14 @@ namespace MiskoPersist.Core
 				if (mIOController_ == null)
 	            {
 	                throw new MiskoException(ErrorStrings.errIOControllerIsNull);
-	            }				
+	            }
+
 				return mIOController_;
 			}
 			set
 			{
 				mIOController_ = value;
-				Application.ThreadException += mIOController_.Exception;
-			}
-		}
-		
-		private ConnectionProvider ConnectionProvider
-		{
-			get
-			{
-				if(IOController.DataSource.Equals(DataSource.Local))
-				{
-					return new LocalConnectionProvider();
-				}
-				else if(IOController.DataSource.Equals(DataSource.Online))
-				{
-					return new OnlineConnectionProvider();
-				}
-				else
-				{
-					throw new MiskoException("Unknown connection provider");
-				}
+                Application.ThreadException += mIOController_.Exception;
 			}
 		}
 		
@@ -119,13 +106,21 @@ namespace MiskoPersist.Core
 				Debug.WriteLine(AbstractData.SerializeJson(mRequest_));
             #endif
 			
-			ResponseMessage response = ConnectionProvider.Send(mRequest_);
-				
+            ResponseMessage response = null;
+            if(IOController.ServerLocation.Equals(ServerLocation.Local))
+            {
+                response = MessageProcessor.Process(mRequest_);
+            }
+            else
+            {
+                response = SendToServer();
+            }
+
 			#if DEBUG
 				Debug.WriteLine(AbstractData.SerializeJson(response));
             #endif
                 
-            if(HandleErrors(response.AllMessages))
+            if(HandleErrors(response.ErrorMessages))
             {
             	// No errors in the message; call the successfulHandler
 	            if (!response.HasErrors && !response.HasUnconfirmed && mSuccessHandler_ != null)
@@ -264,6 +259,47 @@ namespace MiskoPersist.Core
 				Invoke(exceptionMethod);
 			}
 		}
+
+        private ResponseMessage SendToServer()
+        {
+            String url = IOController.UseSSL ? "https://" : "http://";
+            url += IOController.Host;
+            url += IOController.Port != 80 ? ":" + IOController.Port : "";
+            url += IOController.Script;
+
+            ResponseMessage responseMessage = null;
+
+            try
+            {
+                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(url);
+
+                String postData = "request=" + HttpUtility.UrlEncode(AbstractData.SerializeJson(mRequest_));
+                byte[] data = Encoding.ASCII.GetBytes(postData);
+
+                httpRequest.Method = "POST";
+                httpRequest.ContentType = "application/x-www-form-urlencoded";
+                httpRequest.ContentLength = data.Length;
+                httpRequest.GetRequestStream().Write(data, 0, data.Length);
+
+                HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
+                String responseString = new StreamReader(httpResponse.GetResponseStream()).ReadToEnd();
+
+                responseMessage = (ResponseMessage)AbstractData.DeserializeJson(responseString);
+            }
+            catch(Exception ex)
+            {
+                while(ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
+
+                responseMessage = new ResponseMessage();
+                responseMessage.Status = ErrorLevel.Error;
+                responseMessage.Errors.Add(new ErrorMessage(ex));
+            }
+
+            return responseMessage;
+        }
 		
 		#endregion
 		

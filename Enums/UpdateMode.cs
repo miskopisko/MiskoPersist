@@ -30,11 +30,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected UpdateMode()
+        public UpdateMode()
         {
         }
 
-        protected UpdateMode(Int64 value, String code, String description) : base(value, code, description)
+        public UpdateMode(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

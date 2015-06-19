@@ -36,11 +36,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected MessageStatus()
+        public MessageStatus()
         {
         }
 
-        protected MessageStatus(Int64 value, String code, String description) : base(value, code, description)
+        public MessageStatus(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

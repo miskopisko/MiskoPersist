@@ -1,23 +1,20 @@
 ﻿using System;
-using System.Runtime.Remoting.Messaging;
-using Newtonsoft.Json;
+using System.ComponentModel;
+using System.Reflection;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
+using Newtonsoft.Json;
 
 namespace MiskoPersist.Message.Response
 {
-	[JsonObjectAttribute(MemberSerialization.OptOut)]
+    [JsonConverter(typeof(ResponseSerializer))]
     public class ResponseMessage
     {
         private static Logger Log = Logger.GetInstance(typeof(ResponseMessage));
 
         #region Fields
 
-        private ErrorMessages mErrors_;
-        private ErrorMessages mInfos_;
-        private ErrorMessages mWarnings_;
-        private ErrorMessages mConfirmations_;
 
         #endregion
 
@@ -29,52 +26,28 @@ namespace MiskoPersist.Message.Response
         	set; 
         }        
 		
-        public ErrorMessages Errors 
+        public ErrorMessages Errors
         {
-			get 
-			{
-				return HasErrors ? mErrors_ : null;
-			}
-			set 
-			{
-				mErrors_ = value;
-			}
-		}
-        
-        public ErrorMessages Infos 
-        { 
-        	get 
-			{
-        		return HasInfos ? mInfos_ : null;
-			}
-			set 
-			{
-				mInfos_ = value;
-			} 
+            get;
+            set;
         }
         
-        public ErrorMessages Warnings 
-        { 
-        	get 
-			{
-				return HasWarnings ? mWarnings_ : null;
-			}
-			set 
-			{
-				mWarnings_ = value;
-			} 
+        public ErrorMessages Infos
+        {
+            get;
+            set;
         }
         
-        public ErrorMessages Confirmations 
-        { 
-        	get 
-			{
-				return HasConfirmations ? mConfirmations_ : null;
-			}
-			set 
-			{
-				mConfirmations_ = value;
-			}
+        public ErrorMessages Warnings
+        {
+            get;
+            set;
+        }
+        
+        public ErrorMessages Confirmations
+        {
+            get;
+            set;
         }
         
         public Page Page 
@@ -83,89 +56,77 @@ namespace MiskoPersist.Message.Response
         	set;
         }
         
-        [JsonIgnore]
         public Boolean HasErrors 
         { 
         	get 
         	{ 
-        		return mErrors_ != null && mErrors_.Count > 0; 
+        		return Errors != null && Errors.Count > 0; 
         	} 
         }
-        
-        [JsonIgnore]
-        public Boolean HasUnconfirmed 
-        {
-        	get
-        	{
-        		bool hasUnconfirmed = false;
-        		if(HasConfirmations)
-        		{
-        			foreach (ErrorMessage confirmMessage in Confirmations) 
-        			{
-        				if(confirmMessage.Confirmed.HasValue && !confirmMessage.Confirmed.Value)
-        				{
-        					hasUnconfirmed = true;
-        					break;
-        				}
-        			}
-        		}
-        		return hasUnconfirmed;
-        	}
-        }
-        
-        [JsonIgnore]
+
         public Boolean HasInfos 
         { 
         	get 
         	{ 
-        		return mInfos_ != null && mInfos_.Count > 0; 
+        		return Infos != null && Infos.Count > 0; 
         	} 
         }
         
-        [JsonIgnore]
         public Boolean HasWarnings 
         { 
         	get 
         	{ 
-        		return mWarnings_ != null && mWarnings_.Count > 0; 
+        		return Warnings != null && Warnings.Count > 0; 
         	} 
         }
         
-        [JsonIgnore]
         public Boolean HasConfirmations 
         { 
         	get 
         	{ 
-        		return mConfirmations_ != null && mConfirmations_.Count > 0; 
+        		return Confirmations != null && Confirmations.Count > 0; 
         	} 
         }
+
+        public Boolean HasUnconfirmed 
+        {
+            get
+            {
+                bool hasUnconfirmed = false;
+                if(HasConfirmations)
+                {
+                    foreach (ErrorMessage confirmMessage in Confirmations) 
+                    {
+                        if(confirmMessage.Confirmed.HasValue && !confirmMessage.Confirmed.Value)
+                        {
+                            hasUnconfirmed = true;
+                            break;
+                        }
+                    }
+                }
+                return hasUnconfirmed;
+            }
+        }
         
-        [JsonIgnore]
-        public ErrorMessages AllMessages
+        public ErrorMessages ErrorMessages
         {
         	get
         	{
-        		ErrorMessages all = new ErrorMessages();
-        		
-        		if(HasErrors)
-        		{
-        			all.AddRange(Errors);
-        		}
-        		if(HasWarnings)
-        		{
-        			all.AddRange(Warnings);
-        		}
-        		if(HasConfirmations)
-        		{
-        			all.AddRange(Confirmations);
-        		}
-        		if(HasInfos)
-        		{
-        			all.AddRange(Infos);
-        		}
-        		
-        		return all;
+                ErrorMessages result = new ErrorMessages();
+                result.AddRange(Errors);
+                result.AddRange(Confirmations);
+                result.AddRange(Warnings);
+                result.AddRange(Infos);
+
+                return result;
         	}
+            set
+            {
+                Errors = ((ErrorMessages)value).ListOf(ErrorLevel.Error);
+                Confirmations = ((ErrorMessages)value).ListOf(ErrorLevel.Confirmation);
+                Warnings = ((ErrorMessages)value).ListOf(ErrorLevel.Warning);
+                Infos = ((ErrorMessages)value).ListOf(ErrorLevel.Information);
+            }
         }
 
         #endregion
@@ -174,13 +135,86 @@ namespace MiskoPersist.Message.Response
 
         public  ResponseMessage()
         {
+            Errors = new ErrorMessages();
+            Confirmations = new ErrorMessages();
+            Warnings = new ErrorMessages();
+            Infos = new ErrorMessages();
         }
 
         #endregion
+    }
 
-        #region Private Properties
+    internal class ResponseSerializer : JsonConverter
+    {
+        #region implemented abstract members of JsonConverter
 
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            ResponseMessage response = value as ResponseMessage;
 
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("$type");
+            writer.WriteValue(response.GetType().ToString() + ", " + response.GetType().Assembly.GetName().Name);
+
+            if(response.GetType() != typeof(ResponseMessage))
+            {
+                foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                {
+                    Object obj = property.GetValue(response);
+                    if(obj != null)
+                    {
+                        writer.WritePropertyName(property.Name);
+                        serializer.Serialize(writer, obj);
+                    }
+                }    
+            }
+
+            writer.WritePropertyName("Status");
+            serializer.Serialize(writer, response.Status);
+
+            if(response.HasErrors)
+            {
+                writer.WritePropertyName("Errors");
+                serializer.Serialize(writer, response.Errors);
+            }
+
+            if(response.HasConfirmations)
+            {
+                writer.WritePropertyName("Confirmations");
+                serializer.Serialize(writer, response.Confirmations);
+            }
+
+            if(response.HasWarnings)
+            {
+                writer.WritePropertyName("Warnings");
+                serializer.Serialize(writer, response.Warnings);
+            }
+
+            if(response.HasInfos)
+            {
+                writer.WritePropertyName("Infos");
+                serializer.Serialize(writer, response.Infos);
+            }
+
+            if(response.Page != null)
+            {
+                writer.WritePropertyName("Page");
+                serializer.Serialize(writer, response.Page);
+            }
+
+            writer.WriteEndObject();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }

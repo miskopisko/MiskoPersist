@@ -32,11 +32,11 @@ namespace MiskoPersist.Enums
 
         #region Constructor
 
-        protected SvnLogEntryPathActionType()
+        public SvnLogEntryPathActionType()
         {
         }
 
-        protected SvnLogEntryPathActionType(Int64 id, String Code, String Description) : base(id, Code, Description)
+        public SvnLogEntryPathActionType(Int64 id, String Code, String Description) : base(id, Code, Description)
         {
         }
 

@@ -7,6 +7,7 @@ using MiskoPersist.Enums;
 using MiskoPersist.Message;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
+using MiskoPersist.Resources;
 
 namespace MiskoPersist.Core
 {
@@ -33,7 +34,7 @@ namespace MiskoPersist.Core
         {
             if (request != null)
             {
-                ResponseMessage response = null;
+                ResponseMessage response = new ResponseMessage();
                 MessageWrapper wrapper = null;
                 DateTime startTime = DateTime.Now;
                 Session session = new Session();				
@@ -49,18 +50,33 @@ namespace MiskoPersist.Core
                     // Instantiate the properties of the response message; eliminated null pointers
                     foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) 
                     {
-                    	property.SetValue(response, Activator.CreateInstance(property.PropertyType), BindingFlags.Default, null, null, null);
+                    	Object obj = null;
+                    	
+                    	if(property.PropertyType == typeof(String))
+                    	{
+                    		obj = "";
+                    	}
+                    	else if(property.PropertyType.BaseType == typeof(Array))
+                    	{
+                    		throw new MiskoException(ErrorStrings.errDoNotUseArrays);
+                    	}
+                    	else
+                    	{
+                    		obj = Activator.CreateInstance(property.PropertyType);
+                    	}
+                    	
+                    	property.SetValue(response, obj);
                     }
                     
                     response.Page = request.Page;
 
-                    session.Connection = ServiceLocator.GetConnection(request.Connection ?? "Default");
-                	session.MessageMode = request.MessageMode ?? MessageMode.Normal;
+                    session.Connection = ServiceLocator.GetConnection(request.Connection);
+                	session.MessageMode = request.MessageMode;
 					session.ErrorMessages.AddRange(request.Confirms);
                     session.BeginTransaction();
 
                     Stopwatch watch = Stopwatch.StartNew();
-                    wrapper.GetType().InvokeMember(request.Command ?? "Execute", BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
+                    wrapper.GetType().InvokeMember(request.Command, BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
                     watch.Stop();
         			long elapsedMs = watch.ElapsedMilliseconds;
                 }
@@ -118,14 +134,8 @@ namespace MiskoPersist.Core
                         session.EndTransaction();
                         session.FlushPersistence();
 
-                        if (response != null)
-                        {
-                            response.Status = session.Status;
-                            response.Errors = session.ErrorMessages.ListOf(ErrorLevel.Error);
-                            response.Infos = session.ErrorMessages.ListOf(ErrorLevel.Information);
-                            response.Warnings = session.ErrorMessages.ListOf(ErrorLevel.Warning);
-                            response.Confirmations = session.ErrorMessages.ListOf(ErrorLevel.Confirmation);
-                        }
+                        response.Status = session.Status;
+                        response.ErrorMessages = session.ErrorMessages;
                         
                         if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
                        	{

@@ -28,11 +28,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected MessageMode()
+        public MessageMode()
         {
         }
 
-        protected MessageMode(Int64 value, String code, String description) : base(value, code, description)
+        public MessageMode(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 

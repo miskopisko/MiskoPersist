@@ -8,6 +8,7 @@ using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
+using System.ComponentModel;
 
 namespace MiskoPersist.Data
 {
@@ -19,9 +20,10 @@ namespace MiskoPersist.Data
 
         private static readonly JsonSerializerSettings settings = new JsonSerializerSettings()
         			{ 	
-        				TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple,
-        				TypeNameHandling = TypeNameHandling.Objects,
-						NullValueHandling = NullValueHandling.Ignore,
+                        TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple,
+                        TypeNameHandling = TypeNameHandling.Objects,
+                        NullValueHandling = NullValueHandling.Ignore,
+                        DateFormatString = "yyyy-MM-dd",
 						Formatting = Formatting.Indented
         			};
 
@@ -35,12 +37,13 @@ namespace MiskoPersist.Data
 
         #region Properties
 
-		public bool IsSet 
+        public bool IsSet 
         { 
         	get; 
         	set; 
         }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsNotSet 
         { 
         	get 
@@ -309,22 +312,7 @@ namespace MiskoPersist.Data
         
         public static String SerializeJson(Object obj)
         {
-        	String result = "";
-        	
-        	try
-        	{
-        		result = JsonConvert.SerializeObject(obj, settings);
-        	}
-        	catch(Exception e)
-        	{
-        		result = "Could not serialize object: " + obj.GetType().Name;
-        		
-        		#if DEBUG
-					Debug.WriteLine(e.StackTrace);
-				#endif
-        	}
-        	
-        	return result;
+        	return JsonConvert.SerializeObject(obj, settings);
         }
         
         public static Object DeserializeJson(String json)

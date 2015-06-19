@@ -2,15 +2,15 @@
 
 namespace MiskoPersist.Enums
 {
-    public class DataSource : AbstractEnum
+    public class ServerLocation : AbstractEnum
     {
         #region Fields
 
-        private static readonly DataSource mNULL_ = new DataSource(-1, "", "");
-        private static readonly DataSource mLocal_ = new DataSource(0, "", "Local");
-        private static readonly DataSource mOnline_ = new DataSource(1, "", "Online");
+        private static readonly ServerLocation mNULL_ = new ServerLocation(-1, "", "");
+        private static readonly ServerLocation mLocal_ = new ServerLocation(0, "", "Local");
+        private static readonly ServerLocation mOnline_ = new ServerLocation(1, "", "Online");
 
-        private static readonly DataSource[] mElements_ = new[]
+        private static readonly ServerLocation[] mElements_ = new[]
 		{
 		    mNULL_, mLocal_, mOnline_
 		};
@@ -19,20 +19,20 @@ namespace MiskoPersist.Enums
 
         #region Parameters
 
-        public static DataSource[] Elements { get { return mElements_; } }
-        public static DataSource NULL { get { return mNULL_; } }
-        public static DataSource Local { get { return mLocal_; } }
-        public static DataSource Online { get { return mOnline_; } }
+        public static ServerLocation[] Elements { get { return mElements_; } }
+        public static ServerLocation NULL { get { return mNULL_; } }
+        public static ServerLocation Local { get { return mLocal_; } }
+        public static ServerLocation Online { get { return mOnline_; } }
 
         #endregion
 
         #region Constructors
 
-        protected DataSource()
+        public ServerLocation()
         {
         }
 
-        protected DataSource(Int64 value, String code, String description) : base(value, code, description)
+        public ServerLocation(Int64 value, String code, String description) : base(value, code, description)
         {
         }
 
@@ -40,7 +40,7 @@ namespace MiskoPersist.Enums
 
         #region Helpers
 
-        public static DataSource GetElement(long index)
+        public static ServerLocation GetElement(long index)
         {
             for (int i = 0; Elements != null && i < Elements.Length; i++)
             {
@@ -53,7 +53,7 @@ namespace MiskoPersist.Enums
             return null;
         }
 
-        public static DataSource GetElement(String descriptionCode)
+        public static ServerLocation GetElement(String descriptionCode)
         {
             for (int i = 0; descriptionCode != null && Elements != null && i < Elements.Length; i++)
             {

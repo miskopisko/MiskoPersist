@@ -32,11 +32,11 @@ namespace MiskoPersist.Enums
 
         #region Constructors
 
-        protected SvnPropsStatusType()
+        public SvnPropsStatusType()
         {
         }
 
-        protected SvnPropsStatusType(Int64 id, String Code, String Description) : base(id, Code, Description)
+        public SvnPropsStatusType(Int64 id, String Code, String Description) : base(id, Code, Description)
         {
         }
 
