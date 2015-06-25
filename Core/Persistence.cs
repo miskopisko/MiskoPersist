@@ -5,13 +5,13 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
-using MySql.Data.MySqlClient;
-using Oracle.DataAccess.Client;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
 using MiskoPersist.Persistences;
 using MiskoPersist.Resources;
+using MySql.Data.MySqlClient;
+using Oracle.DataAccess.Client;
 
 namespace MiskoPersist.Core
 {
@@ -22,7 +22,7 @@ namespace MiskoPersist.Core
         #region Fields
 
         protected Session mSession_ = null;
-        protected DataTable mRs_ = new DataTable();
+        protected DataTable mRs_ = new DataTable("Unknown");
         protected DbCommand mCommand_ = null;
         protected String mSql_ = "";
         protected List<Object> mParameters_ = new List<Object>();
@@ -216,7 +216,7 @@ namespace MiskoPersist.Core
             
             mCommand_.Prepare();
 
-            Stopwatch timer = Stopwatch.StartNew();            
+            Stopwatch timer = Stopwatch.StartNew();
             DataAdapter.Fill(mRs_);
             timer.Stop();
             mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;

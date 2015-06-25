@@ -1,11 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
@@ -13,7 +12,6 @@ using MiskoPersist.Interfaces;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
 using MiskoPersist.Resources;
-using System.Web;
 
 namespace MiskoPersist.Core
 {
@@ -271,20 +269,23 @@ namespace MiskoPersist.Core
 
             try
             {
-                HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(url);
-
-                String postData = "request=" + HttpUtility.UrlEncode(AbstractData.SerializeJson(mRequest_));
-                byte[] data = Encoding.ASCII.GetBytes(postData);
-
+            	HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(url);                
+                httpRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
                 httpRequest.Method = "POST";
+                httpRequest.KeepAlive = true;
                 httpRequest.ContentType = "application/x-www-form-urlencoded";
-                httpRequest.ContentLength = data.Length;
-                httpRequest.GetRequestStream().Write(data, 0, data.Length);
 
-                HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-                String responseString = new StreamReader(httpResponse.GetResponseStream()).ReadToEnd();
-
-                responseMessage = (ResponseMessage)AbstractData.DeserializeJson(responseString);
+                using(StreamWriter writer = new StreamWriter(httpRequest.GetRequestStream()))
+                {
+                	String postData = "request=" + HttpUtility.UrlEncode(AbstractData.SerializeJson(mRequest_));
+                    writer.Write(postData);
+                }
+				
+                using(HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse())
+                {
+                	String responseString = new StreamReader(httpResponse.GetResponseStream()).ReadToEnd();	
+                	responseMessage = (ResponseMessage)AbstractData.DeserializeJson(responseString);
+                }                
             }
             catch(Exception ex)
             {

@@ -81,11 +81,11 @@ namespace MiskoPersist.Core
                         try
                         {
                             FileInfo OldLogFile = new FileInfo(OldLog);
-                            String oldLogFile = mBaseDir_.FullName + @"\" + OldLogFile.Name;
+                            String oldLogFile = mBaseDir_.FullName + Path.DirectorySeparatorChar + OldLogFile.Name;
 
                             while (File.Exists(oldLogFile))
                             {
-                                oldLogFile = mBaseDir_.FullName + @"\" + PREFIX + "_" + (Counter++).ToString().PadLeft(4, '0') + SUFFIX;
+                                oldLogFile = mBaseDir_.FullName + Path.DirectorySeparatorChar + PREFIX + "_" + (Counter++).ToString().PadLeft(4, '0') + SUFFIX;
                             }
 
                             File.Move(OldLog, oldLogFile);
@@ -100,7 +100,7 @@ namespace MiskoPersist.Core
                         try
                         {
                             FileInfo NewLogFile = new FileInfo(NewLog);
-                            String newLogFile = mBaseDir_.FullName + @"\" + NewLogFile.Name;
+                            String newLogFile = mBaseDir_.FullName + Path.DirectorySeparatorChar + NewLogFile.Name;
 
                             File.Move(NewLog, newLogFile);
                         }
@@ -170,27 +170,27 @@ namespace MiskoPersist.Core
                 {
                     try
                     {
-                        FileInfo log = new FileInfo(mBaseDir_.FullName + @"\" + PREFIX + SUFFIX);
+                        FileInfo log = new FileInfo(mBaseDir_.FullName + Path.DirectorySeparatorChar + PREFIX + SUFFIX);
                         TextWriter mLogger_ = null;
 
                         String Line = "";
 
                         if (log.Exists)
                         {
-                            StreamReader i = new StreamReader(mBaseDir_ + @"\" + PREFIX + SUFFIX);
+                            StreamReader i = new StreamReader(mBaseDir_ + Path.DirectorySeparatorChar.ToString() + PREFIX + SUFFIX);
                             String data = i.ReadToEnd().Trim();
                             i.Close();
 
-                            StreamWriter o = new StreamWriter(mBaseDir_ + @"\" + PREFIX + SUFFIX, false);
+                            StreamWriter o = new StreamWriter(mBaseDir_ + Path.DirectorySeparatorChar.ToString() + PREFIX + SUFFIX, false);
                             o.Write(data.Substring(0, data.Length - 10));
                             o.Close();
 
-                            mLogger_ = new StreamWriter(mBaseDir_ + @"\" + PREFIX + SUFFIX, true);
+                            mLogger_ = new StreamWriter(mBaseDir_ + Path.DirectorySeparatorChar.ToString() + PREFIX + SUFFIX, true);
                         }
 
                         if (!log.Exists) // Write the header if nothing exists or it was moved above.
                         {
-                            mLogger_ = new StreamWriter(mBaseDir_ + @"\" + PREFIX + SUFFIX, false);
+                            mLogger_ = new StreamWriter(mBaseDir_ + Path.DirectorySeparatorChar.ToString() + PREFIX + SUFFIX, false);
                             Line += "<?xml version='1.0' encoding='ISO-8859-1'?>\n";
                             Line += "<logfile>\n";
                         }
