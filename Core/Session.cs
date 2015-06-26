@@ -170,10 +170,6 @@ namespace MiskoPersist.Core
 
             if (!errorLevel.Equals(ErrorLevel.Warning) && !errorLevel.Equals(ErrorLevel.Information))
             {
-                if (errorLevel.Equals(ErrorLevel.Error))
-                {
-                    Log.Error(errorMessage.Message);
-                }
                 throw new MiskoException("Houston we have a problem!");
             }
         }

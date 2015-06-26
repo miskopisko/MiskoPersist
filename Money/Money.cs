@@ -25,7 +25,6 @@ namespace MiskoPersist.MoneyType
 
         [ThreadStatic]
         private static Random mRng_;
-        private Currency? mCurrency_;
         private Int64 mUnits_;
         private Int32 mDecimalFraction_;
 
@@ -35,32 +34,22 @@ namespace MiskoPersist.MoneyType
         
         public Decimal Value
         {
-        	get
-        	{
-        		return computeValue();
-        	}
-        	set
-        	{
-        		checkValue(value);
+            get
+            {
+                return computeValue();
+            }
+            set
+            {
+                checkValue(value);
 
-            	mUnits_ = (Int64)value;
-            	mDecimalFraction_ = (Int32)Decimal.Round((value - mUnits_) * FractionScale);
+                mUnits_ = (Int64)value;
+                mDecimalFraction_ = (Int32)Decimal.Round((value - mUnits_) * FractionScale);
 
-            	if (mDecimalFraction_ >= FractionScale)
-            	{
-                	mUnits_ += 1;
-                	mDecimalFraction_ = mDecimalFraction_ - (Int32)FractionScale;
-            	}
-
-            	mCurrency_ = Currency.FromCurrentCulture();;
-        	}
-        }
-
-        public Currency Currency
-        {
-            get 
-            { 
-            	return mCurrency_.GetValueOrDefault(Currency.FromCurrentCulture()); 
+                if (mDecimalFraction_ >= FractionScale)
+                {
+                    mUnits_ += 1;
+                    mDecimalFraction_ = mDecimalFraction_ - (Int32)FractionScale;
+                }
             }
         }
 
@@ -88,17 +77,10 @@ namespace MiskoPersist.MoneyType
         {
         }
 
-        public Money(Decimal value, Currency currency)
-            : this(value)
-        {
-            mCurrency_ = currency;
-        }
-
-        private Money(Int64 units, Int32 fraction, Currency currency)
+        private Money(Int64 units, Int32 fraction)
         {
             mUnits_ = units;
             mDecimalFraction_ = fraction;
-            mCurrency_ = currency;
         }
 
         #endregion
@@ -167,7 +149,7 @@ namespace MiskoPersist.MoneyType
 
         public static Money operator -(Money value)
         {
-            return new Money(-value.mUnits_, -value.mDecimalFraction_, value.Currency);
+            return new Money(-value.mUnits_, -value.mDecimalFraction_);
         }
 
         public static Money operator +(Money value)
@@ -180,10 +162,7 @@ namespace MiskoPersist.MoneyType
             if (object.ReferenceEquals(left, null)) left = Money.ZERO;
             if (object.ReferenceEquals(right, null)) right = Money.ZERO;
 
-            if (left.Currency != right.Currency)
-            {
-                throw differentCurrencies();
-            }
+
 
             var fractionSum = left.mDecimalFraction_ + right.mDecimalFraction_;
 
@@ -207,19 +186,13 @@ namespace MiskoPersist.MoneyType
             }
 
             return new Money(newUnits,
-                             fractionSum,
-                             left.Currency);
+                             fractionSum);
         }
 
         public static Money operator -(Money left, Money right)
         {
             if (object.ReferenceEquals(left, null)) left = Money.ZERO;
             if (object.ReferenceEquals(right, null)) right = Money.ZERO;
-
-            if (left.Currency != right.Currency)
-            {
-                throw differentCurrencies();
-            }
 
             return left + -right;
         }
@@ -311,7 +284,7 @@ namespace MiskoPersist.MoneyType
                 return false;
             }
 
-            money = currency != null ? new Money(value, currency.Value) : new Money(value);
+            money = currency != null ? new Money(value) : new Money(value);
 
             return true;
         }
@@ -334,9 +307,9 @@ namespace MiskoPersist.MoneyType
             var placesExponent = getExponentFromPlaces(places);
             var fraction = roundFraction(placesExponent, rounding, out unit);
             var units = mUnits_ + unit;
-            remainder = new Money(0, mDecimalFraction_ - fraction, Currency);
+            remainder = new Money(0, mDecimalFraction_ - fraction);
 
-            return new Money(units, fraction, Currency);
+            return new Money(units, fraction);
         }
 
         private Int32 roundFraction(Int32 exponent, MidpointRoundingRule rounding, out Int64 unit)
@@ -452,22 +425,6 @@ namespace MiskoPersist.MoneyType
             }
         }
 
-        private void checkCurrencies(Money other)
-        {
-            if (other.Currency != Currency)
-            {
-                throw differentCurrencies();
-            }
-        }
-
-        private String getDebugView()
-        {
-            return ToString() +
-                   String.Format(" ({0} {1})",
-                                 ToDecimal(CultureInfo.CurrentCulture),
-                                 Currency == Currency.None ? "<Unspecified Currency>" : Currency.Name);
-        }
-
         #endregion
 
         #region Override Methods
@@ -476,7 +433,7 @@ namespace MiskoPersist.MoneyType
         {
             unchecked
             {
-                return (397 * mUnits_.GetHashCode()) ^ mCurrency_.GetHashCode();
+                return (397 * mUnits_.GetHashCode());
             }
         }
 
@@ -493,12 +450,12 @@ namespace MiskoPersist.MoneyType
 
         public override String ToString()
         {
-            return computeValue().ToString("C", (IFormatProvider)mCurrency_ ?? NumberFormatInfo.CurrentInfo);
+            return computeValue().ToString("C", NumberFormatInfo.CurrentInfo);
         }
 
         public String ToString(String format)
         {
-            return computeValue().ToString(format, (IFormatProvider)mCurrency_ ?? NumberFormatInfo.CurrentInfo);
+            return computeValue().ToString(format, NumberFormatInfo.CurrentInfo);
         }
 
         #endregion
@@ -512,8 +469,6 @@ namespace MiskoPersist.MoneyType
                 return false;
             }
 
-            checkCurrencies(other);
-
             return mUnits_ == other.mUnits_ &&
                    mDecimalFraction_ == other.mDecimalFraction_;
         }
@@ -524,8 +479,6 @@ namespace MiskoPersist.MoneyType
 
         public Int32 CompareTo(Money other)
         {
-            checkCurrencies(other);
-
             var unitCompare = mUnits_.CompareTo(other.mUnits_);
 
             return unitCompare == 0

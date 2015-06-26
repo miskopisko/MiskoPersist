@@ -56,7 +56,7 @@ namespace MiskoPersist.MoneyType
             var distributionCount = (Int32)Math.Floor(1 / distribution);
             var result = new Money[distributionCount];
 
-            _distributedTotal = new Money(0, _toDistribute.Currency);
+            _distributedTotal = new Money(0.00);
             decimal quantum = (Decimal)Math.Pow(10, -(Int32)_precision);
 
             for (int i = 0; i < distributionCount; i++)

@@ -16,7 +16,7 @@ namespace MiskoPersist.Core
         private const String WARN = "WARN";
         private const String ERROR = "ERROR";
 
-        private const String PREFIX = "GENERAL";
+        private const String PREFIX = "GENERAL_LOG";
         private const String SUFFIX = ".xml";
 
         private readonly Type mClass_;
@@ -197,7 +197,7 @@ namespace MiskoPersist.Core
 
                         if (mLogger_ != null && message != null)
                         {
-                            String Date = DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss");
+                            String Date = DateTime.Now.ToString("yyyy'-'MM'-'dd' @ 'HH':'mm':'ss");
                             String Level = level;
 
                             Line += "\t<log timestamp='" + Date + "' level='" + Level + "' class='" + mClass_.FullName + "' machine='" + Environment.MachineName + "'>\n";
