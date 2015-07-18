@@ -1,9 +1,9 @@
 using System;
 using System.Reflection;
+using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MiskoPersist.Attributes;
 
 namespace MiskoPersist.Data
 {

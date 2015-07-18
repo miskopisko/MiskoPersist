@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
@@ -47,10 +48,10 @@ namespace MiskoPersist.Persistences
 
         #region Override Methods
 
-        protected override void SetParameters(Object[] parameters)
+        protected override void SetParameters()
         {
             Int32 position = 0;
-            foreach (Object parameter in parameters)
+            foreach (Object parameter in mParameters_)
             {
                 OleDbParameter param = new OleDbParameter();
                 param.ParameterName = position.ToString();
@@ -167,11 +168,6 @@ namespace MiskoPersist.Persistences
         protected override void GenerateInsertStatement(AbstractStoredData clazz, Type type)
         {
             throw new MiskoException("FoxPro INSERTSs are implemented on a class by class basis by overriding the Create(session) method");
-        }
-
-        protected override string GenerateCreateTableStatement(Type type)
-        {
-            throw new MiskoException("Automated CREATE TABLE statements for FoxPro are not supported at this time");
         }
 
         #endregion

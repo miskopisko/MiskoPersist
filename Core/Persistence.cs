@@ -212,7 +212,7 @@ namespace MiskoPersist.Core
             mParameters_ = new List<object>(parameters);
 
             mCommand_.CommandText = mSql_;
-            SetParameters(parameters);
+            SetParameters();
             
             mCommand_.Prepare();
 
@@ -276,7 +276,7 @@ namespace MiskoPersist.Core
 
             mCommand_.CommandText = mSql_;
             mCommand_.CommandType = CommandType.StoredProcedure;
-            SetParameters(parameters);
+            SetParameters();
             
             mCommand_.Prepare();
             
@@ -383,7 +383,7 @@ namespace MiskoPersist.Core
             mParameters_ = new List<object>(parameters);
 
             mCommand_.CommandText = mSql_;
-            SetParameters(parameters);
+            SetParameters();
             
             mCommand_.Prepare();
 
@@ -400,11 +400,10 @@ namespace MiskoPersist.Core
         #region Abstract Methods
 
         protected abstract DbDataAdapter DataAdapter { get; }
-        protected abstract void SetParameters(Object[] parameters);
+        protected abstract void SetParameters();
         protected abstract void GenerateUpdateStatement(AbstractStoredData clazz, Type type);
         protected abstract void GenerateDeleteStatement(AbstractStoredData clazz, Type type);
         protected abstract void GenerateInsertStatement(AbstractStoredData clazz, Type type);
-        protected abstract String GenerateCreateTableStatement(Type type);
 
         #endregion
 

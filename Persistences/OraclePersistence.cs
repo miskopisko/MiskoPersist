@@ -49,7 +49,7 @@ namespace MiskoPersist.Persistences
 
         #region Public Methods
 
-        protected override void SetParameters(Object[] parameters)
+        protected override void SetParameters()
         {
             // Normalize the parameters by replacing typical ? marks with @param values
             Int32 end = 0;
@@ -61,7 +61,7 @@ namespace MiskoPersist.Persistences
             }
 
             position = 0;
-            foreach (Object parameter in parameters)
+            foreach (Object parameter in mParameters_)
             {
                 OracleParameter param = new OracleParameter();
                 param.ParameterName = ":param" + position;
@@ -142,28 +142,25 @@ namespace MiskoPersist.Persistences
         {
             if (clazz != null)
             {
-                String sql = "";
-                List<Object> parameters = new List<Object>();
+                mSql_ += "UPDATE " + type.Name.ToUpper() + Environment.NewLine + "SET    ";
 
-                sql += "UPDATE " + type.Name.ToUpper() + Environment.NewLine + "SET    ";
-
-                foreach (PropertyInfo property in clazz.GetStoredProperties(type))
+                foreach (PropertyInfo property in AbstractData.GetStoredProperties(type))
                 {
-                    sql += clazz.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
-                    parameters.Add(property.GetValue(clazz, null));
+                    mSql_ += clazz.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
+                    mParameters_.Add(property.GetValue(clazz, null));
                 }
                 
-                sql += "DTMODIFIED = SYSDATE," + Environment.NewLine;
-                sql += "       ROWVER = ?" + Environment.NewLine;
-                sql += "WHERE  ID = ?" + Environment.NewLine;
-                sql += "AND    ROWVER = ?";
+                mSql_ += "DTMODIFIED = SYSDATE," + Environment.NewLine;
+                mSql_ += "       ROWVER = ?" + Environment.NewLine;
+                mSql_ += "WHERE  ID = ?" + Environment.NewLine;
+                mSql_ += "AND    ROWVER = ?";
 
-                parameters.Add(clazz.RowVer);
-                parameters.Add(clazz.Id);
-                parameters.Add(clazz.RowVer - 1);
+                mParameters_.Add(clazz.RowVer);
+                mParameters_.Add(clazz.Id);
+                mParameters_.Add(clazz.RowVer - 1);
 
-                mCommand_.CommandText = sql;
-                SetParameters(parameters.ToArray());
+                mCommand_.CommandText = mSql_;
+                SetParameters();
             }
         }
 
@@ -171,19 +168,16 @@ namespace MiskoPersist.Persistences
         {
             if (clazz != null)
             {
-                String sql = "";
-                List<Object> parameters = new List<Object>();
+                mSql_ += "DELETE" + Environment.NewLine;
+                mSql_ += "FROM   " + type.Name.ToUpper() + Environment.NewLine;
+                mSql_ += "WHERE  ID = ?" + Environment.NewLine;
+                mSql_ += "AND    ROWVER = ?";
 
-                sql += "DELETE" + Environment.NewLine;
-                sql += "FROM   " + type.Name.ToUpper() + Environment.NewLine;
-                sql += "WHERE  ID = ?" + Environment.NewLine;
-                sql += "AND    ROWVER = ?";
+                mParameters_.Add(-clazz.Id);
+                mParameters_.Add(clazz.RowVer);
 
-                parameters.Add(-clazz.Id);
-                parameters.Add(clazz.RowVer);
-
-                mCommand_.CommandText = sql;
-                SetParameters(parameters.ToArray());
+                mCommand_.CommandText = mSql_;
+                SetParameters();
             }
         }
 
@@ -191,55 +185,48 @@ namespace MiskoPersist.Persistences
         {
             if (clazz != null)
             {
-                String sql = "";
-                List<Object> parameters = new List<Object>();
-                PropertyInfo[] properties = clazz.GetStoredProperties(type);
+                List<PropertyInfo> properties = AbstractData.GetStoredProperties(type);
 
-                sql += "INSERT INTO " + type.Name.ToUpper() + " (ID";
+                mSql_ += "INSERT INTO " + type.Name.ToUpper() + " (ID";
 
                 foreach (PropertyInfo property in properties)
                 {
-                    sql += ", " + clazz.GetColumnName(property).ToUpper();
+                    mSql_ += ", " + clazz.GetColumnName(property).ToUpper();
                 }
 
-                sql += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (";
+                mSql_ += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (";
 
                 if (type.BaseType.Equals(typeof(AbstractStoredData)))
                 {
-                    sql += "SQ_" + type.Name.ToUpper() + ".NEXTVAL, ";
+                    mSql_ += "SQ_" + type.Name.ToUpper() + ".NEXTVAL, ";
                 }
                 else
                 {
-                    sql += "?, ";
-                    parameters.Add(clazz.Id);
+                    mSql_ += "?, ";
+                    mParameters_.Add(clazz.Id);
                 }
 
                 foreach (PropertyInfo property in properties)
                 {
-                    sql += "?, ";
-                    parameters.Add(property.GetValue(clazz, null));
+                    mSql_ += "?, ";
+                    mParameters_.Add(property.GetValue(clazz, null));
                 }
 
-                sql += "SYSDATE, SYSDATE, 0)";
+                mSql_ += "SYSDATE, SYSDATE, 0)";
 
                 if (type.BaseType.Equals(typeof(AbstractStoredData)))
                 {
-                    sql += Environment.NewLine + "RETURNING ID INTO :LASTID";
+                    mSql_ += Environment.NewLine + "RETURNING ID INTO :LASTID";
                 }
                 else
                 {
-                    sql += Environment.NewLine + "RETURNING ? INTO :LASTID";
-                    parameters.Add(clazz.Id);
+                    mSql_ += Environment.NewLine + "RETURNING ? INTO :LASTID";
+                    mParameters_.Add(clazz.Id);
                 }
 
-                mCommand_.CommandText = sql;
-                SetParameters(parameters.ToArray());
+                mCommand_.CommandText = mSql_;
+                SetParameters();
             }
-        }
-
-        protected override string GenerateCreateTableStatement(Type type)
-        {
-            throw new NotImplementedException();
         }
 
         #endregion

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters;
 using Newtonsoft.Json;
@@ -8,26 +10,13 @@ using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
-using System.ComponentModel;
+using System.Text;
 
 namespace MiskoPersist.Data
 {
     public class AbstractData
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractData));
-
-        #region Constants
-
-        private static readonly JsonSerializerSettings settings = new JsonSerializerSettings()
-        			{ 	
-                        TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple,
-                        TypeNameHandling = TypeNameHandling.Objects,
-                        NullValueHandling = NullValueHandling.Ignore,
-                        DateFormatString = "yyyy-MM-dd",
-						Formatting = Formatting.Indented
-        			};
-
-        #endregion
 
         #region Fields
 
@@ -84,17 +73,17 @@ namespace MiskoPersist.Data
         {
             if (persistence.Next())
             {
-                PropertyInfo[] properties = null;
+                List<PropertyInfo> properties = null;
                 if(this is AbstractStoredData)
                 {
-                    properties = GetStoredProperties();
+                	properties = GetStoredProperties(GetType());
 
                     ((AbstractStoredData)this).Id = persistence.GetPrimaryKey("Id");
                     ((AbstractStoredData)this).RowVer = persistence.GetLong("RowVer").HasValue ? persistence.GetLong("RowVer").Value : 0;
                 }
                 else if(this is AbstractViewedData)
                 {
-                    properties = GetViewedProperties();
+                	properties = GetViewedProperties(GetType());
                 }
                 
                 IsSet = true;
@@ -214,7 +203,7 @@ namespace MiskoPersist.Data
 
         public void FetchDeep(Session session)
         {
-            foreach (PropertyInfo property in GetStoredProperties(GetType()))
+        	foreach (PropertyInfo property in GetStoredProperties(GetType()))
             {
                 if (property.PropertyType.IsSubclassOf(typeof(AbstractStoredData)))
                 {
@@ -249,26 +238,7 @@ namespace MiskoPersist.Data
             return property.Name;
         }
 
-        protected internal PropertyInfo[] GetStoredProperties()
-        {
-            PropertyInfo[] properties = GetType().GetProperties();
-
-            List<PropertyInfo> storedProperties = new List<PropertyInfo>();
-            foreach (PropertyInfo property in properties)
-            {
-                foreach (Attribute attribute in property.GetCustomAttributes(false))
-                {
-                    if (attribute is StoredAttribute && ((StoredAttribute)attribute).UseInSql)
-                    {
-                        storedProperties.Add(property);
-                    }
-                }
-            }
-
-            return storedProperties.ToArray();
-        }
-
-        protected internal PropertyInfo[] GetStoredProperties(Type type)
+        protected internal static List<PropertyInfo> GetStoredProperties(Type type)
         {
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
@@ -284,12 +254,12 @@ namespace MiskoPersist.Data
                 }
             }
 
-            return storedProperties.ToArray();
+            return storedProperties;
         }
 
-        protected internal PropertyInfo[] GetViewedProperties()
+        protected internal static List<PropertyInfo> GetViewedProperties(Type type)
         {
-            PropertyInfo[] properties = GetType().GetProperties();
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
             List<PropertyInfo> viewedProperties = new List<PropertyInfo>();
             foreach (PropertyInfo property in properties)
@@ -303,23 +273,9 @@ namespace MiskoPersist.Data
                 }
             }
 
-            return viewedProperties.ToArray();
+            return viewedProperties;
         }
 
         #endregion     
-        
-        #region JSON Serialization
-        
-        public static String SerializeJson(Object obj)
-        {
-        	return JsonConvert.SerializeObject(obj, settings);
-        }
-        
-        public static Object DeserializeJson(String json)
-        {
-        	return JsonConvert.DeserializeObject(json, settings);
-        }
-        
-        #endregion
     }
 }

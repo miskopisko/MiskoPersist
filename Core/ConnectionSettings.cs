@@ -85,7 +85,7 @@ namespace MiskoPersist.Core
         {
             if (AlreadyExists(name))
             {
-                throw new MiskoException("A connection with the name {0} already exists", new String[] { name });
+            	return;
             }
 
             ConnectionSettings item = new ConnectionSettings();
@@ -110,7 +110,7 @@ namespace MiskoPersist.Core
         {
             if (AlreadyExists(name))
             {
-                throw new MiskoException("A connection with the name {0} already exists", new String[] { name });
+            	return;
             }
 
             ConnectionSettings item = new ConnectionSettings();
@@ -135,7 +135,7 @@ namespace MiskoPersist.Core
         {
             if (AlreadyExists(name))
             {
-                throw new MiskoException("A connection with the name {0} already exists", new String[] { name });
+            	return;
             }
 
             ConnectionSettings item = new ConnectionSettings();
@@ -160,7 +160,7 @@ namespace MiskoPersist.Core
         {
             if (AlreadyExists(name))
             {
-                throw new MiskoException("A connection with the name {0} already exists", new String[] { name });
+            	return;
             }
 
             ConnectionSettings item = new ConnectionSettings();
@@ -185,7 +185,7 @@ namespace MiskoPersist.Core
         {
             if (AlreadyExists(name))
             {
-                throw new MiskoException("A connection with the name {0} already exists", new String[] { name });
+            	return;
             }
 
             ConnectionSettings item = new ConnectionSettings();

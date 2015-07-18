@@ -6,7 +6,6 @@ using System.Net;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
-using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Interfaces;
 using MiskoPersist.Message.Request;
@@ -101,7 +100,7 @@ namespace MiskoPersist.Core
 			Invoke(method);
 			
 			#if DEBUG
-				Debug.WriteLine(AbstractData.SerializeJson(mRequest_));
+                Debug.WriteLine(mRequest_.Serialize());
             #endif
 			
             ResponseMessage response = null;
@@ -115,7 +114,7 @@ namespace MiskoPersist.Core
             }
 
 			#if DEBUG
-				Debug.WriteLine(AbstractData.SerializeJson(response));
+                Debug.WriteLine(response.Serialize());
             #endif
                 
             if(HandleErrors(response.ErrorMessages))
@@ -195,12 +194,12 @@ namespace MiskoPersist.Core
                         {
                             errorMessage.Confirmed = true;
                             
-                            if(mRequest_.Confirms == null)
+                            if(mRequest_.Confirmations == null)
                             {
-                            	mRequest_.Confirms = new ErrorMessages();
+                                mRequest_.Confirmations = new ErrorMessages();
                             }
                             
-                            mRequest_.Confirms.Add(errorMessage);
+                            mRequest_.Confirmations.Add(errorMessage);
                             ServerConnection.SendRequest(mRequest_, mSuccessHandler_, mErrorHandler_);
                             continueProcessing = false;
                             break;
@@ -277,14 +276,17 @@ namespace MiskoPersist.Core
 
                 using(StreamWriter writer = new StreamWriter(httpRequest.GetRequestStream()))
                 {
-                	String postData = "request=" + HttpUtility.UrlEncode(AbstractData.SerializeJson(mRequest_));
+                    String postData = "request=" + HttpUtility.UrlEncode(mRequest_.Serialize());
                     writer.Write(postData);
                 }
 				
                 using(HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse())
                 {
-                	String responseString = new StreamReader(httpResponse.GetResponseStream()).ReadToEnd();	
-                	responseMessage = (ResponseMessage)AbstractData.DeserializeJson(responseString);
+                    using (Stream stream = httpResponse.GetResponseStream())
+                    {
+                        using(StreamReader reader = new StreamReader(stream))
+                        responseMessage = ResponseMessage.Deserialize(reader.ReadToEnd());
+                    }
                 }                
             }
             catch(Exception ex)

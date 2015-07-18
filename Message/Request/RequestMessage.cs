@@ -1,14 +1,19 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization.Formatters;
+using System.Text;
+using Message;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using Newtonsoft.Json;
-using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Message.Request
 {
     [JsonConverter(typeof(RequestSerializer))]
-    public class RequestMessage
+    public class RequestMessage : CoreMessage
     {
         private static Logger Log = Logger.GetInstance(typeof(RequestMessage));
 
@@ -37,18 +42,6 @@ namespace MiskoPersist.Message.Request
         	get;
         	set; 
         }
-        
-        public Page Page 
-        { 
-        	get;
-        	set; 
-        }
-        
-        public ErrorMessages Confirms
-        {
-        	get;
-        	set;
-        }
 
         #endregion
 
@@ -63,10 +56,27 @@ namespace MiskoPersist.Message.Request
 
         #endregion
 
-        #region Private Properties
+        #region Serialization
 
-        
-        
+        public static RequestMessage Deserialize(String json)
+        {
+            RequestMessage requestMessage;
+
+            using (StreamReader sr = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(json ?? ""))))
+            using (JsonReader reader = new JsonTextReader(sr))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple;
+                serializer.TypeNameHandling = TypeNameHandling.Objects;
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+                serializer.DateFormatString = "yyyy-MM-dd";
+                serializer.Formatting = Formatting.Indented;
+                requestMessage = serializer.Deserialize<RequestMessage>(reader);
+            }
+
+            return requestMessage;
+        }
+
         #endregion
     }
 
@@ -113,10 +123,10 @@ namespace MiskoPersist.Message.Request
                 serializer.Serialize(writer, request.Page);
             }
 
-            if(request.Confirms != null && request.Confirms.Count > 0)
+            if(request.Confirmations != null && request.Confirmations.Count > 0)
             {
-                writer.WritePropertyName("Confirms");
-                serializer.Serialize(writer, request.Confirms);
+                writer.WritePropertyName("Confirmations");
+                serializer.Serialize(writer, request.Confirmations);
             }
 
             writer.WriteEndObject();
@@ -124,7 +134,20 @@ namespace MiskoPersist.Message.Request
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            JObject jsonObject = JObject.Load(reader);
+
+            RequestMessage request = (RequestMessage)Activator.CreateInstance(Type.GetType((String)jsonObject["$type"]));
+
+            foreach(PropertyInfo property in request.GetType().GetProperties())
+            {
+                JToken token = jsonObject.GetValue(property.Name);
+                if(token != null)
+                {
+                    property.SetValue(request, serializer.Deserialize(token.CreateReader(), property.PropertyType));    
+                }
+            }
+
+            return request;
         }
 
         public override bool CanConvert(Type objectType)

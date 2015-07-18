@@ -27,7 +27,7 @@ namespace MiskoPersist.Core
         
         public static ResponseMessage Process(String request)
         {
-        	return Process((RequestMessage)AbstractData.DeserializeJson(request));
+            return Process(RequestMessage.Deserialize(request));
         }
 
         public static ResponseMessage Process(RequestMessage request)
@@ -36,7 +36,6 @@ namespace MiskoPersist.Core
             {
                 ResponseMessage response = new ResponseMessage();
                 MessageWrapper wrapper = null;
-                DateTime startTime = DateTime.Now;
                 Session session = new Session();				
                 	
                 try
@@ -72,7 +71,7 @@ namespace MiskoPersist.Core
 
                     session.Connection = ServiceLocator.GetConnection(request.Connection);
                 	session.MessageMode = request.MessageMode;
-					session.ErrorMessages.AddRange(request.Confirms);
+                    session.ErrorMessages.AddRange(request.Confirmations);
                     session.BeginTransaction();
 
                     Stopwatch watch = Stopwatch.StartNew();
