@@ -176,31 +176,6 @@ namespace MiskoPersist.Core
             mConnections_.Add(item);            
         }
 
-        public static void AddSvnConnection(String workingCopy)
-        {
-            AddSvnConnection("Default", workingCopy);
-        }
-
-        public static void AddSvnConnection(String name, String workingCopy)
-        {
-            if (AlreadyExists(name))
-            {
-            	return;
-            }
-
-            ConnectionSettings item = new ConnectionSettings();
-            item.Name = name;
-            item.ConnectionType = ConnectionType.SVN;
-            item.Server = null;
-            item.Port = null;
-            item.Datasource = workingCopy;
-            item.Username = null;
-            item.Password = null;
-            item.ConnectionString = workingCopy;
-
-            mConnections_.Add(item);  
-        }
-
         public static ConnectionSettings GetConnectionSettings(String name)
         {
             foreach (ConnectionSettings item in mConnections_)

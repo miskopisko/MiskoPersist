@@ -61,7 +61,13 @@ namespace MiskoPersist.Core
                     	}
                     	else
                     	{
-                    		obj = Activator.CreateInstance(property.PropertyType);
+							try
+							{
+								obj = Activator.CreateInstance(property.PropertyType);
+							}
+							catch
+							{
+							}
                     	}
                     	
                     	property.SetValue(response, obj);

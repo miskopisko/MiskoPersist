@@ -4,7 +4,6 @@ using System.Data.OleDb;
 using System.Data.SQLite;
 using MiskoPersist.Enums;
 using MiskoPersist.Resources;
-using MiskoPersist.SVN;
 using MySql.Data.MySqlClient;
 using Oracle.DataAccess.Client;
 
@@ -44,10 +43,6 @@ namespace MiskoPersist.Core
             else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.FoxPro))
             {
                 return GetFoxProConnection(connectionSettings.ConnectionString);
-            }
-            else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.SVN))
-            {
-                return GetSvnConnection(connectionSettings.ConnectionString);
             }
             else
             {
@@ -97,20 +92,6 @@ namespace MiskoPersist.Core
 			command.CommandText = "SET EXCLUSIVE OFF";
 			command.ExecuteNonQuery();
 			
-            return connection;
-        }
-
-        private static DbConnection GetSvnConnection(String connectionString)
-        {
-            DbConnection connection = SvnConnectionPool.GetByConnectionString(connectionString);
-
-            if(connection == null)
-            {
-                connection = new SvnConnection(connectionString);
-                connection.Open();
-                SvnConnectionPool.AddConnection((SvnConnection)connection);
-            }
-
             return connection;
         }
 

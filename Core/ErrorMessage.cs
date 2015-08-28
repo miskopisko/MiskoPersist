@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
@@ -80,8 +81,24 @@ namespace MiskoPersist.Core
         }
 
         public ErrorMessage(Exception e) 
-        	: this(e.TargetSite.DeclaringType, e.TargetSite, ErrorLevel.Error, e.Message, null)
         {
+        	IsSet = true;
+        	
+        	if(e.TargetSite == null)
+        	{
+        		StackFrame stackFrame = new StackFrame(1);
+        		Class = stackFrame.GetMethod().DeclaringType.Name;
+            	Method = stackFrame.GetMethod().Name;
+        	}
+			else
+			{
+				Class = e.TargetSite.DeclaringType.Name;
+				Method = e.TargetSite.Name;
+			}
+        	
+            ErrorLevel = ErrorLevel.Error;
+            mErrorMessage_ = e.Message;
+            Parameters = null;
         }
 
         public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message) 
