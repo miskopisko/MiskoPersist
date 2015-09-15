@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using MiskoPersist.Core;
@@ -177,9 +176,9 @@ namespace MiskoPersist.Persistences
             {
                 mSql_ += "UPDATE " + type.Name + Environment.NewLine + "SET    ";
 
-                foreach (PropertyInfo property in AbstractData.GetStoredProperties(type))
+                foreach (PropertyInfo property in AbstractData.GetProperties(type))
                 {
-                    mSql_ += clazz.GetColumnName(property) + " = ?, " + Environment.NewLine + "       ";
+                    mSql_ += AbstractData.GetColumnName(property) + " = ?, " + Environment.NewLine + "       ";
                     mParameters_.Add(property.GetValue(clazz, null));
                 }
 
@@ -218,13 +217,13 @@ namespace MiskoPersist.Persistences
         {
             if (clazz != null)
             {
-                List<PropertyInfo> properties = AbstractData.GetStoredProperties(type);
+                List<PropertyInfo> properties = AbstractData.GetProperties(type);
 
                 mSql_ += "INSERT INTO " + type.Name + " (ID";
 
                 foreach (PropertyInfo property in properties)
                 {
-                    mSql_ += ", " + clazz.GetColumnName(property);
+                    mSql_ += ", " + AbstractData.GetColumnName(property);
                 }
 
                 mSql_ += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (?, ";

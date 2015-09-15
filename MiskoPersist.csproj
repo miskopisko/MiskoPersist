@@ -107,6 +107,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\ServerConnection.cs" />
+    <Compile Include="Data\ErrorMessage.cs" />
+    <Compile Include="Data\ErrorMessages.cs" />
     <Compile Include="Enums\MessageStatus.cs" />
     <Compile Include="Interfaces\IOController.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />
@@ -125,8 +127,6 @@
     <Compile Include="Data\AbstractViewedDataList.cs">
     </Compile>
     <Compile Include="Enums\MessageMode.cs" />
-    <Compile Include="Core\ErrorMessage.cs" />
-    <Compile Include="Core\ErrorMessages.cs" />
     <Compile Include="Core\Logger.cs" />
     <Compile Include="Core\MessageProcessor.cs" />
     <Compile Include="Message\MessageWrapper.cs" />

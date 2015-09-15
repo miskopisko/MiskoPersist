@@ -144,9 +144,9 @@ namespace MiskoPersist.Persistences
             {
                 mSql_ += "UPDATE " + type.Name.ToUpper() + Environment.NewLine + "SET    ";
 
-                foreach (PropertyInfo property in AbstractData.GetStoredProperties(type))
+                foreach (PropertyInfo property in AbstractData.GetProperties(type))
                 {
-                    mSql_ += clazz.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
+                    mSql_ += AbstractData.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
                     mParameters_.Add(property.GetValue(clazz, null));
                 }
                 
@@ -181,17 +181,17 @@ namespace MiskoPersist.Persistences
             }
         }
 
-        protected override void GenerateInsertStatement(AbstractStoredData clazz, Type type)
+		protected override void GenerateInsertStatement(AbstractStoredData clazz, Type type)
         {
             if (clazz != null)
             {
-                List<PropertyInfo> properties = AbstractData.GetStoredProperties(type);
+                List<PropertyInfo> properties = AbstractData.GetProperties(type);
 
                 mSql_ += "INSERT INTO " + type.Name.ToUpper() + " (ID";
 
                 foreach (PropertyInfo property in properties)
                 {
-                    mSql_ += ", " + clazz.GetColumnName(property).ToUpper();
+                    mSql_ += ", " + AbstractData.GetColumnName(property).ToUpper();
                 }
 
                 mSql_ += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (";

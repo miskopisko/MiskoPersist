@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
-using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
-{	
+{
     public abstract class AbstractStoredData : AbstractData
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractStoredData));
@@ -47,12 +46,26 @@ namespace MiskoPersist.Data
 
         protected AbstractStoredData(Session session, Persistence persistence)
         {
-            Set(session, persistence);
+        	Set(session, persistence);
         }
 
         #endregion
 
         #region Override Methods
+        
+		public new AbstractStoredData Set(Session session, Persistence persistence)
+		{
+			IsSet = persistence.Next();
+			
+			if(IsSet)
+            {
+				Id = persistence.GetPrimaryKey("Id");
+            	RowVer = persistence.GetLong("RowVer").HasValue ? persistence.GetLong("RowVer").Value : 0;            	
+            	base.Set(session, persistence);
+			}
+			
+			return this;
+		}
 
         public override string ToString()
         {
@@ -159,7 +172,7 @@ namespace MiskoPersist.Data
 
             Persistence p = Persistence.GetInstance(session);
             p.ExecuteQuery(BuildSelectStatement(), new Object[] { Math.Abs(id.Value) });
-            Set(session, p, deep);
+            Set(session, p);
             p.Close();
             p = null;
 
@@ -190,6 +203,39 @@ namespace MiskoPersist.Data
             }            
 
             return this;
+        }
+        
+        public virtual void Fetch(Session session)
+        {
+        	Fetch(session, false);
+        }
+        
+        public virtual void Fetch(Session session, bool deep)
+        {
+        	if (!IsSet && Id != null)
+	        {
+	            FetchById(session, Id, deep);
+	        }
+	
+	        if (deep)
+	        {
+	            FetchDeep(session);
+	        }
+        }
+        
+        public virtual void FetchDeep(Session session)
+        {
+        	foreach (PropertyInfo property in GetProperties(GetType()))
+            {
+                if (property.PropertyType.IsSubclassOf(typeof(AbstractStoredData)))
+                {
+                    AbstractStoredData item = (AbstractStoredData)property.GetValue(this, null);
+                    if (item != null && item.Id > 0 && item.IsNotSet)
+                    {
+                        item.FetchById(session, item.Id, true);
+                    }
+                }
+            }
         }
 
         #endregion

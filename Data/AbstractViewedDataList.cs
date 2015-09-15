@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
-using System.Xml;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractViewedDataList<AbstractViewedData> : BindingList<AbstractViewedData>
+    public class AbstractViewedDataList<T> : BindingList<T> where T : AbstractViewedData, new()
     {
-        private static Logger Log = Logger.GetInstance(typeof(AbstractViewedDataList<AbstractViewedData>));
-
         #region Fields
 
         protected bool mIsSorted_;
@@ -28,10 +24,6 @@ namespace MiskoPersist.Data
         #region Constructors
 
         public AbstractViewedDataList()
-        {
-        }
-
-        public AbstractViewedDataList(IList<AbstractViewedData> list) : base(list)
         {
         }
         
@@ -67,8 +59,9 @@ namespace MiskoPersist.Data
 
             for (int i = 0; (noRows == 0 || i < noRows) && persistence.HasNext; i++)
             {
-                ConstructorInfo ctor = typeof(AbstractViewedData).GetConstructor(new[] { typeof(Session), typeof(Persistence) });
-                Add((AbstractViewedData)ctor.Invoke(new object[] { session, persistence }));
+                T data = new T();
+                data.Set(session, persistence);
+                Add(data);
             }
 
             if(page.IncludeRecordCount)
@@ -80,20 +73,15 @@ namespace MiskoPersist.Data
         public void FetchAll(Session session)
         {
             Persistence persistence = Persistence.GetInstance(session);
-            persistence.ExecuteQuery("SELECT * FROM " + typeof(AbstractViewedData).Name);
+            persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
             Set(session, persistence, new Page());
             persistence.Close();
             persistence = null;
         }
 
-        public void AddRange(AbstractViewedDataList<AbstractViewedData> list)
+        public void AddRange(AbstractViewedDataList<T> list)
         {
-        	if(list == null)
-        	{
-        		return;
-        	}
-        	
-            foreach (AbstractViewedData item in list)
+        	foreach (T item in list)
             {
                 Items.Add(item);
             }
@@ -140,7 +128,7 @@ namespace MiskoPersist.Data
             mSortProperty_ = prop;
             mSortDirection_ = direction;
 
-            List<AbstractViewedData> list = Items as List<AbstractViewedData>;
+            List<T> list = Items as List<T>;
             if (list == null) return;
 
             list.Sort(Compare);
@@ -150,7 +138,7 @@ namespace MiskoPersist.Data
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
-        private int Compare(AbstractViewedData lhs, AbstractViewedData rhs)
+        private int Compare(T lhs, T rhs)
         {
             var result = OnComparison(lhs, rhs);
             //invert if descending
@@ -162,7 +150,7 @@ namespace MiskoPersist.Data
             return result;
         }
 
-        private int OnComparison(AbstractViewedData lhs, AbstractViewedData rhs)
+        private int OnComparison(T lhs, T rhs)
         {
             object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
             object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Globalization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using MiskoPersist.Core;
+using Newtonsoft.Json;
 
 namespace MiskoPersist.MoneyType
 {
-	[JsonConverter(typeof(MoneySerializer))]
+    [JsonConverter(typeof(MoneySerializer))]
 	public class Money : IComparable, IFormattable, IConvertible
     {
         private static Logger Log = Logger.GetInstance(typeof(Money));
@@ -615,7 +614,7 @@ namespace MiskoPersist.MoneyType
         #endregion
     }
 	
-    internal class MoneySerializer : JsonConverter
+    internal sealed class MoneySerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		

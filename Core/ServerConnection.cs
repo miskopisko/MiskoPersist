@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Interfaces;
 using MiskoPersist.Message.Request;
@@ -279,14 +280,10 @@ namespace MiskoPersist.Core
                     String postData = "request=" + HttpUtility.UrlEncode(mRequest_.Serialize());
                     writer.Write(postData);
                 }
-				
-                using(HttpWebResponse httpResponse = (HttpWebResponse)httpRequest.GetResponse())
-                {
-                    using (Stream stream = httpResponse.GetResponseStream())
-                    {
-                        using(StreamReader reader = new StreamReader(stream))
-                        responseMessage = ResponseMessage.Deserialize(reader.ReadToEnd());
-                    }
+
+				using (StreamReader reader = new StreamReader(((HttpWebResponse)httpRequest.GetResponse()).GetResponseStream()))
+				{ 
+					responseMessage = ResponseMessage.Deserialize(reader.ReadToEnd());
                 }                
             }
             catch(Exception ex)

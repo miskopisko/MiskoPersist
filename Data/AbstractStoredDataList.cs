@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractStoredDataList<AbstractStoredData> : BindingList<AbstractStoredData>
+    public class AbstractStoredDataList<T> : BindingList<T> where T : AbstractStoredData, new()
     {
-        private static Logger Log = Logger.GetInstance(typeof(AbstractStoredDataList<AbstractStoredData>));
-
         #region Fields
 
         private bool mIsSorted_;
@@ -30,8 +27,9 @@ namespace MiskoPersist.Data
         {
         }
 
-        public AbstractStoredDataList(IList<AbstractStoredData> list) : base(list)
+        public AbstractStoredDataList(Session session, Persistence persistence)
         {
+            Set(session, persistence);
         }
 
         #endregion
@@ -44,22 +42,20 @@ namespace MiskoPersist.Data
 
         #region Public Methods
 
-        public AbstractStoredDataList<AbstractStoredData> Save(Session session)
+        public void Save(Session session)
         {
-            foreach (AbstractStoredData item in Items)
+            foreach (T item in Items)
             {
-                typeof(AbstractStoredData).InvokeMember("Save", BindingFlags.InvokeMethod, null, item, new Object[] { session });
-            }            
-
-            return this;
+                item.Save(session);
+            }
         }
         
         public void Set(Session session, Persistence persistence)
         {
             while (persistence.HasNext)
             {
-                ConstructorInfo ctor = typeof(AbstractStoredData).GetConstructor(new[] { typeof(Session), typeof(Persistence) });
-                AbstractStoredData data = (AbstractStoredData)ctor.Invoke(new object[] { session, persistence });
+                T data = new T();
+                data.Set(session, persistence);
                 Add(data);
             }
         }
@@ -67,15 +63,15 @@ namespace MiskoPersist.Data
         public void FetchAll(Session session)
         {
             Persistence persistence = Persistence.GetInstance(session);
-            persistence.ExecuteQuery("SELECT * FROM " + typeof(AbstractStoredData).Name);
+            persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
             Set(session, persistence);
             persistence.Close();
             persistence = null;
         }
 
-        public void AddRange(AbstractStoredDataList<AbstractStoredData> list)
+        public void AddRange(AbstractStoredDataList<T> list)
         {
-            foreach (AbstractStoredData item in list)
+            foreach (T item in list)
             {
                 Items.Add(item);
             }
@@ -116,7 +112,7 @@ namespace MiskoPersist.Data
             mSortProperty_ = prop;
             mSortDirection_ = direction;
 
-            List<AbstractStoredData> list = Items as List<AbstractStoredData>;
+            List<T> list = Items as List<T>;
             if (list == null) return;
 
             list.Sort(Compare);
@@ -126,7 +122,7 @@ namespace MiskoPersist.Data
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
-        private int Compare(AbstractStoredData lhs, AbstractStoredData rhs)
+        private int Compare(T lhs, T rhs)
         {
             var result = OnComparison(lhs, rhs);
             //invert if descending
@@ -137,7 +133,7 @@ namespace MiskoPersist.Data
             return result;
         }
 
-        private int OnComparison(AbstractStoredData lhs, AbstractStoredData rhs)
+        private int OnComparison(T lhs, T rhs)
         {
             object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
             object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);

@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using MiskoPersist.Data;
+using MiskoPersist.Core;
 using MiskoPersist.Enums;
 using MiskoPersist.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MiskoPersist.Core
+namespace MiskoPersist.Data
 {
     [JsonConverter(typeof(ErrorSerializer))]
-    public class ErrorMessage : AbstractViewedData
+    public class ErrorMessage
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessage));
 
@@ -82,8 +82,6 @@ namespace MiskoPersist.Core
 
         public ErrorMessage(Exception e) 
         {
-        	IsSet = true;
-        	
         	if(e.TargetSite == null)
         	{
         		StackFrame stackFrame = new StackFrame(1);
@@ -108,7 +106,6 @@ namespace MiskoPersist.Core
 
         public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message, Object[] parameters)
         {
-        	IsSet = true;
             Class = clazz.Name;
             Method = method.Name;
             ErrorLevel = level;
@@ -205,7 +202,7 @@ namespace MiskoPersist.Core
         #endregion
     }
 
-    internal class ErrorSerializer : JsonConverter
+    internal sealed class ErrorSerializer : JsonConverter
     {
         #region implemented abstract members of JsonConverter
 

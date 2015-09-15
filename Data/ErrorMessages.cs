@@ -1,11 +1,11 @@
 using System;
-using System.Windows.Forms;
-using MiskoPersist.Data;
+using System.Collections.Generic;
+using MiskoPersist.Core;
 using MiskoPersist.Enums;
 
-namespace MiskoPersist.Core
+namespace MiskoPersist.Data
 {
-    public class ErrorMessages : AbstractViewedDataList<ErrorMessage>
+    public class ErrorMessages : List<ErrorMessage>
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessages));
 

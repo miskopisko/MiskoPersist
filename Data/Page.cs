@@ -1,12 +1,11 @@
 using System;
+using MiskoPersist.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MiskoPersist.Attributes;
-using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-	[JsonConverter(typeof(PageSerializer))]
+    [JsonConverter(typeof(PageSerializer))]
     public class Page
     {
         private static Logger Log = Logger.GetInstance(typeof(Page));
@@ -106,7 +105,7 @@ namespace MiskoPersist.Data
         #endregion
     }
     
-    internal class PageSerializer : JsonConverter
+    internal sealed class PageSerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		

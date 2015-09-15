@@ -1,15 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Windows.Forms;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using MiskoPersist.Data;
 
 namespace MiskoPersist.Enums
 {
-	[JsonConverter(typeof(EnumSerializer))]
+    [JsonConverter(typeof(EnumSerializer))]
     public abstract class AbstractEnum : IComparable
     {
         #region Properties
@@ -103,7 +99,7 @@ namespace MiskoPersist.Enums
         }
     }
     
-    internal class EnumSerializer : JsonConverter
+    internal sealed class EnumSerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		

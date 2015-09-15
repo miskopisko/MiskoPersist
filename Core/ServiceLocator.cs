@@ -87,10 +87,6 @@ namespace MiskoPersist.Core
         {
             DbConnection connection = new OleDbConnection(connectionString);
             connection.Open();
-            
-            DbCommand command = connection.CreateCommand();
-			command.CommandText = "SET EXCLUSIVE OFF";
-			command.ExecuteNonQuery();
 			
             return connection;
         }

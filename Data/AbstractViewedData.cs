@@ -32,12 +32,24 @@ namespace MiskoPersist.Data
 
         protected AbstractViewedData(Session session, Persistence persistence)
         {
-            Set(session, persistence, true);
+            Set(session, persistence);
         }
 
         #endregion
 
         #region Override Methods
+        
+        public new AbstractViewedData Set(Session session, Persistence persistence)
+		{
+			IsSet = persistence.Next();
+			
+			if(IsSet)
+            {
+				base.Set(session, persistence);
+			}
+			
+			return this;
+		}
 
         public override string ToString()
         {
@@ -61,12 +73,23 @@ namespace MiskoPersist.Data
 
         #region Public Methods
 
+        public virtual void Fetch(Session session)
+        {
+        	Fetch(session, false);
+        }
         
-
+		public virtual void Fetch(Session session, bool deep)
+        {
+        }
+		
+		public virtual void FetchDeep(Session session)
+		{
+		}
+        
         #endregion
     }
 
-    internal class ViewedDataSerializer : JsonConverter
+    internal sealed class ViewedDataSerializer : JsonConverter
     {
         #region implemented abstract members of JsonConverter
 

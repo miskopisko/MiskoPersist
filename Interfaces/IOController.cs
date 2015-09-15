@@ -1,9 +1,7 @@
 using System;
 using System.Threading;
-using MiskoPersist.Core;
+using MiskoPersist.Data;
 using MiskoPersist.Enums;
-using Newtonsoft.Json;
-using System.ComponentModel;
 
 namespace MiskoPersist.Interfaces
 {

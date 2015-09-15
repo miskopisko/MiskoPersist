@@ -1,11 +1,10 @@
 using System;
 using MiskoPersist.Core;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Data
 {
-	[JsonConverter(typeof(PrimaryKeySerializer))]
+    [JsonConverter(typeof(PrimaryKeySerializer))]
 	public class PrimaryKey : IComparable<PrimaryKey>, IComparable<long>, IEquatable<PrimaryKey>, IEquatable<long>
     {
         private static Logger Log = Logger.GetInstance(typeof(PrimaryKey));
@@ -263,7 +262,7 @@ namespace MiskoPersist.Data
         #endregion
     }
     
-    internal class PrimaryKeySerializer : JsonConverter
+    internal sealed class PrimaryKeySerializer : JsonConverter
     {
 		#region implemented abstract members of JsonConverter
 		

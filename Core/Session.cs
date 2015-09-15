@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Reflection;
+using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Resources;
 
