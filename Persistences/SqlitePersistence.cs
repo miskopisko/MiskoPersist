@@ -154,7 +154,7 @@ namespace MiskoPersist.Persistences
 					param.DbType = DbType.DateTime;
 					mCommand_.Parameters.Add(param);
 				}
-				else if(parameter is bool || parameter is Boolean)
+				else if(parameter is Boolean || parameter is Boolean)
 				{
 					param.Value = parameter;
 					param.DbType = DbType.Int16;

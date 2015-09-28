@@ -35,7 +35,7 @@ namespace MiskoPersist.Data
 
         #region Public Methods
         
-        public bool IsConfirmed(ErrorMessage errorMessage)
+        public Boolean IsConfirmed(ErrorMessage errorMessage)
         {
         	foreach(ErrorMessage message in this)
         	{

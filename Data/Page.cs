@@ -46,11 +46,11 @@ namespace MiskoPersist.Data
 		{
 			get
 			{
-				if(RowsPerPage == 0)
+				if(TotalRowCount > 0 && RowsPerPage == 0)
 				{
 					return 1;
 				}
-				return TotalRowCount > 0 ? (Int32)Math.Ceiling((decimal)TotalRowCount / (decimal)RowsPerPage) : 0;
+				return TotalRowCount > 0 ? (Int32)Math.Ceiling((Decimal)TotalRowCount / (Decimal)RowsPerPage) : 0;
 			}
 		}		
         
@@ -109,7 +109,7 @@ namespace MiskoPersist.Data
     {
 		#region implemented abstract members of JsonConverter
 		
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
 			Page page = value as Page;
 			
@@ -135,7 +135,7 @@ namespace MiskoPersist.Data
 			writer.WriteEndObject();
 		}
 		
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 			
@@ -146,7 +146,7 @@ namespace MiskoPersist.Data
 						   };
 		}
 		
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type ObjectType)
 		{
 			throw new NotImplementedException();
 		}

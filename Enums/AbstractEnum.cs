@@ -32,7 +32,7 @@ namespace MiskoPersist.Enums
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsSet 
+        public Boolean IsSet 
         { 
         	get 
         	{ 
@@ -41,7 +41,7 @@ namespace MiskoPersist.Enums
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsNotSet 
+        public Boolean IsNotSet 
         { 
         	get 
         	{ 
@@ -72,7 +72,7 @@ namespace MiskoPersist.Enums
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual int CompareTo(object e)
+        public virtual Int32 CompareTo(Object e)
         {
             if (e is AbstractEnum)
             {
@@ -80,18 +80,18 @@ namespace MiskoPersist.Enums
                 {
                     return 1;
                 }
-				return string.Compare(Code, ((AbstractEnum)e).Code, StringComparison.Ordinal);
+				return String.Compare(Code, ((AbstractEnum)e).Code, StringComparison.Ordinal);
             }
             return -1;
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override int GetHashCode()
+        public override Int32 GetHashCode()
         {
             return base.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override Boolean Equals(Object obj)
         {
             AbstractEnum o = obj as AbstractEnum;
 
@@ -103,7 +103,7 @@ namespace MiskoPersist.Enums
     {
 		#region implemented abstract members of JsonConverter
 		
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
 			AbstractEnum e = value as AbstractEnum;
 			
@@ -117,16 +117,16 @@ namespace MiskoPersist.Enums
             }
 		}
 		
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
 		{
             if(reader.Value != null)
             {
-                return (AbstractEnum)objectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { (Int64)reader.Value });
+                return (AbstractEnum)ObjectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { (Int64)reader.Value });
             }
             return null;
 		}
 		
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type ObjectType)
 		{
 			throw new NotImplementedException();
 		}

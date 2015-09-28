@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 namespace MiskoPersist.Data
 {
     [JsonConverter(typeof(ViewedDataSerializer))]
-    public abstract class AbstractViewedData : AbstractData
+    public abstract class AbstractViewedData : AbstractData, ICloneable
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractViewedData));
 
@@ -51,7 +51,7 @@ namespace MiskoPersist.Data
 			return this;
 		}
 
-        public override string ToString()
+        public override String ToString()
         {
             String result = GetType().Name + Environment.NewLine;
 
@@ -62,8 +62,17 @@ namespace MiskoPersist.Data
 
             return result;
         }
-
+		
         #endregion
+        
+        #region ICloneable implementation
+        
+		public object Clone()
+		{
+			return MemberwiseClone();
+		}
+		
+		#endregion
 
         #region Private Methods
 
@@ -78,7 +87,7 @@ namespace MiskoPersist.Data
         	Fetch(session, false);
         }
         
-		public virtual void Fetch(Session session, bool deep)
+		public virtual void Fetch(Session session, Boolean deep)
         {
         }
 		
@@ -93,7 +102,7 @@ namespace MiskoPersist.Data
     {
         #region implemented abstract members of JsonConverter
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
         {
             AbstractViewedData data = value as AbstractViewedData;
 
@@ -118,11 +127,11 @@ namespace MiskoPersist.Data
             writer.WriteEndObject();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
         {
             JObject jsonObject = JObject.Load(reader);
 
-            AbstractViewedData data = (AbstractViewedData)Activator.CreateInstance(objectType);
+            AbstractViewedData data = (AbstractViewedData)Activator.CreateInstance(ObjectType);
             data.IsSet = true;
 
             foreach(PropertyInfo property in data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
@@ -140,7 +149,7 @@ namespace MiskoPersist.Data
             return data;
         }
 
-        public override bool CanConvert(Type objectType)
+        public override Boolean CanConvert(Type ObjectType)
         {
             throw new NotImplementedException();
         }

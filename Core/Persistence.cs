@@ -163,7 +163,7 @@ namespace MiskoPersist.Core
 			mParameters_.AddRange(values);
 		}
 
-		public void SqlWhere(bool condition, String expression, Object[] value)
+		public void SqlWhere(Boolean condition, String expression, Object[] value)
 		{
 			if (condition)
 			{
@@ -209,13 +209,13 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			mParameters_ = new List<object>(parameters);
+			mParameters_ = new List<Object>(parameters);
 
 			mCommand_.CommandText = mSql_;
 			SetParameters();
 			
 			mCommand_.Prepare();
-
+			
 			Stopwatch timer = Stopwatch.StartNew();
 			DataAdapter.Fill(mRs_);
 			timer.Stop();
@@ -272,7 +272,7 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = function;
-			mParameters_ = new List<object>(parameters);
+			mParameters_ = new List<Object>(parameters);
 
 			mCommand_.CommandText = mSql_;
 			mCommand_.CommandType = CommandType.StoredProcedure;
@@ -365,7 +365,7 @@ namespace MiskoPersist.Core
 			mCommand_.Prepare();
 
 			Stopwatch timer = Stopwatch.StartNew();
-			int result = mCommand_.ExecuteNonQuery();
+			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
 			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
 
@@ -380,7 +380,7 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			mParameters_ = new List<object>(parameters);
+			mParameters_ = new List<Object>(parameters);
 
 			mCommand_.CommandText = mSql_;
 			SetParameters();
@@ -388,7 +388,7 @@ namespace MiskoPersist.Core
 			mCommand_.Prepare();
 
 			Stopwatch timer = Stopwatch.StartNew();
-			int result = mCommand_.ExecuteNonQuery();
+			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
 			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
 
@@ -422,7 +422,7 @@ namespace MiskoPersist.Core
 		public PrimaryKey GetPrimaryKey(String key)
 		{
 			Int64? value = GetLong(key);
-			if (value != null && value.HasValue)
+			if (value != null && value.HasValue && value.Value > 0)
 			{
 				return new PrimaryKey(value.Value);
 			}
@@ -452,7 +452,7 @@ namespace MiskoPersist.Core
 				Byte[] asBytes = (Byte[])o;
 				String asValue = "";
 
-				for (int i = 0; i < asBytes.Length; i++)
+				for (Int32 i = 0; i < asBytes.Length; i++)
 				{
 					asValue += (Char)asBytes[i];
 				}
@@ -479,7 +479,7 @@ namespace MiskoPersist.Core
 			{
 				return (Int32)o;
 			}
-			else if (o is sbyte || o is Byte || o is Int64 || o is Decimal)
+			else if (o is SByte || o is Byte || o is Int64 || o is Decimal)
 			{
 				return Convert.ToInt32(o);
 			}
@@ -521,9 +521,9 @@ namespace MiskoPersist.Core
 			{
 				return Convert.ToInt64((Int32)o);
 			}
-			else if (o is uint)
+			else if (o is UInt32)
 			{
-				return Convert.ToInt64((uint)o);
+				return Convert.ToInt64((UInt32)o);
 			}
 			else if (o is Decimal)
 			{
@@ -613,7 +613,7 @@ namespace MiskoPersist.Core
 			{
 				return (Boolean)o;
 			}
-			else if (o is Decimal || o is Int32 || o is Int64 || o is Byte || o is uint)
+			else if (o is Decimal || o is Int32 || o is Int64 || o is Byte || o is UInt32)
 			{
 				return Convert.ToInt16(o) == 1;
 			}

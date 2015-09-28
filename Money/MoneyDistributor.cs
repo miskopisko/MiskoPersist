@@ -39,7 +39,7 @@ namespace MiskoPersist.MoneyType
             return Distribute(1 / count);
         }
 
-        public Money[] Distribute(decimal distribution)
+        public Money[] Distribute(Decimal distribution)
         {
             if (distribution > 1 || distribution <= 0)
             {
@@ -50,16 +50,16 @@ namespace MiskoPersist.MoneyType
                                                       "less than or equal to 1.0");
             }
 
-            _distribution = new decimal[1];
+            _distribution = new Decimal[1];
             _distribution[0] = distribution;
 
             var distributionCount = (Int32)Math.Floor(1 / distribution);
             var result = new Money[distributionCount];
 
             _distributedTotal = new Money(0.00);
-            decimal quantum = (Decimal)Math.Pow(10, -(Int32)_precision);
+            Decimal quantum = (Decimal)Math.Pow(10, -(Int32)_precision);
 
-            for (int i = 0; i < distributionCount; i++)
+            for (Int32 i = 0; i < distributionCount; i++)
             {
                 var toDistribute = _toDistribute;
                 var part = toDistribute / distributionCount;
@@ -105,7 +105,7 @@ namespace MiskoPersist.MoneyType
             return result;
         }
 
-        public Money[] Distribute(decimal distribution1, decimal distribution2)
+        public Money[] Distribute(Decimal distribution1, Decimal distribution2)
         {
             var distributionSum = distribution1 + distribution2;
 
@@ -120,9 +120,9 @@ namespace MiskoPersist.MoneyType
             throw new NotImplementedException();
         }
 
-        public Money[] Distribute(decimal distribution1,
-                                  decimal distribution2,
-                                  decimal distribution3)
+        public Money[] Distribute(Decimal distribution1,
+                                  Decimal distribution2,
+                                  Decimal distribution3)
         {
             throw new NotImplementedException();
         }

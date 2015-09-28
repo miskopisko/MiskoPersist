@@ -52,17 +52,17 @@ namespace MiskoPersist.Tools
                 String param = (String)text.Clone();
 
                 Regex reg = new Regex("[{]([0-9]+|D-[LS]{1}:[0-9]+|N-[0-9]+,[0-9]+:[0-9]+)[}]");
-                int[] groups = reg.GetGroupNumbers();
+                Int32[] groups = reg.GetGroupNumbers();
 
                 Match match = reg.Match(param);
-                int counter = 0;
+                Int32 counter = 0;
 
                 while (match.Success)
                 {
                     if (groups.Length == 2)
                     {
                         CaptureCollection collect = match.Groups[groups[1]].Captures;
-                        foreach (object t in collect)
+                        foreach (Object t in collect)
                         {
                             if (Regex.IsMatch(param, "[{]" + counter + "[}]")) // Text
                             {
@@ -122,7 +122,7 @@ namespace MiskoPersist.Tools
                 using (MemoryStream msEncrypt = new MemoryStream())
                 {
                     // prepend the IV
-                    msEncrypt.Write(BitConverter.GetBytes(aesAlg.IV.Length), 0, sizeof(int));
+                    msEncrypt.Write(BitConverter.GetBytes(aesAlg.IV.Length), 0, sizeof(Int32));
                     msEncrypt.Write(aesAlg.IV, 0, aesAlg.IV.Length);
                     using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                     {
@@ -150,7 +150,7 @@ namespace MiskoPersist.Tools
 
         public static String DecryptStringAES(String cipherText)
         {
-            if (string.IsNullOrEmpty(cipherText))
+            if (String.IsNullOrEmpty(cipherText))
             {
                 return "";
             }
@@ -161,7 +161,7 @@ namespace MiskoPersist.Tools
 
             // Declare the string used to hold
             // the decrypted text.
-            string plaintext = null;
+            String plaintext = null;
 
             try
             {
@@ -202,11 +202,11 @@ namespace MiskoPersist.Tools
             return plaintext;
         }
         
-        public static DateTime AddWorkDays(DateTime date, int workingDays, List<DateTime> holidays)
+        public static DateTime AddWorkDays(DateTime date, Int32 workingDays, List<DateTime> holidays)
 		{
         	holidays = holidays ?? new List<DateTime>();
         	
-			int direction = workingDays < 0 ? -1 : 1;
+			Int32 direction = workingDays < 0 ? -1 : 1;
 			DateTime newDate = date;
 			
 			while (workingDays != 0)
@@ -221,9 +221,9 @@ namespace MiskoPersist.Tools
 			return newDate;
 		}
         
-        public static int WorkDaysBetween(DateTime startDate, DateTime endDate, List<DateTime> holidays)
+        public static Int32 WorkDaysBetween(DateTime startDate, DateTime endDate, List<DateTime> holidays)
 		{
-			int result = 0;
+			Int32 result = 0;
 			
 			if(endDate < startDate)
 			{
@@ -251,7 +251,7 @@ namespace MiskoPersist.Tools
 
         private static byte[] ReadByteArray(Stream s)
         {
-            byte[] rawLength = new byte[sizeof(int)];
+            byte[] rawLength = new byte[sizeof(Int32)];
             if (s.Read(rawLength, 0, rawLength.Length) != rawLength.Length)
             {
                 throw new SystemException("Stream did not contain properly formatted byte array");

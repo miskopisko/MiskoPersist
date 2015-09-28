@@ -5,11 +5,11 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractViewedDataList<T> : BindingList<T> where T : AbstractViewedData, new()
+    public class AbstractViewedDataList<T> : BindingList<T>, ICloneable where T : AbstractViewedData, new()
     {
         #region Fields
 
-        protected bool mIsSorted_;
+        protected Boolean mIsSorted_;
         protected ListSortDirection mSortDirection_ = ListSortDirection.Ascending;
         protected PropertyDescriptor mSortProperty_;
 
@@ -52,12 +52,12 @@ namespace MiskoPersist.Data
             Int32 noRows = page.RowsPerPage;
             Int32 pageNo = page.PageNo;
 
-			for (int i = 0; i < (pageNo - 1) * noRows && persistence.HasNext; i++)
+			for (Int32 i = 0; i < (pageNo - 1) * noRows && persistence.HasNext; i++)
             {
                 persistence.Next();
             }
 
-            for (int i = 0; (noRows == 0 || i < noRows) && persistence.HasNext; i++)
+            for (Int32 i = 0; (noRows == 0 || i < noRows) && persistence.HasNext; i++)
             {
                 T data = new T();
                 data.Set(session, persistence);
@@ -81,10 +81,13 @@ namespace MiskoPersist.Data
 
         public void AddRange(AbstractViewedDataList<T> list)
         {
-        	foreach (T item in list)
-            {
-                Items.Add(item);
-            }
+        	if(list != null)
+        	{
+	        	foreach (T item in list)
+	            {
+	                Items.Add(item);
+	            }
+        	}
         }
 
         #endregion
@@ -97,12 +100,12 @@ namespace MiskoPersist.Data
 
         #region Override Methods
 
-        protected override bool SupportsSortingCore
+        protected override Boolean SupportsSortingCore
         {
             get { return true; }
         }
 
-        protected override bool IsSortedCore
+        protected override Boolean IsSortedCore
         {
             get { return mIsSorted_; }
         }
@@ -138,7 +141,7 @@ namespace MiskoPersist.Data
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
-        private int Compare(T lhs, T rhs)
+        private Int32 Compare(T lhs, T rhs)
         {
             var result = OnComparison(lhs, rhs);
             //invert if descending
@@ -150,10 +153,10 @@ namespace MiskoPersist.Data
             return result;
         }
 
-        private int OnComparison(T lhs, T rhs)
+        private Int32 OnComparison(T lhs, T rhs)
         {
-            object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
-            object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
+            Object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
+            Object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
             if (lhsValue == null)
             {
                 return (rhsValue == null) ? 0 : -1; //nulls are equal
@@ -171,9 +174,25 @@ namespace MiskoPersist.Data
                 return 0; //both are the same
             }
             //not comparable, compare ToString
-			return string.Compare(lhsValue.ToString(), rhsValue.ToString(), StringComparison.Ordinal);
+			return String.Compare(lhsValue.ToString(), rhsValue.ToString(), StringComparison.Ordinal);
         }
 
         #endregion
+
+		#region ICloneable implementation
+
+		public Object Clone()
+		{
+			var result = Activator.CreateInstance(GetType());
+			
+			foreach(T data in this)
+			{
+				((AbstractViewedDataList<T>)result).Add((T)data.Clone());
+			}
+			
+			return result;
+		}
+
+		#endregion
     }
 }

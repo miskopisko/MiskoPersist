@@ -45,7 +45,7 @@ namespace MiskoPersist.Core
 			}
 		}
 		
-		public override string Message
+		public override String Message
 		{
 			get
 			{

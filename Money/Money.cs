@@ -158,8 +158,8 @@ namespace MiskoPersist.MoneyType
 
         public static Money operator +(Money left, Money right)
         {
-            if (object.ReferenceEquals(left, null)) left = Money.ZERO;
-            if (object.ReferenceEquals(right, null)) right = Money.ZERO;
+            if (Object.ReferenceEquals(left, null)) left = Money.ZERO;
+            if (Object.ReferenceEquals(right, null)) right = Money.ZERO;
 
 
 
@@ -190,8 +190,8 @@ namespace MiskoPersist.MoneyType
 
         public static Money operator -(Money left, Money right)
         {
-            if (object.ReferenceEquals(left, null)) left = Money.ZERO;
-            if (object.ReferenceEquals(right, null)) right = Money.ZERO;
+            if (Object.ReferenceEquals(left, null)) left = Money.ZERO;
+            if (Object.ReferenceEquals(right, null)) right = Money.ZERO;
 
             return left + -right;
         }
@@ -208,9 +208,9 @@ namespace MiskoPersist.MoneyType
 
         public static Boolean operator ==(Money left, Money right)
         {
-            if (object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null)) return true;
-            else if (object.ReferenceEquals(left, null) && !object.ReferenceEquals(right, null)) return false;
-            else if (!object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null)) return false;
+            if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
+            else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
+            else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
             return left.Equals(right);
         }
 
@@ -463,7 +463,7 @@ namespace MiskoPersist.MoneyType
 
         public Boolean Equals(Money other)
         {
-            if (object.ReferenceEquals(other, null))
+            if (Object.ReferenceEquals(other, null))
             {
                 return false;
             }
@@ -498,7 +498,7 @@ namespace MiskoPersist.MoneyType
 
         #region Implementation of IComparable
 
-        int IComparable.CompareTo(object obj)
+        Int32 IComparable.CompareTo(Object obj)
         {
             if (obj is Money)
             {
@@ -510,14 +510,14 @@ namespace MiskoPersist.MoneyType
 
         public Boolean lessThen(Money value)
         {
-            if (object.ReferenceEquals(value, null)) return false;
+            if (Object.ReferenceEquals(value, null)) return false;
 
             return this.CompareTo(value) < 0;
         }
 
         public Boolean greaterThen(Money value)
         {
-            if (object.ReferenceEquals(value, null)) return false;
+            if (Object.ReferenceEquals(value, null)) return false;
 
             return this.CompareTo(value) > 0;
         }
@@ -618,12 +618,12 @@ namespace MiskoPersist.MoneyType
     {
 		#region implemented abstract members of JsonConverter
 		
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
             writer.WriteValue(((Money)value).Value.ToString("F2"));
 		}
 		
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
             if(reader.Value != null)
             {
@@ -633,7 +633,7 @@ namespace MiskoPersist.MoneyType
             return null;
 		}
 		
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}

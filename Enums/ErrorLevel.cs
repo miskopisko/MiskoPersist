@@ -58,7 +58,7 @@ namespace MiskoPersist.Enums
 
         public static ErrorLevel GetElement(long index)
         {
-            for (int i = 0; mElements_ != null && i < mElements_.Length; i++)
+            for (Int32 i = 0; mElements_ != null && i < mElements_.Length; i++)
             {
                 if (mElements_[i].Value == index)
                 {
@@ -71,7 +71,7 @@ namespace MiskoPersist.Enums
 
         public static ErrorLevel GetElement(String descriptionCode)
         {
-            for (int i = 0; descriptionCode != null && mElements_ != null && i < mElements_.Length; i++)
+            for (Int32 i = 0; descriptionCode != null && mElements_ != null && i < mElements_.Length; i++)
             {
                 if (mElements_[i].Description.ToLower().Equals(descriptionCode.ToLower()) || mElements_[i].Code.ToLower().Equals(descriptionCode.ToLower()))
                 {

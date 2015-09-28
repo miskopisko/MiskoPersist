@@ -82,7 +82,7 @@ namespace MiskoPersist.Message.Request
 	{
 		#region implemented abstract members of JsonConverter
 
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
 			RequestMessage request = value as RequestMessage;
 
@@ -130,7 +130,7 @@ namespace MiskoPersist.Message.Request
 			writer.WriteEndObject();
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 
@@ -148,7 +148,7 @@ namespace MiskoPersist.Message.Request
 			return request;
 		}
 
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type ObjectType)
 		{
 			throw new NotImplementedException();
 		}

@@ -70,7 +70,7 @@ namespace MiskoPersist.Data
 
         public static PrimaryKey operator +(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null)) return new PrimaryKey() + right;
+            if (Object.ReferenceEquals(left, null)) return new PrimaryKey() + right;
             return new PrimaryKey(left.Value + right);
         }
 
@@ -81,9 +81,9 @@ namespace MiskoPersist.Data
 
         public static Boolean operator ==(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null) && object.Equals(right, null)) return true;
-            else if (object.ReferenceEquals(left, null) && !object.Equals(right, null)) return false;
-            else if (!object.ReferenceEquals(left, null) && object.Equals(right, null)) return false;
+            if (Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return true;
+            else if (Object.ReferenceEquals(left, null) && !Object.Equals(right, null)) return false;
+            else if (!Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return false;
             return left.Value.Equals(right);
         }
 
@@ -94,9 +94,9 @@ namespace MiskoPersist.Data
 
         public static Boolean operator ==(PrimaryKey left, PrimaryKey right)
         {
-            if (object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null)) return true;
-            else if (object.ReferenceEquals(left, null) && !object.ReferenceEquals(right, null)) return false;
-            else if (!object.ReferenceEquals(left, null) && object.ReferenceEquals(right, null)) return false;
+            if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
+            else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
+            else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
             return left.Value.Equals(right.Value);
         }
 
@@ -107,7 +107,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator >(PrimaryKey left, PrimaryKey right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -117,7 +117,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator >(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -127,7 +127,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator <(PrimaryKey left, PrimaryKey right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -137,7 +137,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator <(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -147,7 +147,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator >=(PrimaryKey left, PrimaryKey right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -157,7 +157,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator >=(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -167,7 +167,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator <=(PrimaryKey left, PrimaryKey right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -177,7 +177,7 @@ namespace MiskoPersist.Data
 
         public static Boolean operator <=(PrimaryKey left, Int64 right)
         {
-            if (object.ReferenceEquals(left, null))
+            if (Object.ReferenceEquals(left, null))
             {
                 left = new PrimaryKey(0);
             }
@@ -189,7 +189,7 @@ namespace MiskoPersist.Data
 
         #region Override Methods
 
-        public override bool Equals(object obj)
+        public override Boolean Equals(Object obj)
         {
             if (obj is PrimaryKey)
             {
@@ -203,12 +203,12 @@ namespace MiskoPersist.Data
             return false;
         }
 
-        public override int GetHashCode()
+        public override Int32 GetHashCode()
         {
             return Value.GetHashCode();
         }
 
-        public override string ToString()
+        public override String ToString()
         {
             return Value.ToString();
         }
@@ -217,7 +217,7 @@ namespace MiskoPersist.Data
 
         #region IComparable<PrimaryKey> Members
 
-        public int CompareTo(PrimaryKey other)
+        public Int32 CompareTo(PrimaryKey other)
         {
             return Value.CompareTo(other.Value);
         }
@@ -226,7 +226,7 @@ namespace MiskoPersist.Data
 
         #region IComparable<long> Members
 
-        public int CompareTo(long other)
+        public Int32 CompareTo(long other)
         {
             return Value.CompareTo(other);
         }
@@ -235,9 +235,9 @@ namespace MiskoPersist.Data
 
         #region IEquatable<PrimaryKey> Members
 
-        public bool Equals(PrimaryKey other)
+        public Boolean Equals(PrimaryKey other)
         {
-            if (object.ReferenceEquals(other, null))
+            if (Object.ReferenceEquals(other, null))
             {
                 return false;
             }
@@ -249,9 +249,9 @@ namespace MiskoPersist.Data
 
         #region IEquatable<long> Members
 
-        public bool Equals(long other)
+        public Boolean Equals(long other)
         {
-            if (object.ReferenceEquals(other, null))
+            if (Object.ReferenceEquals(other, null))
             {
                 return false;
             }
@@ -266,12 +266,12 @@ namespace MiskoPersist.Data
     {
 		#region implemented abstract members of JsonConverter
 		
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
 		    writer.WriteValue(((PrimaryKey)value).Value);
 		}
 		
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
 		{
             if (reader.Value != null)
             {
@@ -281,7 +281,7 @@ namespace MiskoPersist.Data
             return null;
 		}
 		
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type ObjectType)
 		{
 			throw new NotImplementedException();
 		}

@@ -215,7 +215,7 @@ namespace MiskoPersist.Core
                                     Line += "\t\t<stacktrace>\n";
                                 }
 
-                                foreach (string t in lines)
+                                foreach (String t in lines)
                                 {
                                     String[] Details = t.Split(new[]
                                                            {

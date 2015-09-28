@@ -26,7 +26,7 @@ namespace MiskoPersist.Core
 		
 		#region Fields
 		
-		private static int mActive_ = 0;
+		private static Int32 mActive_ = 0;
 		private static IOController mIOController_;
 		
 		private Thread mThread_;
@@ -183,7 +183,7 @@ namespace MiskoPersist.Core
                 {
                     if (errorMessage.Confirmed.HasValue && !errorMessage.Confirmed.Value)
                     {
-                    	bool confirmed = false;
+                    	Boolean confirmed = false;
                     	method = delegate
         				{
                     		IOController.Status(MessageStatus.Confirmation);

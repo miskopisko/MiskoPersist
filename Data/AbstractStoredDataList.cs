@@ -9,7 +9,7 @@ namespace MiskoPersist.Data
     {
         #region Fields
 
-        private bool mIsSorted_;
+        private Boolean mIsSorted_;
         private ListSortDirection mSortDirection_ = ListSortDirection.Ascending;
         private PropertyDescriptor mSortProperty_;
 
@@ -81,12 +81,12 @@ namespace MiskoPersist.Data
 
         #region Inherited Methods
 
-        protected override bool SupportsSortingCore
+        protected override Boolean SupportsSortingCore
         {
             get { return true; }
         }
 
-        protected override bool IsSortedCore
+        protected override Boolean IsSortedCore
         {
             get { return mIsSorted_; }
         }
@@ -122,7 +122,7 @@ namespace MiskoPersist.Data
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
-        private int Compare(T lhs, T rhs)
+        private Int32 Compare(T lhs, T rhs)
         {
             var result = OnComparison(lhs, rhs);
             //invert if descending
@@ -133,10 +133,10 @@ namespace MiskoPersist.Data
             return result;
         }
 
-        private int OnComparison(T lhs, T rhs)
+        private Int32 OnComparison(T lhs, T rhs)
         {
-            object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
-            object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
+            Object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
+            Object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
             if (lhsValue == null)
             {
                 return (rhsValue == null) ? 0 : -1; //nulls are equal

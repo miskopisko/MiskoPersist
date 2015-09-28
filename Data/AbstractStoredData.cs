@@ -67,7 +67,7 @@ namespace MiskoPersist.Data
 			return this;
 		}
 
-        public override string ToString()
+        public override String ToString()
         {
             String result = GetType().Name + Environment.NewLine;
 
@@ -105,7 +105,7 @@ namespace MiskoPersist.Data
             sql = sql.Trim().Trim(',') + Environment.NewLine;
             sql += "WHERE  ";
 
-            for (int i = 0; i < types.Count - 1; i++)
+            for (Int32 i = 0; i < types.Count - 1; i++)
             {
                 sql += types[i].Name + ".Id = " + types[i + 1].Name + ".Id" + Environment.NewLine;
 
@@ -210,7 +210,7 @@ namespace MiskoPersist.Data
         	Fetch(session, false);
         }
         
-        public virtual void Fetch(Session session, bool deep)
+        public virtual void Fetch(Session session, Boolean deep)
         {
         	if (!IsSet && Id != null)
 	        {

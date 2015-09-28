@@ -21,14 +21,14 @@ namespace MiskoPersist.Data
 
         #region Properties
 
-        public bool IsSet 
+        public Boolean IsSet 
         { 
         	get; 
         	set; 
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool IsNotSet 
+        public Boolean IsNotSet 
         { 
         	get 
         	{ 
@@ -115,15 +115,15 @@ namespace MiskoPersist.Data
 
                     if (persistence.GetLong(columnName) != null && persistence.GetLong(columnName).HasValue)
                     {
-                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { persistence.GetLong(columnName) });
+                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { persistence.GetLong(columnName) });
                     }
                     else if (persistence.GetString(columnName) != null)
                     {
-                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { persistence.GetString(columnName) });
+                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { persistence.GetString(columnName) });
                     }
                     else
                     {
-                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new object[] { -1 });
+                        item = (AbstractEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { -1 });
                     }
 
                     property.SetValue(this, item, null);

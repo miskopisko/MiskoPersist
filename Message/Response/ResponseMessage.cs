@@ -84,7 +84,7 @@ namespace MiskoPersist.Message.Response
 		{
 			get
 			{
-				bool hasUnconfirmed = false;
+				Boolean hasUnconfirmed = false;
 				if(HasConfirmations)
 				{
 					foreach (ErrorMessage confirmMessage in Confirmations) 
@@ -161,7 +161,7 @@ namespace MiskoPersist.Message.Response
 	{
 		#region implemented abstract members of JsonConverter
 
-		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
 			ResponseMessage response = value as ResponseMessage;
 
@@ -219,7 +219,7 @@ namespace MiskoPersist.Message.Response
 			writer.WriteEndObject();
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 			
@@ -237,7 +237,7 @@ namespace MiskoPersist.Message.Response
 			return response;
 		}
 
-		public override bool CanConvert(Type objectType)
+		public override Boolean CanConvert(Type ObjectType)
 		{
 			throw new NotImplementedException();
 		}

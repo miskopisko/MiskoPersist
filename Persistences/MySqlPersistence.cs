@@ -153,7 +153,7 @@ namespace MiskoPersist.Persistences
                     param.MySqlDbType = MySqlDbType.DateTime;
                     mCommand_.Parameters.Add(param);
                 }
-                else if(parameter is bool || parameter is Boolean)
+                else if(parameter is Boolean || parameter is Boolean)
                 {
                 	param.Value = parameter;
                     param.MySqlDbType = MySqlDbType.Int16;

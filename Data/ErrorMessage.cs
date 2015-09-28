@@ -117,7 +117,7 @@ namespace MiskoPersist.Data
 
         #region Override Methods
 
-        public override string ToString()
+        public override String ToString()
         {
             return Utils.ResolveTextParameters(mErrorMessage_, Parameters != null ? Parameters.ToArray() : null);
         }
@@ -126,9 +126,9 @@ namespace MiskoPersist.Data
 
 		#region Equals and GetHashCode implementation
 		
-		public override int GetHashCode()
+		public override Int32 GetHashCode()
 		{
-			int hashCode = 0;
+			Int32 hashCode = 0;
 			
 			unchecked
 			{
@@ -161,7 +161,7 @@ namespace MiskoPersist.Data
 			return hashCode;
 		}
 
-		public override bool Equals(object obj)
+		public override Boolean Equals(Object obj)
 		{
 			ErrorMessage other = obj as ErrorMessage;
 			
@@ -170,7 +170,7 @@ namespace MiskoPersist.Data
 				return false;
 			}
 			
-			bool parametersEqual = true;
+			Boolean parametersEqual = true;
 			if((Parameters != null && other.Parameters != null) && (Parameters.Count.Equals(other.Parameters.Count)))
 			{
 				parametersEqual = new HashSet<Object>(Parameters).SetEquals(new HashSet<Object>(other.Parameters));
@@ -179,7 +179,7 @@ namespace MiskoPersist.Data
 			return mErrorMessage_.Equals(other.mErrorMessage_) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && parametersEqual;
 		}
 
-		public static bool operator ==(ErrorMessage lhs, ErrorMessage rhs) 
+		public static Boolean operator ==(ErrorMessage lhs, ErrorMessage rhs) 
 		{
 			if (ReferenceEquals(lhs, rhs)) 
 			{
@@ -194,7 +194,7 @@ namespace MiskoPersist.Data
 			return lhs.Equals(rhs);
 		}
 
-		public static bool operator !=(ErrorMessage lhs, ErrorMessage rhs) 
+		public static Boolean operator !=(ErrorMessage lhs, ErrorMessage rhs) 
 		{
 			return !(lhs == rhs);
 		}
@@ -206,7 +206,7 @@ namespace MiskoPersist.Data
     {
         #region implemented abstract members of JsonConverter
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
         {
             ErrorMessage errorMessage = value as ErrorMessage;
 
@@ -236,7 +236,7 @@ namespace MiskoPersist.Data
             writer.WriteEndObject();
         }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
         {
             JObject jsonObject = JObject.Load(reader);
 
@@ -244,13 +244,13 @@ namespace MiskoPersist.Data
             result.Class = (String)jsonObject["Class"];
             result.Method = (String)jsonObject["Method"];
             result.Parameters = jsonObject["Parameters"] != null ? jsonObject["Parameters"].ToObject<List<Object>>() : null;
-            result.ErrorLevel = ErrorLevel.GetElement((int)jsonObject["ErrorLevel"]);
+            result.ErrorLevel = ErrorLevel.GetElement((Int32)jsonObject["ErrorLevel"]);
             result.Message = (String)jsonObject["Message"];
 
             return result;
         }
 
-        public override bool CanConvert(Type objectType)
+        public override Boolean CanConvert(Type ObjectType)
         {
             throw new NotImplementedException();
         }
