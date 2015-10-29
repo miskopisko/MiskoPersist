@@ -1,12 +1,13 @@
 using System;
-using MiskoPersist.Core;
+using System.Xml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
     [JsonConverter(typeof(PageSerializer))]
-    public class Page
+    public class Page : AbstractViewedData
     {
         private static Logger Log = Logger.GetInstance(typeof(Page));
 
@@ -103,6 +104,43 @@ namespace MiskoPersist.Data
         
 
         #endregion
+
+		#region XmlSerialization
+
+		public override void ReadXml(XmlReader reader)
+		{
+			PageNo = GetIntElement("PageNo").Value;
+			RowsPerPage = GetIntElement("RowsPerPage").Value;
+			IncludeRecordCount = GetBooleanElement("IncludeRecordCount").Value;
+			TotalRowCount = GetIntElement("TotalRowCount").Value;                              
+		}
+
+		public override void WriteXml(XmlWriter writer)
+		{
+			writer.WriteStartElement("PageNo");
+			writer.WriteValue(PageNo);
+			writer.WriteEndElement();
+    		
+    		if(RowsPerPage > 0)
+    		{
+    			writer.WriteStartElement("RowsPerPage");
+				writer.WriteValue(RowsPerPage);
+				writer.WriteEndElement();
+    		}
+    		
+    		writer.WriteStartElement("IncludeRecordCount");
+			writer.WriteValue(IncludeRecordCount);
+			writer.WriteEndElement();
+    		
+    		if(IncludeRecordCount && RowsPerPage > 0)
+    		{
+    			writer.WriteStartElement("TotalRowCount");
+				writer.WriteValue(TotalRowCount);
+				writer.WriteEndElement();
+    		}
+		}
+
+		#endregion
     }
     
     internal sealed class PageSerializer : JsonConverter
@@ -135,7 +173,7 @@ namespace MiskoPersist.Data
 			writer.WriteEndObject();
 		}
 		
-		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 			
@@ -146,7 +184,7 @@ namespace MiskoPersist.Data
 						   };
 		}
 		
-		public override Boolean CanConvert(Type ObjectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}

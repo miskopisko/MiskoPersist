@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Xml;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
@@ -180,7 +181,7 @@ namespace MiskoPersist.Data
         #endregion
 
 		#region ICloneable implementation
-
+		
 		public Object Clone()
 		{
 			var result = Activator.CreateInstance(GetType());
@@ -191,6 +192,42 @@ namespace MiskoPersist.Data
 			}
 			
 			return result;
+		}
+
+		#endregion
+
+		#region Xml Serialization
+
+		public static AbstractViewedDataList<T> ReadXml(XmlElement XML, String name, Type type)
+		{
+			AbstractViewedDataList<T> list = (AbstractViewedDataList<T>)Activator.CreateInstance(type);
+
+			if (XML != null)
+			{
+				foreach (XmlNode n in XML.ChildNodes)
+				{
+					if (n.Name == name)
+					{
+						T value = new T();
+						value.XML = (XmlElement)n;
+						value.IsSet = true;
+						value.ReadXml(null);
+						list.Add(value);
+					}
+				}
+			}
+
+			return list;
+		}
+
+		public void WriteXml(XmlWriter writer, String name)
+		{
+			foreach (T element in this) 
+			{
+				writer.WriteStartElement(name);
+				element.WriteXml(writer);
+				writer.WriteEndElement();
+			}
 		}
 
 		#endregion

@@ -2,6 +2,7 @@ using System;
 using System.Data.Common;
 using System.Data.OleDb;
 using System.Data.SQLite;
+using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Resources;
 using MySql.Data.MySqlClient;
@@ -22,27 +23,27 @@ namespace MiskoPersist.Core
 
         public static DbConnection GetConnection(String name)
         {
-            ConnectionSettings connectionSettings = ConnectionSettings.GetConnectionSettings(name);
+            DatabaseConnection databaseConnection = DatabaseConnections.GetDatabaseConnection(name);
 
-            if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.SQLite))
+            if (databaseConnection != null && databaseConnection.DatabaseType.Equals(DatabaseType.SQLite))
             {
-                return GetSqliteConnection(connectionSettings.ConnectionString);
+                return GetSqliteConnection(databaseConnection.ConnectionString);
             }
-            else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.MySql))
+            else if (databaseConnection != null && databaseConnection.DatabaseType.Equals(DatabaseType.MySql))
             {
-                return GetMysqlConnection(connectionSettings.ConnectionString);
+                return GetMySqlConnection(databaseConnection.ConnectionString);
             }
-            else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.Oracle))
+            else if (databaseConnection != null && databaseConnection.DatabaseType.Equals(DatabaseType.Oracle))
             {
-                return GetOracleConnection(connectionSettings.ConnectionString);
+                return GetOracleConnection(databaseConnection.ConnectionString);
             }
-            else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.Postgres))
+            else if (databaseConnection != null && databaseConnection.DatabaseType.Equals(DatabaseType.Postgres))
             {
-                return GetPostgresConnection(connectionSettings.ConnectionString);
+                return GetPostgresConnection(databaseConnection.ConnectionString);
             }
-            else if (connectionSettings != null && connectionSettings.ConnectionType.Equals(ConnectionType.FoxPro))
+            else if (databaseConnection != null && databaseConnection.DatabaseType.Equals(DatabaseType.FoxPro))
             {
-                return GetFoxProConnection(connectionSettings.ConnectionString);
+                return GetFoxProConnection(databaseConnection.ConnectionString);
             }
             else
             {
@@ -54,7 +55,7 @@ namespace MiskoPersist.Core
 
         #region Private Methods
 
-        private static DbConnection GetMysqlConnection(String connectionString)
+        private static DbConnection GetMySqlConnection(String connectionString)
         {
             MySqlConnection connection = new MySqlConnection(connectionString);
             connection.Open();

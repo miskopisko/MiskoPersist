@@ -20,7 +20,7 @@ namespace MiskoPersist.Core
         private ErrorMessages mErrorMessages_ = new ErrorMessages();
         private ErrorLevel mStatus_ = ErrorLevel.Success;
         private MessageMode mMessageMode_ = MessageMode.Normal;
-        private long mSqlExecutionTime_ = 0;
+        private TimeSpan mSqlExecutionTime_ = TimeSpan.Zero;
 
         #endregion
 
@@ -80,7 +80,7 @@ namespace MiskoPersist.Core
         	}
         }
         
-        public long SqlExecutionTime
+        public TimeSpan SqlExecutionTime
         {
         	get
         	{

@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Globalization;
+using System.Xml;
 using MiskoPersist.Core;
 using Newtonsoft.Json;
+using MiskoPersist.Data;
 
 namespace MiskoPersist.MoneyType
 {
     [JsonConverter(typeof(MoneySerializer))]
-	public class Money : IComparable, IFormattable, IConvertible
+	public class Money : AbstractViewedData, IComparable, IFormattable, IConvertible
     {
         private static Logger Log = Logger.GetInstance(typeof(Money));
 
@@ -68,6 +70,7 @@ namespace MiskoPersist.MoneyType
 
         public Money(Decimal value)
         {
+        	IsSet = true;
         	Value = value;
         }
 
@@ -78,6 +81,7 @@ namespace MiskoPersist.MoneyType
 
         private Money(Int64 units, Int32 fraction)
         {
+        	IsSet = true;
             mUnits_ = units;
             mDecimalFraction_ = fraction;
         }
@@ -612,6 +616,20 @@ namespace MiskoPersist.MoneyType
         }
 
         #endregion
+
+		#region XmlSerialization
+
+		public override void ReadXml(XmlReader reader)
+		{
+			Value = Decimal.Parse(XML.InnerText);
+		}
+
+		public override void WriteXml(XmlWriter writer)
+		{
+			writer.WriteRaw(String.Format("{0:F2}", Value));
+		}
+
+		#endregion
     }
 	
     internal sealed class MoneySerializer : JsonConverter
@@ -620,22 +638,17 @@ namespace MiskoPersist.MoneyType
 		
 		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
-            writer.WriteValue(((Money)value).Value.ToString("F2"));
+			writer.WriteRawValue(String.Format("{0:F2}", value));
 		}
 		
 		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
-            if(reader.Value != null)
-            {
-                return new Money((String)reader.Value);
-            }
-
-            return null;
+			return reader.Value != null ? new Money((Double)reader.Value) : null;
 		}
 		
 		public override Boolean CanConvert(Type objectType)
-		{
-			throw new NotImplementedException();
+		{	
+			return (objectType == typeof(Decimal) || objectType == typeof(Decimal?));
 		}
 		
 		#endregion		

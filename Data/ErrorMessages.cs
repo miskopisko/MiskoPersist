@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Xml;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-    public class ErrorMessages : List<ErrorMessage>
+    public class ErrorMessages : AbstractViewedDataList<ErrorMessage>
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessages));
 
@@ -83,5 +83,41 @@ namespace MiskoPersist.Data
         }
 
         #endregion
+
+		#region XmlSerialization
+
+		public void ReadXml(XmlElement XML, String name)
+		{
+			if (XML != null)
+			{				
+				foreach (XmlNode n in XML.ChildNodes)
+				{
+					if (n.Name == name)
+					{
+						foreach (XmlNode messageNode in ((XmlElement)n).ChildNodes)
+						{
+							if (messageNode.Name == "ErrorMessage")
+							{
+								ErrorMessage value = new ErrorMessage();
+								value.XML = (XmlElement)messageNode;
+								value.IsSet = true;
+								value.ReadXml(null);
+								Add(value);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		public void WriteXml(XmlWriter writer)
+		{
+			foreach(ErrorMessage message in this)
+			{
+				message.WriteXml(writer);
+			}
+		}
+
+		#endregion
     }
 }

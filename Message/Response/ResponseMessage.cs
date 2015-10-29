@@ -1,14 +1,12 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters;
-using System.Text;
+using System.Xml;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Message;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Message.Response
 {
@@ -120,6 +118,18 @@ namespace MiskoPersist.Message.Response
 				Infos = ((ErrorMessages)value).ListOf(ErrorLevel.Information);
 			}
 		}
+		
+		public TimeSpan MessageExecutionTime
+		{
+			get;
+			set;
+		}
+		
+		public TimeSpan SqlExecutionTime
+		{
+			get;
+			set;
+		}
 
 		#endregion
 
@@ -133,25 +143,79 @@ namespace MiskoPersist.Message.Response
 		}
 
 		#endregion
+		
+		#region XmlSerialization
 
-		#region Serialization
-
-		public static ResponseMessage Deserialize(String json)
+        public override void ReadXml(XmlReader reader)
 		{
-			ResponseMessage responseMessage;
+        	if(!GetType().Equals(typeof(ResponseMessage)))
+        	{
+				base.ReadXml(reader);
+        	}
+			
+			Status = (ErrorLevel)GetEnumElement("Status", typeof(ErrorLevel));
+			Errors.ReadXml(XML, "Errors");
+			Confirmations.ReadXml(XML, "Confirmations");
+			Warnings.ReadXml(XML, "Warnings");
+			Infos.ReadXml(XML, "Infos");
+			Page = (Page)GetDataElement("Page", typeof(Page));			
+			MessageExecutionTime = TimeSpan.Parse(GetElement("MessageExecutionTime"));
+			SqlExecutionTime = TimeSpan.Parse(GetElement("SqlExecutionTime"));
+		}
 
-			using (JsonReader reader = new JsonTextReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(json ?? "")))))
+        public override void WriteXml(XmlWriter writer)
+		{
+        	if(!GetType().Equals(typeof(ResponseMessage)))
+        	{
+            	base.WriteXml(writer);
+        	}
+
+			writer.WriteStartElement("Status");
+			Status.WriteXml(writer);
+			writer.WriteEndElement();
+
+			if(HasErrors)
 			{
-				JsonSerializer serializer = new JsonSerializer();
-				serializer.TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple;
-				serializer.TypeNameHandling = TypeNameHandling.Objects;
-				serializer.NullValueHandling = NullValueHandling.Ignore;
-				serializer.DateFormatString = "yyyy-MM-dd";
-				serializer.Formatting = Formatting.Indented;
-				responseMessage = serializer.Deserialize<ResponseMessage>(reader);
+				writer.WriteStartElement("Errors");
+				Errors.WriteXml(writer);
+				writer.WriteEndElement();
 			}
 
-			return responseMessage;
+			if(HasConfirmations)
+			{
+				writer.WriteStartElement("Confirmations");
+				Confirmations.WriteXml(writer);
+				writer.WriteEndElement();
+			}
+
+			if(HasWarnings)
+			{
+				writer.WriteStartElement("Warnings");
+				Warnings.WriteXml(writer);
+				writer.WriteEndElement();
+			}
+
+			if(HasInfos)
+			{
+				writer.WriteStartElement("Infos");
+				Infos.WriteXml(writer);
+				writer.WriteEndElement();
+			}
+
+			if(Page != null)
+			{
+				writer.WriteStartElement("Page");
+				Page.WriteXml(writer);
+				writer.WriteEndElement();
+			}
+			
+            writer.WriteStartElement("MessageExecutionTime");
+            writer.WriteString(MessageExecutionTime.ToString("G"));
+            writer.WriteEndElement();
+			
+            writer.WriteStartElement("SqlExecutionTime");
+            writer.WriteString(SqlExecutionTime.ToString("G"));
+            writer.WriteEndElement();
 		}
 
 		#endregion
@@ -215,11 +279,17 @@ namespace MiskoPersist.Message.Response
 				writer.WritePropertyName("Page");
 				serializer.Serialize(writer, response.Page);
 			}
+			
+			writer.WritePropertyName("MessageExecutionTime");
+			serializer.Serialize(writer, response.MessageExecutionTime.ToString("G"));
+			
+			writer.WritePropertyName("SqlExecutionTime");
+			serializer.Serialize(writer, response.SqlExecutionTime.ToString("G"));
 
 			writer.WriteEndObject();
 		}
 
-		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 			
@@ -237,7 +307,7 @@ namespace MiskoPersist.Message.Response
 			return response;
 		}
 
-		public override Boolean CanConvert(Type ObjectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}

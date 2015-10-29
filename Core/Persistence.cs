@@ -219,7 +219,7 @@ namespace MiskoPersist.Core
 			Stopwatch timer = Stopwatch.StartNew();
 			DataAdapter.Fill(mRs_);
 			timer.Stop();
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
 			return HasNext;
 		}
@@ -283,7 +283,7 @@ namespace MiskoPersist.Core
 			Stopwatch timer = Stopwatch.StartNew();            
 			DataAdapter.Fill(mRs_);
 			timer.Stop();
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;  
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);  
 
 			return HasNext;        	
 		}
@@ -324,7 +324,7 @@ namespace MiskoPersist.Core
 				// FoxPro INSERT is done on a class by class basis by overriding the Create method
 			}
 			timer.Stop();            
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
 			if (mSession_.MessageMode.Equals(MessageMode.Normal))
 			{
@@ -348,7 +348,7 @@ namespace MiskoPersist.Core
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
 			if (result == 0)
 			{
@@ -367,7 +367,7 @@ namespace MiskoPersist.Core
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
 			if (result == 0)
 			{
@@ -390,7 +390,7 @@ namespace MiskoPersist.Core
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
-			mSession_.SqlExecutionTime += timer.ElapsedMilliseconds;
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
 			return result;
 		}

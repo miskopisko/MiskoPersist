@@ -1,11 +1,12 @@
 using System;
-using MiskoPersist.Core;
+using System.Xml;
 using Newtonsoft.Json;
+using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    [JsonConverter(typeof(PrimaryKeySerializer))]
-	public class PrimaryKey : IComparable<PrimaryKey>, IComparable<long>, IEquatable<PrimaryKey>, IEquatable<long>
+	[JsonConverter(typeof(PrimaryKeySerializer))]
+	public class PrimaryKey : AbstractViewedData, IComparable<PrimaryKey>, IComparable<Int64>, IEquatable<PrimaryKey>, IEquatable<Int64>
     {
         private static Logger Log = Logger.GetInstance(typeof(PrimaryKey));
 
@@ -22,19 +23,11 @@ namespace MiskoPersist.Data
 			set; 
 		}
         
-        public Boolean IsSet 
+        public override Boolean IsSet 
         { 
         	get 
         	{ 
         		return Value != 0; 
-        	} 
-        }
-        
-        public Boolean IsNotSet 
-        { 
-        	get 
-        	{ 
-        		return !IsSet; 
         	} 
         }
 
@@ -226,7 +219,7 @@ namespace MiskoPersist.Data
 
         #region IComparable<long> Members
 
-        public Int32 CompareTo(long other)
+        public Int32 CompareTo(Int64 other)
         {
             return Value.CompareTo(other);
         }
@@ -249,9 +242,9 @@ namespace MiskoPersist.Data
 
         #region IEquatable<long> Members
 
-        public Boolean Equals(long other)
+        public Boolean Equals(Int64 other)
         {
-            if (Object.ReferenceEquals(other, null))
+            if (Object.Equals(other, null))
             {
                 return false;
             }
@@ -260,6 +253,20 @@ namespace MiskoPersist.Data
         }
 
         #endregion
+
+		#region XmlSerialization
+
+		public override void ReadXml(XmlReader reader)
+		{
+			Value = Int64.Parse(XML.InnerText);
+		}
+
+		public override void WriteXml(XmlWriter writer)
+		{
+			writer.WriteValue(Value);
+		}
+
+		#endregion
     }
     
     internal sealed class PrimaryKeySerializer : JsonConverter
@@ -271,17 +278,12 @@ namespace MiskoPersist.Data
 		    writer.WriteValue(((PrimaryKey)value).Value);
 		}
 		
-		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
-            if (reader.Value != null)
-            {
-                return new PrimaryKey((Int64)reader.Value);
-            }
-
-            return null;
+			return reader.Value != null ? new PrimaryKey((Int64)reader.Value) : null;
 		}
 		
-		public override Boolean CanConvert(Type ObjectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}

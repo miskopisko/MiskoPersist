@@ -1,6 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reflection;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 
 namespace MiskoPersist.Enums
@@ -10,7 +13,6 @@ namespace MiskoPersist.Enums
     {
         #region Properties
 		
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public Int64 Value 
         { 
         	get; 
@@ -97,6 +99,23 @@ namespace MiskoPersist.Enums
 
             return o != null && o.GetType() == GetType() && o.Value == Value;
         }
+
+		#region XmlSerialization
+
+		public void ReadXml(XmlReader reader)
+		{
+			
+		}
+
+		public void WriteXml(XmlWriter writer)
+		{
+			if(IsSet)
+			{
+				writer.WriteValue(Value);
+			}
+		}
+
+		#endregion
     }
     
     internal sealed class EnumSerializer : JsonConverter
@@ -117,16 +136,12 @@ namespace MiskoPersist.Enums
             }
 		}
 		
-		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
-            if(reader.Value != null)
-            {
-                return (AbstractEnum)ObjectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { (Int64)reader.Value });
-            }
-            return null;
+			return reader.Value != null ? (AbstractEnum)objectType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { (Int64)reader.Value }) : null;
 		}
 		
-		public override Boolean CanConvert(Type ObjectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}

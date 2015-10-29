@@ -24,19 +24,14 @@ namespace MiskoPersist.Core
         #endregion
 
         #region Private Methods
-        
-        public static ResponseMessage Process(String request)
-        {
-            return Process(RequestMessage.Deserialize(request));
-        }
 
         public static ResponseMessage Process(RequestMessage request)
         {
             if (request != null)
             {
                 ResponseMessage response = new ResponseMessage();
-                MessageWrapper wrapper = null;
-                Session session = new Session();				
+                Session session = new Session();
+                TimeSpan messageExecutionTime = TimeSpan.Zero;
                 	
                 try
                 {
@@ -44,7 +39,7 @@ namespace MiskoPersist.Core
                     String msgPath = request.GetType().FullName.Replace("Requests." + msgName + "RQ", "");
 
                     response = (ResponseMessage)request.GetType().Assembly.CreateInstance(msgPath + "Responses." + msgName + "RS");
-                    wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
+                    MessageWrapper wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
 
                     // Instantiate the properties of the response message; eliminated null pointers
                     foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) 
@@ -83,7 +78,7 @@ namespace MiskoPersist.Core
                     Stopwatch watch = Stopwatch.StartNew();
                     wrapper.GetType().InvokeMember(request.Command, BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
                     watch.Stop();
-        			long elapsedMs = watch.ElapsedMilliseconds;
+        			messageExecutionTime = watch.Elapsed;
                 }
                 catch (TargetInvocationException e)
                 {
@@ -141,6 +136,8 @@ namespace MiskoPersist.Core
 
                         response.Status = session.Status;
                         response.ErrorMessages = session.ErrorMessages;
+                        response.MessageExecutionTime = messageExecutionTime;
+                        response.SqlExecutionTime = session.SqlExecutionTime;
                         
                         if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
                        	{

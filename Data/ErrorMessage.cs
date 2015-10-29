@@ -2,22 +2,22 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Xml;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
 using MiskoPersist.Tools;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Data
 {
-    [JsonConverter(typeof(ErrorSerializer))]
-    public class ErrorMessage
+	[JsonConverter(typeof(ErrorSerializer))]
+	public class ErrorMessage : AbstractViewedData
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessage));
 
         #region Fields
 
-        private String mErrorMessage_;
         private Boolean? mConfirmed_ = false;
 
         #endregion
@@ -36,7 +36,7 @@ namespace MiskoPersist.Data
 			set;
 		}
 		
-		public List<Object> Parameters 
+		public List<String> Parameters 
 		{
 			get;
 			set;
@@ -48,16 +48,10 @@ namespace MiskoPersist.Data
 			set;
 		}
 		
-        public String Message 
-        { 
-        	get 
-        	{ 
-        		return ToString(); 
-        	} 
-        	set 
-        	{ 
-        		mErrorMessage_ = value;
-        	} 
+        public String Message
+        {
+            get;
+            set;
         }
 
         public Boolean? Confirmed 
@@ -95,8 +89,8 @@ namespace MiskoPersist.Data
 			}
         	
             ErrorLevel = ErrorLevel.Error;
-            mErrorMessage_ = e.Message;
-            Parameters = null;
+            Message = e.Message;
+            Parameters = new List<String>();
         }
 
         public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message) 
@@ -109,8 +103,16 @@ namespace MiskoPersist.Data
             Class = clazz.Name;
             Method = method.Name;
             ErrorLevel = level;
-            mErrorMessage_ = message;
-            Parameters = parameters != null ? new List<Object>(parameters) : null;
+            Message = message;
+            Parameters = new List<String>();
+
+            if(parameters != null)
+            {
+                foreach(Object parameter in parameters)
+                {
+                    Parameters.Add(parameter == null ? "" : parameter.ToString());
+                }
+            }
         }
 
         #endregion
@@ -119,7 +121,7 @@ namespace MiskoPersist.Data
 
         public override String ToString()
         {
-            return Utils.ResolveTextParameters(mErrorMessage_, Parameters != null ? Parameters.ToArray() : null);
+            return Utils.ResolveTextParameters(Message, Parameters != null ? Parameters.ToArray() : null);
         }
         
         #endregion
@@ -176,7 +178,7 @@ namespace MiskoPersist.Data
 				parametersEqual = new HashSet<Object>(Parameters).SetEquals(new HashSet<Object>(other.Parameters));
 			}
 						
-			return mErrorMessage_.Equals(other.mErrorMessage_) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && parametersEqual;
+			return Message.Equals(other.Message) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && parametersEqual;
 		}
 
 		public static Boolean operator ==(ErrorMessage lhs, ErrorMessage rhs) 
@@ -200,6 +202,62 @@ namespace MiskoPersist.Data
 		}
 
         #endregion
+        
+        #region XmlSerialization
+
+        public override void ReadXml(XmlReader reader)
+		{
+        	Class = GetElement("Class");
+        	Method = GetElement("Method");
+        	
+        	XmlNodeList parameters = XML.GetElementsByTagName("Parameters");
+        	if(parameters != null && parameters.Count > 0)
+        	{
+        		Parameters = new List<String>();
+				foreach (XmlElement parameter in parameters) 
+	        	{
+	        		Parameters.Add(parameter.InnerText);
+	        	}        		
+        	}
+        	
+        	ErrorLevel = (ErrorLevel)GetEnumElement("ErrorLevel", typeof(ErrorLevel));
+        	Message = GetElement("Message");
+		}
+
+		public override void WriteXml(XmlWriter writer)
+		{
+			writer.WriteStartElement("ErrorMessage");
+			
+			writer.WriteStartElement("Class");
+			writer.WriteValue(Class);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Method");
+			writer.WriteValue(Method);
+            writer.WriteEndElement();
+
+            if(Parameters != null && Parameters.Count > 0)
+            {
+            	foreach (Object parameter in Parameters) 
+            	{
+	            	writer.WriteStartElement("Parameters");
+					writer.WriteValue(parameter);
+	            	writer.WriteEndElement();
+            	}  
+            }
+
+            writer.WriteStartElement("ErrorLevel");
+            ErrorLevel.WriteXml(writer);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Message");
+			writer.WriteValue(Message);
+            writer.WriteEndElement();
+			
+			writer.WriteEndElement();
+		}
+
+		#endregion
     }
 
     internal sealed class ErrorSerializer : JsonConverter
@@ -236,21 +294,21 @@ namespace MiskoPersist.Data
             writer.WriteEndObject();
         }
 
-        public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+        public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
         {
             JObject jsonObject = JObject.Load(reader);
 
             ErrorMessage result = new ErrorMessage();
             result.Class = (String)jsonObject["Class"];
             result.Method = (String)jsonObject["Method"];
-            result.Parameters = jsonObject["Parameters"] != null ? jsonObject["Parameters"].ToObject<List<Object>>() : null;
+            result.Parameters = jsonObject["Parameters"] != null ? jsonObject["Parameters"].ToObject<List<String>>() : null;
             result.ErrorLevel = ErrorLevel.GetElement((Int32)jsonObject["ErrorLevel"]);
             result.Message = (String)jsonObject["Message"];
 
             return result;
         }
 
-        public override Boolean CanConvert(Type ObjectType)
+        public override Boolean CanConvert(Type objectType)
         {
             throw new NotImplementedException();
         }

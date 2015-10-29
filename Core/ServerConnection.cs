@@ -3,9 +3,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using Message;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Interfaces;
@@ -28,11 +30,12 @@ namespace MiskoPersist.Core
 		
 		private static Int32 mActive_ = 0;
 		private static IOController mIOController_;
+		private static Uri mUrl_;
 		
 		private Thread mThread_;
 		private MessageCompleteHandler mSuccessHandler_;
         private MessageCompleteHandler mErrorHandler_;
-        private RequestMessage mRequest_;
+        private RequestMessage mRequest_;        
 		
 		#endregion
 		
@@ -53,6 +56,24 @@ namespace MiskoPersist.Core
 			{
 				mIOController_ = value;
                 Application.ThreadException += mIOController_.Exception;
+			}
+		}
+		
+		private static Uri Url
+		{
+			get
+			{
+				if(mUrl_ == null)
+				{
+					String url = IOController.UseSSL ? "https://" : "http://";
+		            url += IOController.Host;
+		            url += ":" + IOController.Port;
+		            url += IOController.Script;
+		            
+		            mUrl_ = new Uri(url);
+				}
+				
+				return mUrl_;
 			}
 		}
 		
@@ -101,21 +122,13 @@ namespace MiskoPersist.Core
 			Invoke(method);
 			
 			#if DEBUG
-                Debug.WriteLine(mRequest_.Serialize());
+                Debug.WriteLine(mRequest_.Write(mIOController_.SerializationType));
             #endif
 			
-            ResponseMessage response = null;
-            if(IOController.ServerLocation.Equals(ServerLocation.Local))
-            {
-                response = MessageProcessor.Process(mRequest_);
-            }
-            else
-            {
-                response = SendToServer();
-            }
+            ResponseMessage response = IOController.ServerLocation.Equals(ServerLocation.Local) ? MessageProcessor.Process(mRequest_) : SendToServer();
 
 			#if DEBUG
-                Debug.WriteLine(response.Serialize());
+                Debug.WriteLine(response.Write(mIOController_.SerializationType));               
             #endif
                 
             if(HandleErrors(response.ErrorMessages))
@@ -259,45 +272,45 @@ namespace MiskoPersist.Core
 		}
 
         private ResponseMessage SendToServer()
-        {
-            String url = IOController.UseSSL ? "https://" : "http://";
-            url += IOController.Host;
-            url += IOController.Port != 80 ? ":" + IOController.Port : "";
-            url += IOController.Script;
-
-            ResponseMessage responseMessage = null;
+        {   
+            ResponseMessage responseMessage = new ResponseMessage();
 
             try
             {
-            	HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(url);                
-                httpRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
-                httpRequest.Method = "POST";
-                httpRequest.KeepAlive = true;
-                httpRequest.ContentType = "application/x-www-form-urlencoded";
-
-                using(StreamWriter writer = new StreamWriter(httpRequest.GetRequestStream()))
+            	HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(Url);
+                webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+                webRequest.Method = "POST";
+                webRequest.KeepAlive = true;
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+            	
+            	using(StreamWriter writer = new StreamWriter(webRequest.GetRequestStream()))
                 {
-                    String postData = "request=" + HttpUtility.UrlEncode(mRequest_.Serialize());
-                    writer.Write(postData);
+            		writer.Write("message=" + HttpUtility.UrlEncode(mRequest_.Write(mIOController_.SerializationType)) + "&serializationType=" + mIOController_.SerializationType.Value);
                 }
 
-				using (StreamReader reader = new StreamReader(((HttpWebResponse)httpRequest.GetResponse()).GetResponseStream()))
-				{ 
-					responseMessage = ResponseMessage.Deserialize(reader.ReadToEnd());
+				using(StreamReader reader = new StreamReader(((HttpWebResponse)webRequest.GetResponse()).GetResponseStream()))
+				{
+					responseMessage = (ResponseMessage)CoreMessage.Read(reader.ReadToEnd(), mIOController_.SerializationType);
                 }                
             }
             catch(Exception ex)
             {
+            	if(ex is TargetInvocationException)
+            	{
+            		ex = ex.InnerException;
+            	}
+            	
+            	responseMessage = new ResponseMessage();
+            	responseMessage.Status = ErrorLevel.Error;
+            	responseMessage.Errors.Add(new ErrorMessage(ex));
+            	
                 while(ex.InnerException != null)
                 {
                     ex = ex.InnerException;
+                    responseMessage.Errors.Add(new ErrorMessage(ex));
                 }
-
-                responseMessage = new ResponseMessage();
-                responseMessage.Status = ErrorLevel.Error;
-                responseMessage.Errors.Add(new ErrorMessage(ex));
             }
-
+            
             return responseMessage;
         }
 		

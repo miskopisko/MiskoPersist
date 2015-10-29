@@ -16,34 +16,12 @@ namespace MiskoPersist.Tools
 
         #region Fields
 
-        private static byte[] mSalt_ = Encoding.ASCII.GetBytes("b780gU&G&*GP&G&*)");
+        private static Byte[] mSalt_ = Encoding.ASCII.GetBytes("b780gU&G&*GP&G&*)");
         private const String mSharedSecret_ = "bn89*(HG)*h80I&*(*)Y*Hjkjub";
 
         #endregion
 
         #region Public Static Methods
-
-        public static String GenerateHash(String input)
-        {
-            MD5 md5Hash = MD5.Create();
-
-            // Convert the input string to a byte array and compute the hash. 
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
-
-            // Create a new Stringbuilder to collect the bytes 
-            // and create a string.
-            StringBuilder sBuilder = new StringBuilder();
-
-            // Loop through each byte of the hashed data  
-            // and format each one as a hexadecimal string. 
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-
-            // Return the hexadecimal string. 
-            return sBuilder.ToString();
-        }
 
         public static String ResolveTextParameters(String text, Object[] parameters)
         {
@@ -81,19 +59,6 @@ namespace MiskoPersist.Tools
             }
 
             return "";
-        }
-
-        public static T Deserialize<T>(String xml)
-        {
-            if (String.IsNullOrEmpty(xml))
-            {
-                return default(T);
-            }
-
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-            XmlReader xmlReader = XmlReader.Create(new StringReader(xml));
-
-            return (T)serializer.Deserialize(xmlReader);
         }
 
         public static String EncryptStringAES(String plainText)
@@ -169,7 +134,7 @@ namespace MiskoPersist.Tools
                 Rfc2898DeriveBytes key = new Rfc2898DeriveBytes(mSharedSecret_, mSalt_);
 
                 // Create the streams used for decryption.                
-                byte[] bytes = Convert.FromBase64String(cipherText);
+                Byte[] bytes = Convert.FromBase64String(cipherText);
                 using (MemoryStream msDecrypt = new MemoryStream(bytes))
                 {
                     // Create a RijndaelManaged object
@@ -249,18 +214,18 @@ namespace MiskoPersist.Tools
 
         #region Private Methods
 
-        private static byte[] ReadByteArray(Stream s)
+        private static Byte[] ReadByteArray(Stream s)
         {
-            byte[] rawLength = new byte[sizeof(Int32)];
+            Byte[] rawLength = new Byte[sizeof(Int32)];
             if (s.Read(rawLength, 0, rawLength.Length) != rawLength.Length)
             {
-                throw new SystemException("Stream did not contain properly formatted byte array");
+                throw new SystemException("Stream did not contain properly formatted Byte array");
             }
 
-            byte[] buffer = new byte[BitConverter.ToInt32(rawLength, 0)];
+            Byte[] buffer = new Byte[BitConverter.ToInt32(rawLength, 0)];
             if (s.Read(buffer, 0, buffer.Length) != buffer.Length)
             {
-                throw new SystemException("Did not read byte array properly");
+                throw new SystemException("Did not read Byte array properly");
             }
 
             return buffer;

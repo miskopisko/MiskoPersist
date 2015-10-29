@@ -6,7 +6,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public abstract class AbstractStoredData : AbstractData
+    public class AbstractStoredData : AbstractData
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractStoredData));
 
@@ -39,12 +39,12 @@ namespace MiskoPersist.Data
 
         #region Constructors
 
-        protected AbstractStoredData()
+        public AbstractStoredData()
         {
             Id = new PrimaryKey();
         }
 
-        protected AbstractStoredData(Session session, Persistence persistence)
+        public AbstractStoredData(Session session, Persistence persistence)
         {
         	Set(session, persistence);
         }
@@ -242,9 +242,20 @@ namespace MiskoPersist.Data
 
         #region Abstract Methods
 
-        public abstract AbstractStoredData Create(Session session);
-        public abstract AbstractStoredData Store(Session session);
-        public abstract AbstractStoredData Remove(Session session);
+        public virtual AbstractStoredData Create(Session session)
+        {
+        	return this;
+        }
+        
+        public virtual AbstractStoredData Store(Session session)
+        {
+        	return this;
+        }
+        
+        public virtual AbstractStoredData Remove(Session session)
+        {
+        	return this;
+        }
 
         #endregion
     }

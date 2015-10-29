@@ -19,6 +19,8 @@ namespace MiskoPersist.Interfaces
 
         Boolean UseSSL { get; }
         
+        SerializationType SerializationType { get; }
+        
         void Status(MessageStatus status);
 
         void MessageReceived();

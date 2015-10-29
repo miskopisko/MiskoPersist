@@ -1,13 +1,12 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters;
-using System.Text;
-using Message;
-using MiskoPersist.Core;
-using MiskoPersist.Enums;
+using System.Xml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Message;
+using MiskoPersist.Core;
+using MiskoPersist.Data;
+using MiskoPersist.Enums;
 
 namespace MiskoPersist.Message.Request
 {
@@ -54,25 +53,64 @@ namespace MiskoPersist.Message.Request
 		}
 
 		#endregion
+		
+		#region XmlSerialization
 
-		#region Serialization
-
-		public static RequestMessage Deserialize(String json)
+        public override void ReadXml(XmlReader reader)
 		{
-			RequestMessage requestMessage;
-
-			using (JsonReader reader = new JsonTextReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(json ?? "")))))
+        	if(!GetType().Equals(typeof(RequestMessage)))
+        	{
+				base.ReadXml(reader);
+        	}
+			
+			MessageMode = (MessageMode)GetEnumElement("MessageMode", typeof(MessageMode)) ?? MessageMode.Normal;
+			Command = GetElement("Command") ?? "Execute";
+			Connection = GetElement("Connection") ?? "Default";
+			Page = (Page)GetDataElement("Page", typeof(Page));
+			Confirmations.ReadXml(XML, "Confirmations");
+		}
+		
+        public override void WriteXml(XmlWriter writer)
+		{
+        	if(!GetType().Equals(typeof(RequestMessage)))
+        	{
+				base.WriteXml(writer);
+        	}
+						
+			if(!MessageMode.Equals(MessageMode.Normal))
 			{
-				JsonSerializer serializer = new JsonSerializer();
-				serializer.TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple;
-				serializer.TypeNameHandling = TypeNameHandling.Objects;
-				serializer.NullValueHandling = NullValueHandling.Ignore;
-				serializer.DateFormatString = "yyyy-MM-dd";
-				serializer.Formatting = Formatting.Indented;
-				requestMessage = serializer.Deserialize<RequestMessage>(reader);
+				writer.WriteStartElement("MessageMode");
+				writer.WriteValue(MessageMode);
+				writer.WriteEndElement();
 			}
 
-			return requestMessage;
+			if(!Command.Equals("Execute"))
+			{
+				writer.WriteStartElement("Command");
+				writer.WriteValue(Command);
+				writer.WriteEndElement();
+			}
+
+			if(!Connection.Equals("Default"))
+			{
+				writer.WriteStartElement("Connection");
+				writer.WriteValue(Connection);
+				writer.WriteEndElement();
+			}
+
+			if(Page != null)
+			{
+				writer.WriteStartElement("Page");
+				Page.WriteXml(writer);
+				writer.WriteEndElement();
+			}
+
+			if(Confirmations != null && Confirmations.Count > 0)
+			{
+				writer.WriteStartElement("Confirmations");
+				Confirmations.WriteXml(writer);
+				writer.WriteEndElement();
+			}
 		}
 
 		#endregion
@@ -130,7 +168,7 @@ namespace MiskoPersist.Message.Request
 			writer.WriteEndObject();
 		}
 
-		public override Object ReadJson(JsonReader reader, Type ObjectType, Object existingValue, JsonSerializer serializer)
+		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
 			JObject jsonObject = JObject.Load(reader);
 
@@ -148,7 +186,7 @@ namespace MiskoPersist.Message.Request
 			return request;
 		}
 
-		public override Boolean CanConvert(Type ObjectType)
+		public override Boolean CanConvert(Type objectType)
 		{
 			throw new NotImplementedException();
 		}
