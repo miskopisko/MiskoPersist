@@ -4,7 +4,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Tools
 {
-    public class CommandLineProcess
+	public class CommandLineProcess
     {
         private static Logger Log = Logger.GetInstance(typeof(CommandLineProcess));
 

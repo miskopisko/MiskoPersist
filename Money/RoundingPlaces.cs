@@ -1,6 +1,6 @@
 ﻿namespace MiskoPersist.MoneyType
 {
-    public enum RoundingPlaces
+	public enum RoundingPlaces
     {
         Zero,
         One,

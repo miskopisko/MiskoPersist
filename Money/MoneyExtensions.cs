@@ -2,7 +2,7 @@
 
 namespace MiskoPersist.MoneyType
 {
-    public static class MoneyExtensions
+	public static class MoneyExtensions
     {
         public static Money[] Distribute(this Money money,
                                          FractionReceivers fractionReceivers,

@@ -4,7 +4,7 @@ using MiskoPersist.Message.Response;
 
 namespace MiskoPersist.Message
 {
-    public abstract class MessageWrapper
+	public abstract class MessageWrapper
     {
         private static Logger Log = Logger.GetInstance(typeof(MessageWrapper));
 

@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace MiskoPersist.MoneyType
 {
-    [Serializable]
+	[Serializable]
     public struct Currency : IEquatable<Currency>, IFormatProvider
     {
         #region Static Currency Fields

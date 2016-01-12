@@ -11,51 +11,51 @@ using MiskoPersist.Resources;
 
 namespace MiskoPersist.Core
 {
-    public class MessageProcessor
-    {
-        private static readonly Logger Log = Logger.GetInstance(typeof(MessageProcessor));
+	public class MessageProcessor
+	{
+		private static readonly Logger Log = Logger.GetInstance(typeof(MessageProcessor));
 
-        #region Constructors
+		#region Constructors
 
-        private MessageProcessor()
-        {            
-        }
+		private MessageProcessor()
+		{            
+		}
 
-        #endregion
+		#endregion
 
-        #region Private Methods
+		#region Private Methods
 
-        public static ResponseMessage Process(RequestMessage request)
-        {
-            if (request != null)
-            {
-                ResponseMessage response = new ResponseMessage();
-                Session session = new Session();
-                TimeSpan messageExecutionTime = TimeSpan.Zero;
-                	
-                try
-                {
-                    String msgName = request.GetType().Name.Substring(0, request.GetType().Name.Length - 2);
-                    String msgPath = request.GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+		public static ResponseMessage Process(RequestMessage request)
+		{
+			if (request != null)
+			{
+				ResponseMessage response = new ResponseMessage();
+				Session session = new Session();
+				TimeSpan messageExecutionTime = TimeSpan.Zero;
+					
+				try
+				{
+					String msgName = request.GetType().Name.Substring(0, request.GetType().Name.Length - 2);
+					String msgPath = request.GetType().FullName.Replace("Requests." + msgName + "RQ", "");
 
-                    response = (ResponseMessage)request.GetType().Assembly.CreateInstance(msgPath + "Responses." + msgName + "RS");
-                    MessageWrapper wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
+					response = (ResponseMessage)request.GetType().Assembly.CreateInstance(msgPath + "Responses." + msgName + "RS");
+					MessageWrapper wrapper = (MessageWrapper)request.GetType().Assembly.CreateInstance(msgPath + msgName, false, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
 
-                    // Instantiate the properties of the response message; eliminated null pointers
-                    foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) 
-                    {
-                    	Object obj = null;
-                    	
-                    	if(property.PropertyType == typeof(String))
-                    	{
-                    		obj = "";
-                    	}
-                    	else if(property.PropertyType.BaseType == typeof(Array))
-                    	{
-                    		throw new MiskoException(ErrorStrings.errDoNotUseArrays);
-                    	}
-                    	else
-                    	{
+					// Instantiate the properties of the response message; eliminated null pointers
+					foreach (PropertyInfo property in response.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)) 
+					{
+						Object obj = null;
+						
+						if(property.PropertyType == typeof(String))
+						{
+							obj = "";
+						}
+						else if(property.PropertyType.BaseType == typeof(Array))
+						{
+							throw new MiskoException(ErrorStrings.errDoNotUseArrays);
+						}
+						else
+						{
 							try
 							{
 								obj = Activator.CreateInstance(property.PropertyType);
@@ -63,95 +63,95 @@ namespace MiskoPersist.Core
 							catch
 							{
 							}
-                    	}
-                    	
-                    	property.SetValue(response, obj);
-                    }
-                    
-                    response.Page = request.Page;
+						}
+						
+						property.SetValue(response, obj);
+					}
+					
+					response.Page = request.Page;
 
-                    session.Connection = ServiceLocator.GetConnection(request.Connection);
-                	session.MessageMode = request.MessageMode;
-                    session.ErrorMessages.AddRange(request.Confirmations);
-                    session.BeginTransaction();
+					session.Connection = ServiceLocator.GetConnection(request.Connection);
+					session.MessageMode = request.MessageMode;
+					session.ErrorMessages.AddRange(request.Confirmations);
+					session.BeginTransaction();
 
-                    Stopwatch watch = Stopwatch.StartNew();
-                    wrapper.GetType().InvokeMember(request.Command, BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
-                    watch.Stop();
-        			messageExecutionTime = watch.Elapsed;
-                }
-                catch (TargetInvocationException e)
-                {
-                    session.Status = ErrorLevel.Error;
+					Stopwatch watch = Stopwatch.StartNew();
+					wrapper.GetType().InvokeMember(request.Command, BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
+					watch.Stop();
+					messageExecutionTime = watch.Elapsed;
+				}
+				catch (TargetInvocationException e)
+				{
+					session.Status = ErrorLevel.Error;
 
-                    Exception ActualException = e;
+					Exception ActualException = e;
 
-                    while (ActualException.InnerException != null)
-                    {
-                        ActualException = ActualException.InnerException;
-                    }
+					while (ActualException.InnerException != null)
+					{
+						ActualException = ActualException.InnerException;
+					}
 
-                    if (ActualException is MiskoException)
-                    {
-                        MiskoException ex = (MiskoException)ActualException;
+					if (ActualException is MiskoException)
+					{
+						MiskoException ex = (MiskoException)ActualException;
 
-                        // Ignore the generic exception thrown from session.Error
-                        if (!(ex.Class.Name.Equals("Session") && ex.Method.Name.Equals("Error")))
-                        {
-                            Log.Error("Unexpected Error: (" + ex.Message + ")", ex);
-                            session.ErrorMessages.Add(ex.ErrorMessage);
-                            
-                            #if DEBUG
+						// Ignore the generic exception thrown from session.Error
+						if (!(ex.Class.Name.Equals("Session") && ex.Method.Name.Equals("Error")))
+						{
+							Log.Error("Unexpected Error: (" + ex.Message + ")", ex);
+							session.ErrorMessages.Add(ex.ErrorMessage);
+							
+							#if DEBUG
 								Debug.WriteLine(ActualException.StackTrace);
 							#endif                   
-                        }
-                    }
-                    else
-                    {
-                    	session.Status = ErrorLevel.Error;
-                    	
-                        Log.Error("Unexpected Error: (" + ActualException.Message + ")", ActualException);
-                        session.ErrorMessages.Add(new ErrorMessage(ActualException));
-                        
-                        #if DEBUG
+						}
+					}
+					else
+					{
+						session.Status = ErrorLevel.Error;
+						
+						Log.Error("Unexpected Error: (" + ActualException.Message + ")", ActualException);
+						session.ErrorMessages.Add(new ErrorMessage(ActualException));
+						
+						#if DEBUG
 							Debug.WriteLine(ActualException.StackTrace);
 						#endif
-                    }
-                }
-                catch(Exception e)
-                {
-                	Log.Error("Unexpected Error: (" + e.Message + ")", e);
-                    session.ErrorMessages.Add(new ErrorMessage(e));
-                        
-                    #if DEBUG
+					}
+				}
+				catch(Exception e)
+				{
+					Log.Error("Unexpected Error: (" + e.Message + ")", e);
+					session.ErrorMessages.Add(new ErrorMessage(e));
+						
+					#if DEBUG
 						Debug.WriteLine(e.StackTrace);
 					#endif
-                }
-                finally
-                {
-                    if (session != null)
-                    {
-                        session.EndTransaction();
-                        session.FlushPersistence();
+				}
+				finally
+				{
+					if (session != null)
+					{
+						session.EndTransaction();
+						session.FlushPersistence();
 
-                        response.Status = session.Status;
-                        response.ErrorMessages = session.ErrorMessages;
-                        response.MessageExecutionTime = messageExecutionTime;
-                        response.SqlExecutionTime = session.SqlExecutionTime;
-                        
-                        if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
-                       	{
-                        	session.Connection.Close();
-                       	}                        
-                    }
-                }
-                
-                return response;
-            }
+						response.Status = session.Status;
+						response.ErrorMessages = session.ErrorMessages;
+						response.MessageExecutionTime = messageExecutionTime;
+						response.SqlExecutionTime = session.SqlExecutionTime;
+						
+						if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
+						{
+							session.Connection.Close();
+						}                        
+					}
+				}
+				
+				return response;
+			}
 
-            return new ResponseMessage();
-        }
+			return new ResponseMessage();
+		}
 
-        #endregion        
-    }
+		#endregion        
+	}
 }

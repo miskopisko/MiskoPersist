@@ -6,7 +6,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractStoredData : AbstractData
+	public class AbstractStoredData : AbstractData
     {
         private static Logger Log = Logger.GetInstance(typeof(AbstractStoredData));
 

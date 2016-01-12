@@ -6,6 +6,7 @@ using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.Message.Response;
+using MiskoPersist.Tools;
 using Newtonsoft.Json;
 
 namespace Message
@@ -62,45 +63,41 @@ namespace Message
 		
 		#region Serialization
 		
-		public static CoreMessage Read(String message, SerializationType serializationType)
-        {
+		public static CoreMessage Read(String message)
+		{
+			SerializationType serializationType = message.GetSerializationType();
+
 			CoreMessage result = null;
 			
-        	if(serializationType.Equals(SerializationType.Xml))
-        	{
-        		XmlDocument document = new XmlDocument();
-                document.LoadXml(message);
+			if(serializationType.Equals(SerializationType.Xml))
+			{
+				XmlDocument document = new XmlDocument();
+				document.LoadXml(message);
 
-                result = (CoreMessage)Activator.CreateInstance(Type.GetType(document.DocumentElement.Attributes["Type"].Value));
-                result.ReadXml(message);
-        	}
-        	else if(serializationType.Equals(SerializationType.Json))
-        	{
-				return (CoreMessage)JsonSerializer.Create(JsonSettings).Deserialize(new JsonTextReader(new StringReader(message)));
-        	}
-        	else
-        	{
-				result = new ResponseMessage();
-				((ResponseMessage)result).Status = ErrorLevel.Error;
-            	((ResponseMessage)result).Errors.Add(new ErrorMessage(new MiskoException("Error parsing message. It is not a proper Xml or Json format.")));
-        	}
-        	
-        	return result;
-        }
+				result = (CoreMessage)Activator.CreateInstance(Type.GetType(document.DocumentElement.Attributes["Type"].Value));
+				result.ReadXml(message);				
+			}
+			else if(serializationType.Equals(SerializationType.Json))
+			{
+				result = (CoreMessage)JsonSerializer.Create(JsonSettings).Deserialize(new JsonTextReader(new StringReader(message)));
+			}
 
-        public String Write(SerializationType serializationType)
-        {
-        	if(serializationType.Equals(SerializationType.Xml))
-        	{
-        		return WriteXml();
-        	}
-        	else if(serializationType.Equals(SerializationType.Json))
-        	{
-        		return WriteJson();
-        	}
+			return result;
+		}
 
-            throw new MiskoException("Invalid serialization type. Should be one of Xml or Json");
-        }
+		public String Write(SerializationType serializationType)
+		{
+			if(serializationType.Equals(SerializationType.Xml))
+			{
+				return WriteXml();
+			}
+			else if(serializationType.Equals(SerializationType.Json))
+			{
+				return WriteJson();
+			}
+
+			throw new MiskoException("Invalid serialization type. Should be one of Xml or Json");
+		}
 
 		private String WriteJson()
 		{

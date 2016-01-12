@@ -2,7 +2,7 @@
 
 namespace MiskoPersist.Enums
 {
-    public class ServerLocation : AbstractEnum
+	public class ServerLocation : AbstractEnum
     {
         #region Fields
 

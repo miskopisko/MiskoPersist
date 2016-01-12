@@ -1,6 +1,6 @@
 ﻿namespace MiskoPersist.MoneyType
 {
-    public enum FractionReceivers
+	public enum FractionReceivers
     {
         FirstToLast,
         LastToFirst,

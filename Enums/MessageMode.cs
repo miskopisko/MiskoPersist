@@ -2,7 +2,7 @@ using System;
 
 namespace MiskoPersist.Enums
 {
-    public class MessageMode : AbstractEnum
+	public class MessageMode : AbstractEnum
     {
         #region Fields
 

@@ -1,11 +1,10 @@
 ﻿using System;
 using MiskoPersist.Core;
-using MiskoPersist.Data;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-    public class DatabaseConnections : AbstractViewedDataList<DatabaseConnection>
+	public class DatabaseConnections : AbstractViewedDataList<DatabaseConnection>
 	{
 		private static Logger Log = Logger.GetInstance(typeof(DatabaseConnections));
 		

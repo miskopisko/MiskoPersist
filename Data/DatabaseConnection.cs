@@ -3,12 +3,11 @@ using System.Data;
 using System.Xml;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
-using MiskoPersist.Data;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-    public class DatabaseConnection : AbstractViewedData
+	public class DatabaseConnection : AbstractViewedData
 	{
 		private static Logger Log = Logger.GetInstance(typeof(DatabaseConnection));
 		

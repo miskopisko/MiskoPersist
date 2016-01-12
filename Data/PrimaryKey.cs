@@ -1,258 +1,258 @@
 using System;
 using System.Xml;
-using Newtonsoft.Json;
 using MiskoPersist.Core;
+using Newtonsoft.Json;
 
 namespace MiskoPersist.Data
 {
 	[JsonConverter(typeof(PrimaryKeySerializer))]
 	public class PrimaryKey : AbstractViewedData, IComparable<PrimaryKey>, IComparable<Int64>, IEquatable<PrimaryKey>, IEquatable<Int64>
-    {
-        private static Logger Log = Logger.GetInstance(typeof(PrimaryKey));
+	{
+		private static Logger Log = Logger.GetInstance(typeof(PrimaryKey));
 
-        #region Fields
+		#region Fields
 
 
-        #endregion
+		#endregion
 
-        #region Properties
+		#region Properties
 
 		public Int64 Value 
 		{ 
 			get; 
 			set; 
 		}
-        
-        public override Boolean IsSet 
-        { 
-        	get 
-        	{ 
-        		return Value != 0; 
-        	} 
-        }
+		
+		public new Boolean IsSet 
+		{ 
+			get 
+			{ 
+				return Value != 0; 
+			} 
+		}
 
-        #endregion
+		#endregion
 
-        #region Constructors
+		#region Constructors
 
-        public PrimaryKey()
-        {
-            Value = 0;
-        }
+		public PrimaryKey()
+		{
+			Value = 0;
+		}
 
-        public PrimaryKey(Int64 value)
-        {
-            Value = value;
-        }
+		public PrimaryKey(Int64 value)
+		{
+			Value = value;
+		}
 
-        public PrimaryKey(String s)
-        {
-            if (!String.IsNullOrEmpty(s))
-            {
-                Value = Convert.ToInt64(s);
-            }
-            else
-            {
-                Value = 0;
-            }
-        }
+		public PrimaryKey(String s)
+		{
+			if (!String.IsNullOrEmpty(s))
+			{
+				Value = Convert.ToInt64(s);
+			}
+			else
+			{
+				Value = 0;
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region Operators
+		#region Operators
 
-        public static PrimaryKey operator +(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null)) return new PrimaryKey() + right;
-            return new PrimaryKey(left.Value + right);
-        }
+		public static PrimaryKey operator +(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null)) return new PrimaryKey() + right;
+			return new PrimaryKey(left.Value + right);
+		}
 
-        public static PrimaryKey operator -(PrimaryKey value)
-        {
-            return new PrimaryKey(-value.Value);
-        }
+		public static PrimaryKey operator -(PrimaryKey value)
+		{
+			return new PrimaryKey(-value.Value);
+		}
 
-        public static Boolean operator ==(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return true;
-            else if (Object.ReferenceEquals(left, null) && !Object.Equals(right, null)) return false;
-            else if (!Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return false;
-            return left.Value.Equals(right);
-        }
+		public static Boolean operator ==(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return true;
+			else if (Object.ReferenceEquals(left, null) && !Object.Equals(right, null)) return false;
+			else if (!Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return false;
+			return left.Value.Equals(right);
+		}
 
-        public static Boolean operator !=(PrimaryKey left, Int64 right)
-        {
-            return !(left == right);
-        }
+		public static Boolean operator !=(PrimaryKey left, Int64 right)
+		{
+			return !(left == right);
+		}
 
-        public static Boolean operator ==(PrimaryKey left, PrimaryKey right)
-        {
-            if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
-            else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
-            else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
-            return left.Value.Equals(right.Value);
-        }
+		public static Boolean operator ==(PrimaryKey left, PrimaryKey right)
+		{
+			if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
+			else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
+			else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
+			return left.Value.Equals(right.Value);
+		}
 
-        public static Boolean operator !=(PrimaryKey left, PrimaryKey right)
-        {
-            return !(left == right);
-        }
+		public static Boolean operator !=(PrimaryKey left, PrimaryKey right)
+		{
+			return !(left == right);
+		}
 
-        public static Boolean operator >(PrimaryKey left, PrimaryKey right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator >(PrimaryKey left, PrimaryKey right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right.Value) > 0;
-        }
+			return left.CompareTo(right.Value) > 0;
+		}
 
-        public static Boolean operator >(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator >(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right) > 0;
-        }
+			return left.CompareTo(right) > 0;
+		}
 
-        public static Boolean operator <(PrimaryKey left, PrimaryKey right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator <(PrimaryKey left, PrimaryKey right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right.Value) < 0;
-        }
+			return left.CompareTo(right.Value) < 0;
+		}
 
-        public static Boolean operator <(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator <(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right) < 0;
-        }
+			return left.CompareTo(right) < 0;
+		}
 
-        public static Boolean operator >=(PrimaryKey left, PrimaryKey right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator >=(PrimaryKey left, PrimaryKey right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right.Value) >= 0;
-        }
+			return left.CompareTo(right.Value) >= 0;
+		}
 
-        public static Boolean operator >=(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator >=(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right) >= 0;
-        }
+			return left.CompareTo(right) >= 0;
+		}
 
-        public static Boolean operator <=(PrimaryKey left, PrimaryKey right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator <=(PrimaryKey left, PrimaryKey right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right.Value) <= 0;
-        }
+			return left.CompareTo(right.Value) <= 0;
+		}
 
-        public static Boolean operator <=(PrimaryKey left, Int64 right)
-        {
-            if (Object.ReferenceEquals(left, null))
-            {
-                left = new PrimaryKey(0);
-            }
+		public static Boolean operator <=(PrimaryKey left, Int64 right)
+		{
+			if (Object.ReferenceEquals(left, null))
+			{
+				left = new PrimaryKey(0);
+			}
 
-            return left.CompareTo(right) <= 0;
-        }
+			return left.CompareTo(right) <= 0;
+		}
 
-        #endregion
+		#endregion
 
-        #region Override Methods
+		#region Override Methods
 
-        public override Boolean Equals(Object obj)
-        {
-            if (obj is PrimaryKey)
-            {
-                return Equals((PrimaryKey)obj);
-            }
-            else if (obj is Int64)
-            {
-                return Equals((Int64)obj);
-            }
+		public override Boolean Equals(Object obj)
+		{
+			if (obj is PrimaryKey)
+			{
+				return Equals((PrimaryKey)obj);
+			}
+			else if (obj is Int64)
+			{
+				return Equals((Int64)obj);
+			}
 
-            return false;
-        }
+			return false;
+		}
 
-        public override Int32 GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
+		public override Int32 GetHashCode()
+		{
+			return Value.GetHashCode();
+		}
 
-        public override String ToString()
-        {
-            return Value.ToString();
-        }
+		public override String ToString()
+		{
+			return Value.ToString();
+		}
 
-        #endregion
+		#endregion
 
-        #region IComparable<PrimaryKey> Members
+		#region IComparable<PrimaryKey> Members
 
-        public Int32 CompareTo(PrimaryKey other)
-        {
-            return Value.CompareTo(other.Value);
-        }
+		public Int32 CompareTo(PrimaryKey other)
+		{
+			return Value.CompareTo(other.Value);
+		}
 
-        #endregion
+		#endregion
 
-        #region IComparable<long> Members
+		#region IComparable<long> Members
 
-        public Int32 CompareTo(Int64 other)
-        {
-            return Value.CompareTo(other);
-        }
+		public Int32 CompareTo(Int64 other)
+		{
+			return Value.CompareTo(other);
+		}
 
-        #endregion
+		#endregion
 
-        #region IEquatable<PrimaryKey> Members
+		#region IEquatable<PrimaryKey> Members
 
-        public Boolean Equals(PrimaryKey other)
-        {
-            if (Object.ReferenceEquals(other, null))
-            {
-                return false;
-            }
+		public Boolean Equals(PrimaryKey other)
+		{
+			if (Object.ReferenceEquals(other, null))
+			{
+				return false;
+			}
 
-            return Value == other.Value;
-        }
+			return Value == other.Value;
+		}
 
-        #endregion
+		#endregion
 
-        #region IEquatable<long> Members
+		#region IEquatable<long> Members
 
-        public Boolean Equals(Int64 other)
-        {
-            if (Object.Equals(other, null))
-            {
-                return false;
-            }
+		public Boolean Equals(Int64 other)
+		{
+			if (Object.Equals(other, null))
+			{
+				return false;
+			}
 
-            return Value == other;
-        }
+			return Value == other;
+		}
 
-        #endregion
+		#endregion
 
 		#region XmlSerialization
 
@@ -267,15 +267,15 @@ namespace MiskoPersist.Data
 		}
 
 		#endregion
-    }
-    
-    internal sealed class PrimaryKeySerializer : JsonConverter
-    {
+	}
+	
+	internal sealed class PrimaryKeySerializer : JsonConverter
+	{
 		#region implemented abstract members of JsonConverter
 		
 		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
 		{
-		    writer.WriteValue(((PrimaryKey)value).Value);
+			writer.WriteValue(((PrimaryKey)value).Value);
 		}
 		
 		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
@@ -289,5 +289,5 @@ namespace MiskoPersist.Data
 		}
 		
 		#endregion    	
-    }
+	}
 }

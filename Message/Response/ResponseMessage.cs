@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Reflection;
 using System.Xml;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Message;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Message.Response
 {

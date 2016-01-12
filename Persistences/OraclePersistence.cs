@@ -11,7 +11,7 @@ using Oracle.DataAccess.Client;
 
 namespace MiskoPersist.Persistences
 {
-    class OraclePersistence : Persistence
+	class OraclePersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(OraclePersistence));
 

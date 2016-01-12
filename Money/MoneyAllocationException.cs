@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 
 namespace MiskoPersist.MoneyType
 {
-    [Serializable]
+	[Serializable]
     public class MoneyAllocationException : Exception
     {
         private readonly Money _amountToDistribute;

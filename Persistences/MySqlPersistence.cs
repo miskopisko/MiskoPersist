@@ -10,7 +10,7 @@ using MySql.Data.MySqlClient;
 
 namespace MiskoPersist.Persistences
 {
-    class MySqlPersistence : Persistence
+	class MySqlPersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(MySqlPersistence));
 

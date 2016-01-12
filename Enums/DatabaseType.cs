@@ -2,7 +2,7 @@
 
 namespace MiskoPersist.Enums
 {
-    public class DatabaseType : AbstractEnum
+	public class DatabaseType : AbstractEnum
     {
         #region Fields
 

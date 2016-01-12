@@ -5,7 +5,7 @@ using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-    public class ErrorMessages : AbstractViewedDataList<ErrorMessage>
+	public class ErrorMessages : AbstractViewedDataList<ErrorMessage>
     {
         private static Logger Log = Logger.GetInstance(typeof(ErrorMessages));
 

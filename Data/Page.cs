@@ -1,12 +1,12 @@
 using System;
 using System.Xml;
+using MiskoPersist.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    [JsonConverter(typeof(PageSerializer))]
+	[JsonConverter(typeof(PageSerializer))]
     public class Page : AbstractViewedData
     {
         private static Logger Log = Logger.GetInstance(typeof(Page));

@@ -6,7 +6,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractViewedDataList<T> : BindingList<T>, ICloneable where T : AbstractViewedData, new()
+	public class AbstractViewedDataList<T> : BindingList<T>, ICloneable where T : AbstractViewedData, new()
     {
         #region Fields
 

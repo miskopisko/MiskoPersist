@@ -436,7 +436,7 @@ namespace MiskoPersist.Core
 		{
 			Decimal? value = GetDecimal(key);
 
-			return value.HasValue ? new Money(value.Value) : null;
+			return value.HasValue ? new Money(value.Value) : Money.ZERO;
 		}
 
 		public String GetString(String key)

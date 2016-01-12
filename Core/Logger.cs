@@ -5,7 +5,7 @@ using System.Security;
 
 namespace MiskoPersist.Core
 {
-    public class Logger
+	public class Logger
     {
         #region Fields
 

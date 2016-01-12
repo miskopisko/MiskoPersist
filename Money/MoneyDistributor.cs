@@ -2,7 +2,7 @@
 
 namespace MiskoPersist.MoneyType
 {
-    public class MoneyDistributor
+	public class MoneyDistributor
     {
         private readonly Money _toDistribute;
         private readonly FractionReceivers _receiver;

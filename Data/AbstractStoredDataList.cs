@@ -5,7 +5,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
-    public class AbstractStoredDataList<T> : BindingList<T> where T : AbstractStoredData, new()
+	public class AbstractStoredDataList<T> : BindingList<T> where T : AbstractStoredData, new()
     {
         #region Fields
 

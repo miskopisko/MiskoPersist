@@ -2,7 +2,7 @@ using System;
 
 namespace MiskoPersist.Enums
 {
-    public class SortDirection : AbstractEnum
+	public class SortDirection : AbstractEnum
     {
         #region Fields
 

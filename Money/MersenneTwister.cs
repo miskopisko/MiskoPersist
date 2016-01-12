@@ -3,15 +3,15 @@ using System.Collections.Generic;
 
 namespace MiskoPersist.MoneyType
 {
-    /// <summary>
-    /// Generates pseudo-random numbers using the Mersenne Twister algorithm.
-    /// </summary>
-    /// <remarks>
-    /// See <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">
-    /// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html</a> for details
-    /// on the algorithm.
-    /// </remarks>
-    public class MersenneTwister : Random
+	/// <summary>
+	/// Generates pseudo-random numbers using the Mersenne Twister algorithm.
+	/// </summary>
+	/// <remarks>
+	/// See <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">
+	/// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html</a> for details
+	/// on the algorithm.
+	/// </remarks>
+	public class MersenneTwister : Random
     {
         /// <summary>
         /// Period parameters M

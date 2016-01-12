@@ -5,7 +5,7 @@ using MiskoPersist.Enums;
 
 namespace MiskoPersist.Interfaces
 {
-    public interface IOController
+	public interface IOController
     {
     	Int32 RowsPerPage { get; }
         

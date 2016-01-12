@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace MiskoPersist.Enums
 {
-    public class ErrorLevel : AbstractEnum
+	public class ErrorLevel : AbstractEnum
     {
         #region Fields
 

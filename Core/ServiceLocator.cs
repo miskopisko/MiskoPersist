@@ -10,7 +10,7 @@ using Oracle.DataAccess.Client;
 
 namespace MiskoPersist.Core
 {
-    public static class ServiceLocator
+	public static class ServiceLocator
     {
         private static Logger Log = Logger.GetInstance(typeof(ServiceLocator));
 

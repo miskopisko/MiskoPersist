@@ -3,7 +3,7 @@ using MiskoPersist.Core;
 
 namespace MiskoPersist.Attributes
 {
-    public class ViewedAttribute : Attribute
+	public class ViewedAttribute : Attribute
     {
         private static Logger Log = Logger.GetInstance(typeof(ViewedAttribute));
 

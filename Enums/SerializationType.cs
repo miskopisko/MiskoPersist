@@ -2,7 +2,7 @@
 
 namespace MiskoPersist.Enums
 {
-    public class SerializationType : AbstractEnum
+	public class SerializationType : AbstractEnum
     {
         #region Fields
 

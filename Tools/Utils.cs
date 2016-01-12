@@ -5,12 +5,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using System.Xml.Serialization;
 using MiskoPersist.Core;
+using MiskoPersist.Enums;
+using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Tools
 {
-    public static class Utils
+	public static class Utils
     {
         private static Logger Log = Logger.GetInstance(typeof(Utils));
 
@@ -19,11 +20,33 @@ namespace MiskoPersist.Tools
         private static Byte[] mSalt_ = Encoding.ASCII.GetBytes("b780gU&G&*GP&G&*)");
         private const String mSharedSecret_ = "bn89*(HG)*h80I&*(*)Y*Hjkjub";
 
-        #endregion
+		#endregion
 
-        #region Public Static Methods
+		#region Public Static Methods
 
-        public static String ResolveTextParameters(String text, Object[] parameters)
+		public static SerializationType GetSerializationType(this String str)
+		{
+			try
+			{
+				XmlDocument document = new XmlDocument();
+				document.LoadXml(str);
+				return SerializationType.Xml;
+			}
+			catch
+			{
+				try
+				{
+					JObject.Parse(str);
+					return SerializationType.Json;
+				}
+				catch
+				{
+					throw new MiskoException("Invalid input. Not a valid XML or Json string.");
+				}
+			}			
+		}
+
+		public static String ResolveTextParameters(String text, Object[] parameters)
         {
             if (text != null)
             {

@@ -8,7 +8,7 @@ using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Persistences
 {
-    class FoxProPersistence : Persistence
+	class FoxProPersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(FoxProPersistence));
 
