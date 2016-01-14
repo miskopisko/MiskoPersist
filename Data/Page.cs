@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,24 +20,28 @@ namespace MiskoPersist.Data
 
         #region Properties
 
+        [Viewed]
 		public Int32 PageNo 
 		{
 			get;
 			set;
 		}
 		
+		[Viewed]
 		public Int32 RowsPerPage 
         { 
         	get;
         	set;
         }
         
+		[Viewed]
         public Boolean IncludeRecordCount 
         { 
         	get;
         	set;
         }
         
+        [Viewed]
         public Int32 TotalRowCount 
 		{
 			get;
@@ -106,14 +111,6 @@ namespace MiskoPersist.Data
         #endregion
 
 		#region XmlSerialization
-
-		public override void ReadXml(XmlReader reader)
-		{
-			PageNo = GetIntElement("PageNo").Value;
-			RowsPerPage = GetIntElement("RowsPerPage").Value;
-			IncludeRecordCount = GetBooleanElement("IncludeRecordCount").Value;
-			TotalRowCount = GetIntElement("TotalRowCount").Value;                              
-		}
 
 		public override void WriteXml(XmlWriter writer)
 		{

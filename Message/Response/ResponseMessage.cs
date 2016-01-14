@@ -171,7 +171,7 @@ namespace MiskoPersist.Message.Response
         	}
 
 			writer.WriteStartElement("Status");
-			Status.WriteXml(writer);
+			writer.WriteValue(Status.Value);
 			writer.WriteEndElement();
 
 			if(HasErrors)

@@ -11,7 +11,7 @@ using Oracle.DataAccess.Client;
 
 namespace MiskoPersist.Persistences
 {
-	class OraclePersistence : Persistence
+	internal class OraclePersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(OraclePersistence));
 
@@ -23,13 +23,7 @@ namespace MiskoPersist.Persistences
 
         #region Properties
 
-		protected override DbDataAdapter DataAdapter
-		{
-			get
-			{
-				return new OracleDataAdapter((OracleCommand)mCommand_);
-			}
-		}
+		
 
         #endregion
 

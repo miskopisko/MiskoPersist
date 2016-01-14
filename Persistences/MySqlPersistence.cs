@@ -10,7 +10,7 @@ using MySql.Data.MySqlClient;
 
 namespace MiskoPersist.Persistences
 {
-	class MySqlPersistence : Persistence
+	internal class MySqlPersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(MySqlPersistence));
 
@@ -22,13 +22,7 @@ namespace MiskoPersist.Persistences
 
         #region Properties
 
-		protected override DbDataAdapter DataAdapter
-		{
-			get
-			{
-				return new MySqlDataAdapter((MySqlCommand)mCommand_);
-			}
-		}
+		
 
         #endregion
 

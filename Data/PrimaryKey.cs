@@ -1,17 +1,19 @@
 using System;
-using System.Xml;
-using MiskoPersist.Core;
 using Newtonsoft.Json;
+using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
 {
 	[JsonConverter(typeof(PrimaryKeySerializer))]
-	public class PrimaryKey : AbstractViewedData, IComparable<PrimaryKey>, IComparable<Int64>, IEquatable<PrimaryKey>, IEquatable<Int64>
+	public struct PrimaryKey : IComparable<PrimaryKey>, IComparable<Int64>, IEquatable<PrimaryKey>, IEquatable<Int64>
 	{
 		private static Logger Log = Logger.GetInstance(typeof(PrimaryKey));
 
 		#region Fields
 
+		private readonly Int64 mValue_;
+		
+		public static readonly PrimaryKey ZERO = new PrimaryKey(0);
 
 		#endregion
 
@@ -19,15 +21,25 @@ namespace MiskoPersist.Data
 
 		public Int64 Value 
 		{ 
-			get; 
-			set; 
+			get
+			{
+				return mValue_;
+			} 
 		}
 		
-		public new Boolean IsSet 
+		public Boolean IsSet 
 		{ 
 			get 
 			{ 
 				return Value != 0; 
+			} 
+		}
+		
+		public Boolean IsNotSet 
+		{ 
+			get 
+			{ 
+				return !IsSet; 
 			} 
 		}
 
@@ -35,26 +47,14 @@ namespace MiskoPersist.Data
 
 		#region Constructors
 
-		public PrimaryKey()
-		{
-			Value = 0;
-		}
-
 		public PrimaryKey(Int64 value)
 		{
-			Value = value;
+			mValue_ = value;
 		}
 
 		public PrimaryKey(String s)
 		{
-			if (!String.IsNullOrEmpty(s))
-			{
-				Value = Convert.ToInt64(s);
-			}
-			else
-			{
-				Value = 0;
-			}
+			mValue_ = !String.IsNullOrEmpty(s) ? Convert.ToInt64(s) : 0;
 		}
 
 		#endregion
@@ -63,7 +63,6 @@ namespace MiskoPersist.Data
 
 		public static PrimaryKey operator +(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null)) return new PrimaryKey() + right;
 			return new PrimaryKey(left.Value + right);
 		}
 
@@ -74,9 +73,6 @@ namespace MiskoPersist.Data
 
 		public static Boolean operator ==(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return true;
-			else if (Object.ReferenceEquals(left, null) && !Object.Equals(right, null)) return false;
-			else if (!Object.ReferenceEquals(left, null) && Object.Equals(right, null)) return false;
 			return left.Value.Equals(right);
 		}
 
@@ -87,9 +83,6 @@ namespace MiskoPersist.Data
 
 		public static Boolean operator ==(PrimaryKey left, PrimaryKey right)
 		{
-			if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
-			else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
-			else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
 			return left.Value.Equals(right.Value);
 		}
 
@@ -100,81 +93,41 @@ namespace MiskoPersist.Data
 
 		public static Boolean operator >(PrimaryKey left, PrimaryKey right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right.Value) > 0;
 		}
 
 		public static Boolean operator >(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right) > 0;
 		}
 
 		public static Boolean operator <(PrimaryKey left, PrimaryKey right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right.Value) < 0;
 		}
 
 		public static Boolean operator <(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right) < 0;
 		}
 
 		public static Boolean operator >=(PrimaryKey left, PrimaryKey right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right.Value) >= 0;
 		}
 
 		public static Boolean operator >=(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right) >= 0;
 		}
 
 		public static Boolean operator <=(PrimaryKey left, PrimaryKey right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right.Value) <= 0;
 		}
 
 		public static Boolean operator <=(PrimaryKey left, Int64 right)
 		{
-			if (Object.ReferenceEquals(left, null))
-			{
-				left = new PrimaryKey(0);
-			}
-
 			return left.CompareTo(right) <= 0;
 		}
 
@@ -230,11 +183,6 @@ namespace MiskoPersist.Data
 
 		public Boolean Equals(PrimaryKey other)
 		{
-			if (Object.ReferenceEquals(other, null))
-			{
-				return false;
-			}
-
 			return Value == other.Value;
 		}
 
@@ -253,20 +201,6 @@ namespace MiskoPersist.Data
 		}
 
 		#endregion
-
-		#region XmlSerialization
-
-		public override void ReadXml(XmlReader reader)
-		{
-			Value = Int64.Parse(XML.InnerText);
-		}
-
-		public override void WriteXml(XmlWriter writer)
-		{
-			writer.WriteValue(Value);
-		}
-
-		#endregion
 	}
 	
 	internal sealed class PrimaryKeySerializer : JsonConverter
@@ -280,7 +214,7 @@ namespace MiskoPersist.Data
 		
 		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
-			return reader.Value != null ? new PrimaryKey((Int64)reader.Value) : null;
+			return reader.Value != null ? new PrimaryKey((Int64)reader.Value) : new PrimaryKey(0);
 		}
 		
 		public override Boolean CanConvert(Type objectType)

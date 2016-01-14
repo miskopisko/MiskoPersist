@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
@@ -17,6 +18,21 @@ namespace MiskoPersist.Data
         #endregion
 
         #region Stored Properties
+        
+        public Boolean IsSet 
+        { 
+        	get; 
+        	set; 
+        }
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Boolean IsNotSet 
+        { 
+        	get 
+        	{ 
+        		return !IsSet; 
+        	} 
+        }
 
         [Stored(PrimaryKey=true)]
         public PrimaryKey Id 
@@ -55,13 +71,12 @@ namespace MiskoPersist.Data
         
 		public new AbstractStoredData Set(Session session, Persistence persistence)
 		{
-			IsSet = persistence.Next();
-			
-			if(IsSet)
+			if(!persistence.IsEof)
             {
 				Id = persistence.GetPrimaryKey("Id");
             	RowVer = persistence.GetLong("RowVer").HasValue ? persistence.GetLong("RowVer").Value : 0;            	
             	base.Set(session, persistence);
+            	IsSet = true;
 			}
 			
 			return this;
@@ -165,7 +180,7 @@ namespace MiskoPersist.Data
 
         public void FetchById(Session session, PrimaryKey id, Boolean deep)
         {
-            if (id == null || id.IsNotSet)
+            if (id.IsNotSet)
             {
                 return;
             }
@@ -212,7 +227,7 @@ namespace MiskoPersist.Data
         
         public virtual void Fetch(Session session, Boolean deep)
         {
-        	if (!IsSet && Id != null)
+        	if (!IsSet && Id.IsSet)
 	        {
 	            FetchById(session, Id, deep);
 	        }

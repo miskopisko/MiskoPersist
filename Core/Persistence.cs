@@ -22,22 +22,22 @@ namespace MiskoPersist.Core
 		#region Fields
 
 		protected Session mSession_ = null;
-		protected DataTable mRs_ = new DataTable("Unknown");
+		protected DbDataReader mRs_ = null;
 		protected DbCommand mCommand_ = null;
 		protected String mSql_ = "";
 		protected List<Object> mParameters_ = new List<Object>();
-		protected DataRow mResult_;
-		protected Int32 mCurrentResult_ = 0;
+		protected Boolean mEof_ = true;
+		protected Int32 mRecordCount_ = 0;
 
 		#endregion
 
 		#region Properties
-
-		public Boolean HasNext
+		
+		public Boolean IsEof
 		{
 			get
 			{
-				return mRs_ != null && mCurrentResult_ < mRs_.Rows.Count;
+				return mEof_;
 			}
 		}
 		
@@ -45,7 +45,11 @@ namespace MiskoPersist.Core
 		{
 			get
 			{
-				return mRs_ != null ? mRs_.Rows.Count : 0;
+				while(!IsEof)
+				{
+					Next();
+				}
+				return mRecordCount_;
 			}
 		}
 
@@ -70,23 +74,21 @@ namespace MiskoPersist.Core
 			{
 				return new OraclePersistence(session);
 			}
-			else if (session.Connection is MySqlConnection)
+			if (session.Connection is MySqlConnection)
 			{
 				return new MySqlPersistence(session);
 			}
-			else if (session.Connection is SQLiteConnection)
+			if (session.Connection is SQLiteConnection)
 			{
 				return new SqlitePersistence(session);
 			}
-			else if (session.Connection is OleDbConnection)
+			if (session.Connection is OleDbConnection)
 			{
 				return new FoxProPersistence(session);
 			}
-			else
-			{
-				session.Error(ErrorLevel.Error, ErrorStrings.errInvalicConnectionType);
-				return null;
-			}
+			
+			session.Error(ErrorLevel.Error, ErrorStrings.errInvalicConnectionType);
+			return null;
 		}
 
 		public void Close()
@@ -140,16 +142,10 @@ namespace MiskoPersist.Core
 			}
 		}
 
-		public Boolean Next()
+		public void Next()
 		{
-			if (HasNext)
-			{
-				mResult_ = mRs_.Rows[mCurrentResult_];
-				mCurrentResult_++;
-				return true;
-			}
-
-			return false;
+			mEof_ = !mRs_.Read();
+			mRecordCount_ ++;
 		}
 
 		public void SetSql(String sql)
@@ -189,22 +185,22 @@ namespace MiskoPersist.Core
 
 		#region Execute Methods
 
-		public Boolean ExecuteQuery()
+		public void ExecuteQuery()
 		{
 			if (String.IsNullOrEmpty(mSql_))
 			{
 				mSession_.Error(ErrorLevel.Error, ErrorStrings.errSqlNotSet);
 			}
 
-			return ExecuteQuery(mSql_, mParameters_.ToArray());
+			ExecuteQuery(mSql_, mParameters_.ToArray());
 		}
 
-		public Boolean ExecuteQuery(String sql)
+		public void ExecuteQuery(String sql)
 		{
-			return ExecuteQuery(sql, new Object[] { });
+			ExecuteQuery(sql, new Object[] { });
 		}
 
-		public Boolean ExecuteQuery(String sql, Object[] parameters)
+		public void ExecuteQuery(String sql, Object[] parameters)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -217,11 +213,11 @@ namespace MiskoPersist.Core
 			mCommand_.Prepare();
 			
 			Stopwatch timer = Stopwatch.StartNew();
-			DataAdapter.Fill(mRs_);
+			mRs_ = mCommand_.ExecuteReader();
+			mEof_ = !mRs_.Read();
+			mRecordCount_ = 0;
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
-
-			return HasNext;
 		}
 
 		public static Int32 ExecuteUpdate(Session session, String sql)
@@ -262,12 +258,12 @@ namespace MiskoPersist.Core
 			persistence = null;
 		}
 		
-		public Boolean ExecuteRSFunction(String function)
+		public void ExecuteRSFunction(String function)
 		{
-			return ExecuteRSFunction(function, new Object[] { });
+			ExecuteRSFunction(function, new Object[] { });
 		}
 		
-		public Boolean ExecuteRSFunction(String function, Object[] parameters)
+		public void ExecuteRSFunction(String function, Object[] parameters)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -281,11 +277,11 @@ namespace MiskoPersist.Core
 			mCommand_.Prepare();
 			
 			Stopwatch timer = Stopwatch.StartNew();            
-			DataAdapter.Fill(mRs_);
+			mRs_ = mCommand_.ExecuteReader();
+			mEof_ = !mRs_.Read();
+			mRecordCount_ = 0;
 			timer.Stop();
-			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);  
-
-			return HasNext;        	
+			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 		}
 
 		#endregion
@@ -399,226 +395,200 @@ namespace MiskoPersist.Core
 
 		#region Abstract Methods
 
-		protected abstract DbDataAdapter DataAdapter { get; }
 		protected abstract void SetParameters();
 		protected abstract void GenerateUpdateStatement(AbstractStoredData clazz, Type type);
 		protected abstract void GenerateDeleteStatement(AbstractStoredData clazz, Type type);
 		protected abstract void GenerateInsertStatement(AbstractStoredData clazz, Type type);
 
 		#endregion
-
-		#region Private Helpers
-
-		private Object GetObject(String key)
-		{
-			Int32 ordinal = mRs_.Columns.IndexOf(key);
-			return ordinal >= 0 ? (Object)mResult_.ItemArray[ordinal] : null;
-		}
-
-		#endregion
-
+		
 		#region Public Helpers
 
 		public PrimaryKey GetPrimaryKey(String key)
 		{
 			Int64? value = GetLong(key);
-			if (value != null && value.HasValue && value.Value > 0)
-			{
-				return new PrimaryKey(value.Value);
-			}
-			else
-			{
-				return null;
-			}
+			return (value != null && value.HasValue && value.Value > 0) ? new PrimaryKey(value.Value) : new PrimaryKey(0);
 		}
 
 		public Money GetMoney(String key)
 		{
 			Decimal? value = GetDecimal(key);
-
 			return value.HasValue ? new Money(value.Value) : Money.ZERO;
 		}
 
 		public String GetString(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o is String)
+			try
 			{
-				return ((String)o).Trim().Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? mRs_.GetString(ordinal).Trim() : "";
 			}
-			else if (o is Byte[])
+			catch(IndexOutOfRangeException)
 			{
-				Byte[] asBytes = (Byte[])o;
-				String asValue = "";
-
-				for (Int32 i = 0; i < asBytes.Length; i++)
+				return "";
+			}
+			catch(InvalidCastException)
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				try
 				{
-					asValue += (Char)asBytes[i];
+					return !mRs_.IsDBNull(ordinal) ? mRs_.GetValue(ordinal).ToString().Trim() : "";
 				}
-
-				return asValue.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+				catch
+				{
+					return null;
+				}
 			}
-			else if (o != null)
-			{
-				return o.ToString().Trim().Length != 0 ? o.ToString().Trim().Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n") : null;
-			}
-
-			return null;
 		}
 
 		public Int32? GetInt(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o == null)
+			try
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (Int32?)mRs_.GetInt32(ordinal) : null;
+			}
+			catch(IndexOutOfRangeException)
 			{
 				return null;
 			}
-			else if (o is Int32)
+			catch(InvalidCastException)
 			{
-				return (Int32)o;
-			}
-			else if (o is SByte || o is Byte || o is Int64 || o is Decimal)
-			{
-				return Convert.ToInt32(o);
-			}
-			else if (o is String)
-			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
 				{
-					return Int32.Parse((String)o);
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToInt32(mRs_.GetValue(ordinal)) : (Int32?)null;
 				}
 				catch
 				{
+					return null;
 				}
 			}
-
-			return null;
 		}
 
 		public Int64? GetLong(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o == null)
+			try
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (Int64?)mRs_.GetInt64(ordinal) : null;
+			}
+			catch (IndexOutOfRangeException)
 			{
 				return null;
 			}
-			else if (o is Int16)
+			catch(InvalidCastException)
 			{
-				return Convert.ToInt64((Int16)o);
-			}
-			else if (o is Int64)
-			{
-				return (Int64)o;
-			}
-			else if (o is UInt64)
-			{
-				return Convert.ToInt64((UInt64)o);
-			}
-			else if (o is Int32)
-			{
-				return Convert.ToInt64((Int32)o);
-			}
-			else if (o is UInt32)
-			{
-				return Convert.ToInt64((UInt32)o);
-			}
-			else if (o is Decimal)
-			{
-				return Convert.ToInt64((Decimal)o);
-			}
-			else if (o is String)
-			{
-				try 
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				try
 				{
-					return Int64.Parse((String)o);
-				} 
-				catch 
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToInt64(mRs_.GetValue(ordinal)) : (Int64?)null;
+				}
+				catch
 				{
+					return null;
 				}
 			}
-
-			return null;
 		}
 
 		public Decimal? GetDecimal(String key)
 		{
-			Double? value = GetDouble(key);
-
-			if (value.HasValue)
+			try
 			{
-				return Convert.ToDecimal(value);
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (Decimal?)mRs_.GetDecimal(ordinal) : null;
 			}
-
-			return null;
+			catch (IndexOutOfRangeException)
+			{
+				return null;
+			}
+			catch(InvalidCastException)
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				try
+				{
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToDecimal(mRs_.GetValue(ordinal)) : (Decimal?)null;
+				}
+				catch
+				{
+					return null;
+				}
+			}
 		}
 
 		public Double? GetDouble(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o == null)
+			try
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (Double?)mRs_.GetDouble(ordinal) : null;
+			}
+			catch (IndexOutOfRangeException)
 			{
 				return null;
 			}
-			else if (o is Double)
+			catch(InvalidCastException)
 			{
-				return (Double)o;
-			}
-			else if (o is Decimal)
-			{
-				return Decimal.ToDouble((Decimal)o);
-			}
-			else if (o is String)
-			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
 				{
-					return Double.Parse((String)o);
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToDouble(mRs_.GetValue(ordinal)) : (Double?)null;
 				}
 				catch
 				{
+					return null;
 				}
 			}
-
-			return null;
 		}
 
 		public DateTime? GetDate(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o == null)
+			try
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (DateTime?)mRs_.GetDateTime(ordinal) : null;
+			}
+			catch (IndexOutOfRangeException)
 			{
 				return null;
 			}
-			else if (o is DateTime)
+			catch(InvalidCastException)
 			{
-				return (DateTime)o;
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				try
+				{
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToDateTime(mRs_.GetValue(ordinal)) : (DateTime?)null;
+				}
+				catch
+				{
+					return null;
+				}
 			}
-
-			return null;
 		}
 
 		public Boolean? GetBoolean(String key)
 		{
-			Object o = GetObject(key);
-
-			if (o == null)
+			try
+			{
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				return !mRs_.IsDBNull(ordinal) ? (Boolean?)mRs_.GetBoolean(ordinal) : null;
+			}
+			catch (IndexOutOfRangeException)
 			{
 				return null;
 			}
-			else if (o is Boolean)
+			catch(InvalidCastException)
 			{
-				return (Boolean)o;
+				Int32 ordinal = mRs_.GetOrdinal(key);
+				try
+				{
+					return !mRs_.IsDBNull(ordinal) ? Convert.ToBoolean(mRs_.GetValue(ordinal)) : (Boolean?)null;
+				}
+				catch
+				{
+					return null;
+				}
 			}
-			else if (o is Decimal || o is Int32 || o is Int64 || o is Byte || o is UInt32)
-			{
-				return Convert.ToInt16(o) == 1;
-			}
-
-			return null;
 		}
 
 		#endregion

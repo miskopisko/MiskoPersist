@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Data
@@ -44,7 +47,7 @@ namespace MiskoPersist.Data
 
         public void Set(Session session, Persistence persistence, Page page)
         {
-        	if(!persistence.HasNext)
+        	if(persistence.IsEof)
         	{
         		page.PageNo = 0;
         		return;
@@ -53,16 +56,17 @@ namespace MiskoPersist.Data
             Int32 noRows = page.RowsPerPage;
             Int32 pageNo = page.PageNo;
 
-			for (Int32 i = 0; i < (pageNo - 1) * noRows && persistence.HasNext; i++)
+			for (Int32 i = 0; i < (pageNo - 1) * noRows && !persistence.IsEof; i++)
             {
                 persistence.Next();
             }
 
-            for (Int32 i = 0; (noRows == 0 || i < noRows) && persistence.HasNext; i++)
+			for (Int32 i = 0; (noRows == 0 || i < noRows) && !persistence.IsEof; i++)
             {
                 T data = new T();
                 data.Set(session, persistence);
                 Add(data);
+                persistence.Next();
             }
 
             if(page.IncludeRecordCount)
@@ -210,7 +214,6 @@ namespace MiskoPersist.Data
 					{
 						T value = new T();
 						value.XML = (XmlElement)n;
-						value.IsSet = true;
 						value.ReadXml(null);
 						list.Add(value);
 					}
@@ -219,7 +222,7 @@ namespace MiskoPersist.Data
 
 			return list;
 		}
-
+		
 		public void WriteXml(XmlWriter writer, String name)
 		{
 			foreach (T element in this) 

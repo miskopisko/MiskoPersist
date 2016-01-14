@@ -247,7 +247,7 @@ namespace MiskoPersist.Data
             }
 
             writer.WriteStartElement("ErrorLevel");
-            ErrorLevel.WriteXml(writer);
+            writer.WriteValue(ErrorLevel.Value);
             writer.WriteEndElement();
 
             writer.WriteStartElement("Message");

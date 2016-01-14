@@ -117,7 +117,7 @@ namespace Message
 		{
 			using(StringWriter stringWriter = new StringWriter())
 			{
-				using(XmlWriter writer = XmlWriter.Create(stringWriter, new XmlWriterSettings(){ Indent = true, NewLineHandling = NewLineHandling.Replace }))
+				using(XmlWriter writer = XmlWriter.Create(stringWriter, new XmlWriterSettings(){ Indent = true }))
 				{
 					writer.WriteStartDocument();
 					writer.WriteStartElement(GetType().Name);

@@ -8,7 +8,7 @@ using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Persistences
 {
-	class FoxProPersistence : Persistence
+	internal class FoxProPersistence : Persistence
     {
         private static Logger Log = Logger.GetInstance(typeof(FoxProPersistence));
 
@@ -20,13 +20,7 @@ namespace MiskoPersist.Persistences
 
         #region Properties
 
-		protected override DbDataAdapter DataAdapter
-		{
-			get
-			{
-				return new OleDbDataAdapter((OleDbCommand)mCommand_);
-			}
-		}
+		
 
         #endregion
 

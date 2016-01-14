@@ -11,7 +11,7 @@ using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Persistences
 {
-	class SqlitePersistence : Persistence
+	internal class SqlitePersistence : Persistence
 	{
 		private static Logger Log = Logger.GetInstance(typeof(SqlitePersistence));
 
@@ -23,13 +23,7 @@ namespace MiskoPersist.Persistences
 
 		#region Properties
 
-		protected override DbDataAdapter DataAdapter
-		{
-			get
-			{
-				return new SQLiteDataAdapter((SQLiteCommand)mCommand_);
-			}
-		}
+		
 
 		#endregion
 

@@ -52,7 +52,7 @@ namespace MiskoPersist.Data
         
         public void Set(Session session, Persistence persistence)
         {
-            while (persistence.HasNext)
+            while (!persistence.IsEof)
             {
                 T data = new T();
                 data.Set(session, persistence);

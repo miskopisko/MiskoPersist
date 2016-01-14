@@ -86,11 +86,11 @@ namespace MiskoPersist.Data
 
 		#region XmlSerialization
 
-		public void ReadXml(XmlElement XML, String name)
+		public void ReadXml(XmlElement xml, String name)
 		{
-			if (XML != null)
+			if (xml != null)
 			{				
-				foreach (XmlNode n in XML.ChildNodes)
+				foreach (XmlNode n in xml.ChildNodes)
 				{
 					if (n.Name == name)
 					{
@@ -100,7 +100,6 @@ namespace MiskoPersist.Data
 							{
 								ErrorMessage value = new ErrorMessage();
 								value.XML = (XmlElement)messageNode;
-								value.IsSet = true;
 								value.ReadXml(null);
 								Add(value);
 							}

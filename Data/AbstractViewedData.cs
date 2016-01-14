@@ -1,15 +1,16 @@
 using System;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
-using MiskoPersist.MoneyType;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Message;
+using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Data
 {
@@ -51,9 +52,7 @@ namespace MiskoPersist.Data
 		
 		public new AbstractViewedData Set(Session session, Persistence persistence)
 		{
-			IsSet = persistence.Next();
-			
-			if(IsSet)
+			if(!persistence.IsEof)
 			{
 				base.Set(session, persistence);
 			}
@@ -111,7 +110,7 @@ namespace MiskoPersist.Data
 
 		public XmlSchema GetSchema()
 		{
-			return null;
+			throw new NotImplementedException();
 		}
 
 		public virtual void WriteXml(XmlWriter writer)
@@ -128,57 +127,60 @@ namespace MiskoPersist.Data
 				{
 					if(obj is AbstractViewedData)
 					{
-						if(((AbstractViewedData)obj).IsSet)
+						writer.WriteStartElement(property.Name);
+						((AbstractViewedData)obj).WriteXml(writer);
+						writer.WriteEndElement();
+					}
+					else if(obj is DateTime?)
+					{
+						if(((DateTime?)obj).HasValue)
 						{
 							writer.WriteStartElement(property.Name);
-							((AbstractViewedData)obj).WriteXml(writer);
+							writer.WriteValue(((DateTime)obj).ToString(DATEFORMAT));
+							writer.WriteEndElement();	
+						}
+					}
+					else if(obj is PrimaryKey)
+					{
+						if(((PrimaryKey)obj).IsSet)
+						{
+							writer.WriteStartElement(property.Name);
+							writer.WriteValue(((PrimaryKey)obj).ToString());
 							writer.WriteEndElement();
 						}
+					}
+					else if(obj is Money)
+					{
+						writer.WriteStartElement(property.Name);
+						writer.WriteRaw(String.Format("{0:F2}", ((Money)obj).Value));
+						writer.WriteEndElement();
 					}
 					else if(obj is AbstractEnum)
 					{
 						if(((AbstractEnum)obj).IsSet)
 						{
 							writer.WriteStartElement(property.Name);
-							((AbstractEnum)obj).WriteXml(writer);
-							writer.WriteEndElement();   
+							writer.WriteValue(((AbstractEnum)obj).IsSet ? ((AbstractEnum)obj).Value : (Int64?)null);
+							writer.WriteEndElement();	
 						}
-					}
-					else if(obj is String)
-					{
-						if(!String.IsNullOrEmpty((String)obj))
-						{
-							writer.WriteStartElement(property.Name);
-							writer.WriteString((String)obj);
-							writer.WriteEndElement();
-						}
-					}
-					else if(obj is DateTime?)
-					{
-						writer.WriteStartElement(property.Name);
-						writer.WriteValue(((DateTime)obj).ToString(DATEFORMAT));
-						writer.WriteEndElement();
-					}
-					else if(obj.GetType().IsEnum)
-					{
-						writer.WriteStartElement(property.Name);
-						writer.WriteValue(((Enum)obj).ToString());
-						writer.WriteEndElement();
-					}
-					else if(obj is Money)
-					{
-						writer.WriteStartElement(property.Name);
-						((Money)obj).WriteXml(writer);
-						writer.WriteEndElement();
 					}
 					else if(obj.GetType().BaseType.IsGenericType && obj.GetType().BaseType.GetGenericTypeDefinition().Equals(typeof(AbstractViewedDataList<>)))
 					{
 						obj.GetType().BaseType.InvokeMember("WriteXml", BindingFlags.InvokeMethod, null, obj, new Object[] { writer, property.Name });
 					}
+					else if(obj.GetType().IsEnum)
+					{
+						if(Enum.IsDefined(obj.GetType(), obj))
+						{
+							writer.WriteStartElement(property.Name);
+							writer.WriteValue(((Enum)obj).ToString());
+							writer.WriteEndElement();	
+						}
+					}
 					else
 					{
 						writer.WriteStartElement(property.Name);
-						writer.WriteValue(obj);
+						writer.WriteValue(obj.ToString());
 						writer.WriteEndElement();
 					}
 				}
@@ -186,7 +188,7 @@ namespace MiskoPersist.Data
 		}
 
 		public virtual void ReadXml(XmlReader reader)
-		{           
+		{		   
 			foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 			{
 				if(!typeof(CoreMessage).IsAssignableFrom(GetType()) && property.GetCustomAttribute(typeof(ViewedAttribute)) == null)
@@ -200,7 +202,8 @@ namespace MiskoPersist.Data
 				}
 				else if (property.PropertyType == typeof(Boolean))
 				{
-					property.SetValue(this, GetBooleanElement(property.Name).Value);
+					Boolean? value = GetBooleanElement(property.Name);
+					property.SetValue(this, value.HasValue && value.Value);
 				}
 				else if (property.PropertyType == typeof(Boolean?))
 				{
@@ -208,7 +211,8 @@ namespace MiskoPersist.Data
 				}
 				else if (property.PropertyType == typeof(Int32))
 				{
-					property.SetValue(this, GetIntElement(property.Name).Value);
+					Int32? value = GetIntElement(property.Name);
+					property.SetValue(this, value.HasValue ? value.Value : 0);
 				}
 				else if (property.PropertyType == typeof(Int32?))
 				{
@@ -216,7 +220,8 @@ namespace MiskoPersist.Data
 				}
 				else if (property.PropertyType == typeof(Int64))
 				{
-					property.SetValue(this, GetLongElement(property.Name).Value);
+					Int64? value = GetLongElement(property.Name);
+					property.SetValue(this, value.HasValue ? value.Value : 0);
 				}
 				else if (property.PropertyType == typeof(Int64?))
 				{
@@ -224,7 +229,8 @@ namespace MiskoPersist.Data
 				}
 				else if (property.PropertyType == typeof(Double))
 				{
-					property.SetValue(this, GetDoubleElement(property.Name).Value);
+					Double? value = GetDoubleElement(property.Name);
+					property.SetValue(this, value.HasValue ? value.Value : 0);
 				}
 				else if (property.PropertyType == typeof(Double?))
 				{
@@ -232,7 +238,8 @@ namespace MiskoPersist.Data
 				}
 				else if (property.PropertyType == typeof(DateTime))
 				{
-					property.SetValue(this, GetDateTimeElement(property.Name).Value);
+					DateTime? value = GetDateTimeElement(property.Name);
+					property.SetValue(this, value.HasValue ? value.Value : DateTime.MinValue);
 				}
 				else if (property.PropertyType == typeof(DateTime?))
 				{
@@ -250,13 +257,19 @@ namespace MiskoPersist.Data
 				{
 					property.SetValue(this, new Guid(GetElement(property.Name)));
 				}
+				else if (property.PropertyType == typeof(PrimaryKey))
+				{
+					Int64? value = GetLongElement(property.Name);
+					property.SetValue(this, value.HasValue ? new PrimaryKey(value.Value) : new PrimaryKey(0));
+				}
+				else if (property.PropertyType == typeof(Money))
+				{
+					Decimal? value = GetDecimalElement(property.Name);
+					property.SetValue(this, value.HasValue ? new Money(value.Value) : Money.ZERO);
+				}
 				else if(property.GetType().IsEnum)
 				{
 					property.SetValue(this, Enum.Parse(property.GetType(), GetElement(property.Name)));
-				}
-				else if(property.PropertyType == typeof(Money))
-				{
-					property.SetValue(this, new Money(GetDoubleElement(property.Name).Value));
 				}
 				else if(property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition() == typeof(AbstractViewedDataList<>))
 				{
@@ -265,7 +278,7 @@ namespace MiskoPersist.Data
 			}
 		}
 
-		internal AbstractEnum GetEnumElement(String name, Type type)
+		public AbstractEnum GetEnumElement(String name, Type type)
 		{
 			AbstractEnum value = null;
 			String v = GetElement(name);
@@ -285,7 +298,7 @@ namespace MiskoPersist.Data
 			return value;
 		}
 
-		internal AbstractViewedData GetDataElement(String name, Type type)
+		public AbstractViewedData GetDataElement(String name, Type type)
 		{
 			XmlElement e = XML == null ? null : XML[name];
 
@@ -293,23 +306,16 @@ namespace MiskoPersist.Data
 			{
 				AbstractViewedData value = (AbstractViewedData)Activator.CreateInstance(type);
 
-				try
-				{
-					value.XML = e;
-					value.IsSet = true;
-					value.ReadXml(null);
+				value.XML = e;
+				value.ReadXml(null);
 
-					return value;
-				}
-				catch
-				{
-				}
+				return value;
 			}
 
 			return null;
 		}
 
-		internal DateTime? GetDateTimeElement(String name)
+		public DateTime? GetDateTimeElement(String name)
 		{
 			DateTime? value = null;
 			String v = GetElement(name);
@@ -328,7 +334,7 @@ namespace MiskoPersist.Data
 			return value;
 		}
 
-		internal Double? GetDoubleElement(String name)
+		public Double? GetDoubleElement(String name)
 		{
 			Double? value = null;
 			String v = GetElement(name);
@@ -346,8 +352,27 @@ namespace MiskoPersist.Data
 
 			return value;
 		}
+		
+		public Decimal? GetDecimalElement(String name)
+		{
+			Decimal? value = null;
+			String v = GetElement(name);
 
-		internal Int64? GetLongElement(String name)
+			if (!String.IsNullOrEmpty(v))
+			{
+				try
+				{
+					value = Decimal.Parse(v);
+				}
+				catch
+				{
+				}
+			}
+
+			return value;
+		}
+
+		public Int64? GetLongElement(String name)
 		{
 			Int64? value = null;
 			String v = GetElement(name);
@@ -366,7 +391,7 @@ namespace MiskoPersist.Data
 			return value;
 		}
 
-		internal Int32? GetIntElement(String name)
+		public Int32? GetIntElement(String name)
 		{
 			Int32? value = null;
 			String v = GetElement(name);
@@ -385,19 +410,7 @@ namespace MiskoPersist.Data
 			return value;
 		}
 
-		internal PrimaryKey GetPrimaryKeyElement(String name)
-		{
-			String v = GetElement(name);
-
-			if (!String.IsNullOrEmpty(v))
-			{
-				return new PrimaryKey(v);   
-			}
-
-			return null;
-		}
-
-		internal Boolean? GetBooleanElement(String name)
+		public Boolean? GetBooleanElement(String name)
 		{
 			Boolean? value = false;
 			String v = GetElement(name);
@@ -416,10 +429,10 @@ namespace MiskoPersist.Data
 			return value;
 		}
 
-		internal String GetElement(String name)
+		public String GetElement(String name)
 		{
 			XmlElement e = XML == null ? null : XML[name];
-			return e == null ? null : e.InnerText;
+			return e != null ? e.InnerText : null;
 		}
 
 		#endregion
@@ -459,7 +472,6 @@ namespace MiskoPersist.Data
 			JObject jsonObject = JObject.Load(reader);
 
 			AbstractViewedData data = (AbstractViewedData)Activator.CreateInstance(objectType);
-			data.IsSet = true;
 
 			foreach(PropertyInfo property in data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 			{
@@ -468,7 +480,7 @@ namespace MiskoPersist.Data
 					JToken token = jsonObject.GetValue(property.Name);
 					if(token != null)
 					{
-						property.SetValue(data, serializer.Deserialize(token.CreateReader(), property.PropertyType));    
+						property.SetValue(data, serializer.Deserialize(token.CreateReader(), property.PropertyType));	
 					}
 				}
 			}

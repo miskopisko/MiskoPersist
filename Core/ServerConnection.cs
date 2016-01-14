@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using System.Xml;
 using Message;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
@@ -120,12 +121,48 @@ namespace MiskoPersist.Core
 				IOController.Status(MessageStatus.Processing);
 			};
 			Invoke(method);
+
+			String origRequestString = mRequest_.Write(mIOController_.SerializationType);
+			RequestMessage newRequest = (RequestMessage)CoreMessage.Read(origRequestString);
+			String newRequestString = newRequest.Write(mIOController_.SerializationType);
+			
+			if(!origRequestString.Equals(newRequestString))
+			{
+				String left = Environment.GetEnvironmentVariable("TEMP") + Path.DirectorySeparatorChar + Guid.NewGuid().ToString().Substring(0, 8);
+				String right = Environment.GetEnvironmentVariable("TEMP") + Path.DirectorySeparatorChar + Guid.NewGuid().ToString().Substring(0, 8);
+				
+				System.IO.File.WriteAllText(left, origRequestString);
+				System.IO.File.WriteAllText(right, newRequestString);
+				
+				Process process = new Process();
+				process.StartInfo.FileName = @"C:\Users\mpiskuric\Desktop\Beyond Compare 4\BComp.exe";
+				process.StartInfo.Arguments = left + " " + right + " /title1=Original Request /title2=New Request /ro";
+				process.Start();
+			}			
 			
 			#if DEBUG
 				Debug.WriteLine(mRequest_.Write(mIOController_.SerializationType));
 			#endif
 			
 			ResponseMessage response = IOController.ServerLocation.Equals(ServerLocation.Local) ? MessageProcessor.Process(mRequest_) : SendToServer();
+			
+			String origResponseString = response.Write(mIOController_.SerializationType);
+			ResponseMessage newResponse = (ResponseMessage)CoreMessage.Read(origResponseString);
+			String newResponseString = newResponse.Write(mIOController_.SerializationType);
+			
+			if(!origResponseString.Equals(newResponseString))
+			{
+				String left = Environment.GetEnvironmentVariable("TEMP") + Path.DirectorySeparatorChar + Guid.NewGuid().ToString().Substring(0, 8);
+				String right = Environment.GetEnvironmentVariable("TEMP") + Path.DirectorySeparatorChar + Guid.NewGuid().ToString().Substring(0, 8);
+				
+				System.IO.File.WriteAllText(left, origResponseString);
+				System.IO.File.WriteAllText(right, newResponseString);
+				
+				Process process = new Process();
+				process.StartInfo.FileName = @"C:\Users\mpiskuric\Desktop\Beyond Compare 4\BComp.exe";
+				process.StartInfo.Arguments = left + " " + right + " /title1=Original Response /title2=New Response /ro";
+				process.Start();
+			}
 
 			#if DEBUG
 				Debug.WriteLine(response.Write(mIOController_.SerializationType));               

@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Globalization;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
-using MiskoPersist.Core;
 using Newtonsoft.Json;
+using MiskoPersist.Core;
 
 namespace MiskoPersist.MoneyType
 {
 	[JsonConverter(typeof(MoneySerializer))]
-	public struct Money : IComparable, IFormattable, IConvertible, IXmlSerializable
+	public struct Money : IComparable, IFormattable, IConvertible
 	{
 		private static Logger Log = Logger.GetInstance(typeof(Money));
 
 		#region Constants
 
-		public static readonly Money ZERO = new Money(0.00);
-		public static readonly Money ONE = new Money(1.00);
-		public static readonly Money HUNDRED = new Money(100.00);
+		public static readonly Money ZERO = new Money(0);
+		public static readonly Money ONE = new Money(1);
+		public static readonly Money HUNDRED = new Money(100);
 
 		private const Decimal FractionScale = 1E9M;
 
@@ -25,27 +22,12 @@ namespace MiskoPersist.MoneyType
 
 		#region Fields
 
-		[ThreadStatic]
-		private static Random mRng_;
 		private Int64 mUnits_;
 		private Int32 mDecimalFraction_;
-		private XmlElement mXml_;
 
 		#endregion
 
 		#region Properties
-
-		public XmlElement XML
-		{
-			get
-			{
-				return mXml_;
-			}
-			set
-			{
-				mXml_ = value;
-			}
-		}
 
 		public Decimal Value
 		{
@@ -64,11 +46,6 @@ namespace MiskoPersist.MoneyType
 		{
 		}
 
-		public Money(Double value)
-			: this(new Decimal(value))
-		{
-		}
-
 		public Money(Decimal value)
 		{
 			checkValue(value);
@@ -81,15 +58,12 @@ namespace MiskoPersist.MoneyType
 				mUnits_ += 1;
 				mDecimalFraction_ = mDecimalFraction_ - (Int32)FractionScale;
 			}
-
-			mXml_ = null;
 		}
 
 		private Money(Int64 units, Int32 fraction)
 		{
 			mUnits_ = units;
 			mDecimalFraction_ = fraction;
-			mXml_ = null;
 		}
 
 		#endregion
@@ -168,11 +142,6 @@ namespace MiskoPersist.MoneyType
 
 		public static Money operator +(Money left, Money right)
 		{
-			if (Object.ReferenceEquals(left, null)) left = Money.ZERO;
-			if (Object.ReferenceEquals(right, null)) right = Money.ZERO;
-
-
-
 			var fractionSum = left.mDecimalFraction_ + right.mDecimalFraction_;
 
 			var overflow = 0L;
@@ -200,9 +169,6 @@ namespace MiskoPersist.MoneyType
 
 		public static Money operator -(Money left, Money right)
 		{
-			if (Object.ReferenceEquals(left, null)) left = Money.ZERO;
-			if (Object.ReferenceEquals(right, null)) right = Money.ZERO;
-
 			return left + -right;
 		}
 
@@ -218,9 +184,6 @@ namespace MiskoPersist.MoneyType
 
 		public static Boolean operator ==(Money left, Money right)
 		{
-			if (Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return true;
-			else if (Object.ReferenceEquals(left, null) && !Object.ReferenceEquals(right, null)) return false;
-			else if (!Object.ReferenceEquals(left, null) && Object.ReferenceEquals(right, null)) return false;
 			return left.Equals(right);
 		}
 
@@ -348,6 +311,7 @@ namespace MiskoPersist.MoneyType
 					fraction = Math.Ceiling(fraction - 0.5M);
 					break;
 				case MidpointRoundingRule.Stochastic:
+					Random mRng_ = null;
 					if (mRng_ == null)
 					{
 						mRng_ = new MersenneTwister();
@@ -473,13 +437,7 @@ namespace MiskoPersist.MoneyType
 
 		public Boolean Equals(Money other)
 		{
-			if (Object.ReferenceEquals(other, null))
-			{
-				return false;
-			}
-
-			return mUnits_ == other.mUnits_ &&
-				   mDecimalFraction_ == other.mDecimalFraction_;
+			return mUnits_ == other.mUnits_ && mDecimalFraction_ == other.mDecimalFraction_;
 		}
 
 		#endregion
@@ -490,9 +448,7 @@ namespace MiskoPersist.MoneyType
 		{
 			var unitCompare = mUnits_.CompareTo(other.mUnits_);
 
-			return unitCompare == 0
-					   ? mDecimalFraction_.CompareTo(other.mDecimalFraction_)
-					   : unitCompare;
+			return unitCompare == 0 ? mDecimalFraction_.CompareTo(other.mDecimalFraction_) : unitCompare;
 		}
 
 		#endregion
@@ -520,15 +476,11 @@ namespace MiskoPersist.MoneyType
 
 		public Boolean lessThen(Money value)
 		{
-			if (Object.ReferenceEquals(value, null)) return false;
-
 			return this.CompareTo(value) < 0;
 		}
 
 		public Boolean greaterThen(Money value)
 		{
-			if (Object.ReferenceEquals(value, null)) return false;
-
 			return this.CompareTo(value) > 0;
 		}
 
@@ -622,36 +574,6 @@ namespace MiskoPersist.MoneyType
 		}
 
 		#endregion
-
-		#region XmlSerialization
-
-		public void ReadXml(XmlReader reader)
-		{
-			Decimal value = Decimal.Parse(XML.InnerText);
-
-			checkValue(value);
-
-			mUnits_ = (Int64)value;
-			mDecimalFraction_ = (Int32)Decimal.Round((value - mUnits_) * FractionScale);
-
-			if (mDecimalFraction_ >= FractionScale)
-			{
-				mUnits_ += 1;
-				mDecimalFraction_ = mDecimalFraction_ - (Int32)FractionScale;
-			}
-		}
-
-		public void WriteXml(XmlWriter writer)
-		{
-			writer.WriteRaw(String.Format("{0:F2}", Value));
-		}
-
-		public XmlSchema GetSchema()
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
 	}
 	
 	internal sealed class MoneySerializer : JsonConverter
@@ -665,7 +587,7 @@ namespace MiskoPersist.MoneyType
 		
 		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
 		{
-			return reader.Value != null ? new Money((Double)reader.Value) : Money.ZERO;
+			return reader.Value != null ? new Money((Decimal)reader.Value) : Money.ZERO;
 		}
 		
 		public override Boolean CanConvert(Type objectType)
