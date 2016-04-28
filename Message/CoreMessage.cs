@@ -1,146 +1,114 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters;
-using System.Xml;
-using MiskoPersist.Core;
+using System.Reflection;
+using log4net;
+using MiskoPersist.Attributes;
 using MiskoPersist.Data;
-using MiskoPersist.Enums;
+using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
-using MiskoPersist.Tools;
-using Newtonsoft.Json;
 
 namespace Message
 {
-	public class CoreMessage : AbstractViewedData
+	public class CoreMessage : ViewedData
 	{
-		private static Logger Log = Logger.GetInstance(typeof(CoreMessage));
+		private static ILog Log = LogManager.GetLogger(typeof(CoreMessage));
 
 		#region Fields
 
-		private static JsonSerializerSettings mJsonSettings_;
+		private ErrorMessages mConfirmations_ = new ErrorMessages();
 
 		#endregion
-
-		#region Properties
-
-		public ErrorMessages Confirmations
-		{
-			get;
-			set;
-		}
-
-		public Page Page 
-		{ 
-			get;
-			set;
-		}
 		
-		private static JsonSerializerSettings JsonSettings
+		#region Viewed Properties
+		
+		[Viewed]
+		public ErrorMessages Confirmations
 		{
 			get
 			{
-				if(mJsonSettings_ == null)
-				{
-					mJsonSettings_ = new JsonSerializerSettings();
-					mJsonSettings_.TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple;
-					mJsonSettings_.TypeNameHandling = TypeNameHandling.Objects;
-					mJsonSettings_.NullValueHandling = NullValueHandling.Ignore;
-					mJsonSettings_.DateFormatHandling = DateFormatHandling.IsoDateFormat;
-					mJsonSettings_.DateParseHandling = DateParseHandling.DateTime;
-					mJsonSettings_.Formatting = Newtonsoft.Json.Formatting.Indented;	
-				}
-				
-				return mJsonSettings_;
+				return mConfirmations_;
+			}
+			set
+			{
+				mConfirmations_ = value;
 			}
 		}
-
+		
 		#endregion
 
-		public CoreMessage()
-		{
-			Confirmations = new ErrorMessages();
-		}        
+		#region Properties		
 		
-		#region Serialization
-		
-		public static CoreMessage Read(String message)
-		{
-			SerializationType serializationType = message.GetSerializationType();
-
-			CoreMessage result = null;
-			
-			if(serializationType.Equals(SerializationType.Xml))
-			{
-				XmlDocument document = new XmlDocument();
-				document.LoadXml(message);
-
-				result = (CoreMessage)Activator.CreateInstance(Type.GetType(document.DocumentElement.Attributes["Type"].Value));
-				result.ReadXml(message);				
-			}
-			else if(serializationType.Equals(SerializationType.Json))
-			{
-				result = (CoreMessage)JsonSerializer.Create(JsonSettings).Deserialize(new JsonTextReader(new StringReader(message)));
-			}
-
-			return result;
+		public Boolean HasConfirmations 
+		{ 
+			get 
+			{ 
+				return Confirmations != null && Confirmations.Count > 0; 
+			} 
 		}
 
-		public String Write(SerializationType serializationType)
+		public Boolean HasUnconfirmed 
 		{
-			if(serializationType.Equals(SerializationType.Xml))
+			get
 			{
-				return WriteXml();
-			}
-			else if(serializationType.Equals(SerializationType.Json))
-			{
-				return WriteJson();
-			}
-
-			throw new MiskoException("Invalid serialization type. Should be one of Xml or Json");
-		}
-
-		private String WriteJson()
-		{
-			using(StringWriter stringWriter = new StringWriter())
-			{
-				using(JsonTextWriter writer = new JsonTextWriter(stringWriter))
+				Boolean hasUnconfirmed = false;
+				if(HasConfirmations)
 				{
-					JsonSerializer.Create(JsonSettings).Serialize(writer, this);
-					stringWriter.Close();
-					
-					return stringWriter.ToString();
+					foreach (ErrorMessage confirmMessage in Confirmations) 
+					{
+						if(confirmMessage.Confirmed.HasValue && !confirmMessage.Confirmed.Value)
+						{
+							hasUnconfirmed = true;
+							break;
+						}
+					}
 				}
+				return hasUnconfirmed;
 			}
 		}
 		
-		private String WriteXml()
+		internal Type RequestClass
 		{
-			using(StringWriter stringWriter = new StringWriter())
+			get
 			{
-				using(XmlWriter writer = XmlWriter.Create(stringWriter, new XmlWriterSettings(){ Indent = true }))
+				if(this is ResponseMessage)
 				{
-					writer.WriteStartDocument();
-					writer.WriteStartElement(GetType().Name);
-					writer.WriteAttributeString("Type", null, GetType().ToString() + ", " + GetType().Assembly.GetName().Name);
-					WriteXml(writer);
-					writer.WriteEndElement();
-					writer.WriteEndDocument();
-					writer.Flush();
-					
-					return stringWriter.ToString();
+					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					String msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RQ"));
 				}
+				return GetType();
 			}
 		}
 		
-		private void ReadXml(String xml)
+		internal Type ResponseClass
 		{
-			using(XmlReader reader = XmlReader.Create(new StringReader(xml.Trim())))
+			get
 			{
-				reader.MoveToContent();
-
-				XmlDocument document = new XmlDocument();
-				XML = (XmlElement)document.ReadNode(reader);
-				ReadXml(reader);	
+				if(this is RequestMessage)
+				{
+					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RS"));
+				}
+				return GetType();
+			}
+		}
+		
+		internal Type WrapperClass
+		{
+			get
+			{
+				if(this is RequestMessage)
+				{
+					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+				}
+				else
+				{
+					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					String msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+				}
 			}
 		}
 

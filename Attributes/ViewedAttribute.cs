@@ -1,11 +1,11 @@
 using System;
-using MiskoPersist.Core;
+using log4net;
 
 namespace MiskoPersist.Attributes
 {
 	public class ViewedAttribute : Attribute
     {
-        private static Logger Log = Logger.GetInstance(typeof(ViewedAttribute));
+        private static ILog Log = LogManager.GetLogger(typeof(ViewedAttribute));
 
         #region Fields
 

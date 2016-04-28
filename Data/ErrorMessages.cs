@@ -1,13 +1,12 @@
 using System;
-using System.Xml;
-using MiskoPersist.Core;
+using log4net;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-	public class ErrorMessages : AbstractViewedDataList<ErrorMessage>
+	public class ErrorMessages : ViewedDataList
     {
-        private static Logger Log = Logger.GetInstance(typeof(ErrorMessages));
+        private static ILog Log = LogManager.GetLogger(typeof(ErrorMessages));
 
         #region Fields
 
@@ -23,7 +22,9 @@ namespace MiskoPersist.Data
 
         #region Constructors
 
-
+        public ErrorMessages() : base(typeof(ErrorMessage))
+        {
+        }
 
         #endregion
 
@@ -50,11 +51,11 @@ namespace MiskoPersist.Data
 
         public Boolean Contains(ErrorLevel level)
         {
-            if (level != null && Count > 0)
+            if(level != null && Count > 0)
             {
                 foreach (ErrorMessage message in this)
                 {
-                    if (message.ErrorLevel.Equals(level))
+                    if(message.ErrorLevel.Equals(level))
                     {
                         return true;
                     }
@@ -68,11 +69,11 @@ namespace MiskoPersist.Data
         {
             ErrorMessages list = new ErrorMessages();
 
-            if (level != null && Count > 0)
+            if(level != null && Count > 0)
             {
                 foreach (ErrorMessage message in this)
                 {
-                    if (message.ErrorLevel.Equals(level))
+                    if(message.ErrorLevel.Equals(level))
                     {
                         list.Add(message);
                     }
@@ -83,40 +84,5 @@ namespace MiskoPersist.Data
         }
 
         #endregion
-
-		#region XmlSerialization
-
-		public void ReadXml(XmlElement xml, String name)
-		{
-			if (xml != null)
-			{				
-				foreach (XmlNode n in xml.ChildNodes)
-				{
-					if (n.Name == name)
-					{
-						foreach (XmlNode messageNode in ((XmlElement)n).ChildNodes)
-						{
-							if (messageNode.Name == "ErrorMessage")
-							{
-								ErrorMessage value = new ErrorMessage();
-								value.XML = (XmlElement)messageNode;
-								value.ReadXml(null);
-								Add(value);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		public void WriteXml(XmlWriter writer)
-		{
-			foreach(ErrorMessage message in this)
-			{
-				message.WriteXml(writer);
-			}
-		}
-
-		#endregion
     }
 }

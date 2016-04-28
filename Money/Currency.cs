@@ -5,8 +5,7 @@ using System.Threading;
 
 namespace MiskoPersist.MoneyType
 {
-	[Serializable]
-    public struct Currency : IEquatable<Currency>, IFormatProvider
+	public struct Currency : IEquatable<Currency>, IFormatProvider
     {
         #region Static Currency Fields
 
@@ -785,7 +784,7 @@ namespace MiskoPersist.MoneyType
                 var symbol = currency.Symbol;
                 List<Int32> lcids;
 
-                if (cultureIdLookup.TryGetValue(iso3LetterCode, out lcids))
+                if(cultureIdLookup.TryGetValue(iso3LetterCode, out lcids))
                 {
                     foreach (var lcid in lcids)
                     {
@@ -797,7 +796,7 @@ namespace MiskoPersist.MoneyType
 
                 _codeIndex[iso3LetterCode] = currency.IsoNumberCode;
 
-                if (symbol == null)
+                if(symbol == null)
                 {
                     continue;
                 }
@@ -985,7 +984,7 @@ namespace MiskoPersist.MoneyType
 
         public Currency(Int32 isoCurrencyCode)
         {
-            if (isoCurrencyCode != 0 && !_currencies.ContainsKey(isoCurrencyCode))
+            if(isoCurrencyCode != 0 && !_currencies.ContainsKey(isoCurrencyCode))
             {
                 throw new ArgumentOutOfRangeException("isoCurrencyCode",
                                                       isoCurrencyCode,
@@ -1054,7 +1053,7 @@ namespace MiskoPersist.MoneyType
         {
             Int32 currencyId;
 
-            if (_lcidToIsoCodeLookup.TryGetValue(cultureInfo.LCID, out currencyId))
+            if(_lcidToIsoCodeLookup.TryGetValue(cultureInfo.LCID, out currencyId))
             {
                 return new Currency(currencyId);
             }
@@ -1085,7 +1084,7 @@ namespace MiskoPersist.MoneyType
 
             s = s.Trim();
 
-            if (_codeIndex.TryGetValue(s, out currencyId))
+            if(_codeIndex.TryGetValue(s, out currencyId))
             {
                 currency = new Currency(currencyId);
                 return true;
@@ -1093,9 +1092,9 @@ namespace MiskoPersist.MoneyType
 
             List<Int32> currencyIdList;
 
-            if (_symbolIndex.TryGetValue(s, out currencyIdList))
+            if(_symbolIndex.TryGetValue(s, out currencyIdList))
             {
-                if (_lcidToIsoCodeLookup.TryGetValue(Thread.CurrentThread.CurrentCulture.LCID, out currencyId) &&
+                if(_lcidToIsoCodeLookup.TryGetValue(Thread.CurrentThread.CurrentCulture.LCID, out currencyId) &&
                     !currencyIdList.Contains(currencyId))
                 {
                     currencyId = currencyIdList[0];
@@ -1154,7 +1153,7 @@ namespace MiskoPersist.MoneyType
 
         public Object GetFormat(Type formatType)
         {
-            if (formatType != typeof(NumberFormatInfo))
+            if(formatType != typeof(NumberFormatInfo))
             {
                 return null;
             }

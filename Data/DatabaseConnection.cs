@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Data;
-using System.Xml;
+using log4net;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data
 {
-	public class DatabaseConnection : AbstractViewedData
+	public class DatabaseConnection : ViewedData
 	{
-		private static Logger Log = Logger.GetInstance(typeof(DatabaseConnection));
+		private static ILog Log = LogManager.GetLogger(typeof(DatabaseConnection));
 		
 		#region Fields
 
@@ -17,64 +17,29 @@ namespace MiskoPersist.Data
 
         #endregion
 
+        #region Viewed Properties
+
+        [Viewed]
+        public String Name { get; set; }
+		[Viewed]
+        public DatabaseType DatabaseType { get; set; }
+		[Viewed]
+        public String Server { get; set; }
+		[Viewed]
+        public Int32? Port { get; set; }
+		[Viewed]
+        public String Datasource { get; set; }
+		[Viewed]
+        public String Username { get; set; }
+		[Viewed]
+        public String Password { get; set; }
+		[Viewed]
+        public String ConnectionString { get; set; }	
+        
+        #endregion
+        
         #region Properties
-
-        [Viewed]
-        public String Name
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public DatabaseType DatabaseType
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public String Server
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public Int32? Port
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public String Datasource
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public String Username
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public String Password
-        {
-        	get;
-        	set;
-        }
-
-        [Viewed]
-        public String ConnectionString
-        {
-        	get;
-        	set;
-        }
-            
+        
         public ConnectionState State
         {
         	get
@@ -83,19 +48,6 @@ namespace MiskoPersist.Data
         	}
         }
         
-        #endregion
-
-        #region XmlSerialization
-
-        public override void WriteXml(XmlWriter writer)
-        {
-            base.WriteXml(writer);
-
-            writer.WriteStartElement("ConnectionStatus");
-            writer.WriteValue(State.ToString());
-            writer.WriteEndElement();
-        }
-
         #endregion
 	}
 }

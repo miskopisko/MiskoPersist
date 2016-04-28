@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Reflection;
+using log4net;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
@@ -13,7 +12,7 @@ namespace MiskoPersist.Persistences
 {
 	internal class OraclePersistence : Persistence
     {
-        private static Logger Log = Logger.GetInstance(typeof(OraclePersistence));
+        private static ILog Log = LogManager.GetLogger(typeof(OraclePersistence));
 
         #region Fields
 
@@ -55,32 +54,36 @@ namespace MiskoPersist.Persistences
             }
 
             position = 0;
+            String paramString = "[";
             foreach (Object parameter in mParameters_)
             {
                 OracleParameter param = new OracleParameter();
                 param.ParameterName = ":param" + position;
 
-                if (parameter == null || (parameter is String && String.IsNullOrEmpty((String)parameter)))
+                if(parameter == null || (parameter is String && String.IsNullOrEmpty((String)parameter)))
                 {
                     param.IsNullable = true;
                     param.Value = DBNull.Value;
                     mCommand_.Parameters.Add(param);
+                    paramString += "NULL, ";
                 }
-                else if (parameter is AbstractStoredData)
+                else if(parameter is StoredData)
                 {
                     param.IsNullable = false;
                     param.DbType = DbType.Int64;
-                    param.Value = parameter != null ? (Object)((AbstractStoredData)parameter).Id.Value : DBNull.Value;
+                    param.Value = parameter != null ? (Object)((StoredData)parameter).Id.Value : DBNull.Value;
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
-                else if (parameter is AbstractEnum)
+                else if(parameter is MiskoEnum)
                 {
                     param.IsNullable = true;
                     param.DbType = DbType.Int32;
-                    param.Value = ((AbstractEnum)parameter).IsSet ? (Object)((AbstractEnum)parameter).Value : DBNull.Value;
+                    param.Value = ((MiskoEnum)parameter).IsSet ? (Object)((MiskoEnum)parameter).Value : DBNull.Value;
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
-                else if (parameter is Array)
+                else if(parameter is Array)
                 {
                     String firstHalf = mCommand_.CommandText.Substring(0, mCommand_.CommandText.IndexOf(param.ParameterName));
                     String secondHalf = mCommand_.CommandText.Substring(mCommand_.CommandText.IndexOf(param.ParameterName) + 7);
@@ -93,6 +96,7 @@ namespace MiskoPersist.Persistences
                         innerParam.Value = o;
                         middle += innerParam.ParameterName + ", ";
                         mCommand_.Parameters.Add(innerParam);
+                        paramString += innerParam.Value + ", ";
                         position++;
                     }
 
@@ -103,44 +107,52 @@ namespace MiskoPersist.Persistences
                     param.DbType = DbType.Decimal;
                     param.Value = ((Money)parameter).ToDecimal(null);
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
-                else if (parameter is PrimaryKey)
+                else if(parameter is PrimaryKey)
                 {
                     param.DbType = DbType.Int64;
                     param.Value = ((PrimaryKey)parameter).Value;
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
-                else if (parameter is Guid)
+                else if(parameter is Guid)
                 {
                     param.DbType = DbType.String;
                     param.Value = ((Guid)parameter).ToString();
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
-                else if(parameter is Boolean || parameter is Boolean)
+                else if(parameter is Boolean)
                 {
                 	param.Value = parameter;
                     param.OracleDbType = OracleDbType.Int16;
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
                 else
                 {
                     param.Value = parameter;
                     mCommand_.Parameters.Add(param);
+                    paramString += param.Value + ", ";
                 }
 
                 position++;
             }
+            paramString = paramString.Substring(0, paramString.Length-2) + "]";
+			Log.Debug("Command: " + mCommand_.CommandText.Replace(Environment.NewLine, " "));
+			Log.Debug("Parameters: " + paramString);
         }
 
-        protected override void GenerateUpdateStatement(AbstractStoredData clazz, Type type)
+        protected override void GenerateUpdateStatement(StoredData clazz, Type type)
         {
-            if (clazz != null)
+            if(clazz != null)
             {
                 mSql_ += "UPDATE " + type.Name.ToUpper() + Environment.NewLine + "SET    ";
 
-                foreach (PropertyInfo property in AbstractData.GetProperties(type))
+                foreach (PropertyInfo property in StoredData.GetProperties(type))
                 {
-                    mSql_ += AbstractData.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
+                    mSql_ += StoredData.GetColumnName(property).ToUpper() + " = ?," + Environment.NewLine + "       ";
                     mParameters_.Add(property.GetValue(clazz, null));
                 }
                 
@@ -158,9 +170,9 @@ namespace MiskoPersist.Persistences
             }
         }
 
-        protected override void GenerateDeleteStatement(AbstractStoredData clazz, Type type)
+        protected override void GenerateDeleteStatement(StoredData clazz, Type type)
         {
-            if (clazz != null)
+            if(clazz != null)
             {
                 mSql_ += "DELETE" + Environment.NewLine;
                 mSql_ += "FROM   " + type.Name.ToUpper() + Environment.NewLine;
@@ -175,22 +187,20 @@ namespace MiskoPersist.Persistences
             }
         }
 
-		protected override void GenerateInsertStatement(AbstractStoredData clazz, Type type)
+		protected override void GenerateInsertStatement(StoredData clazz, Type type)
         {
-            if (clazz != null)
+            if(clazz != null)
             {
-                List<PropertyInfo> properties = AbstractData.GetProperties(type);
-
                 mSql_ += "INSERT INTO " + type.Name.ToUpper() + " (ID";
 
-                foreach (PropertyInfo property in properties)
+                foreach (PropertyInfo property in StoredData.GetProperties(type))
                 {
-                    mSql_ += ", " + AbstractData.GetColumnName(property).ToUpper();
+                    mSql_ += ", " + StoredData.GetColumnName(property).ToUpper();
                 }
 
                 mSql_ += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (";
 
-                if (type.BaseType.Equals(typeof(AbstractStoredData)))
+                if(type.BaseType.Equals(typeof(StoredData)))
                 {
                     mSql_ += "SQ_" + type.Name.ToUpper() + ".NEXTVAL, ";
                 }
@@ -200,7 +210,7 @@ namespace MiskoPersist.Persistences
                     mParameters_.Add(clazz.Id);
                 }
 
-                foreach (PropertyInfo property in properties)
+                foreach (PropertyInfo property in StoredData.GetProperties(type))
                 {
                     mSql_ += "?, ";
                     mParameters_.Add(property.GetValue(clazz, null));
@@ -208,7 +218,7 @@ namespace MiskoPersist.Persistences
 
                 mSql_ += "SYSDATE, SYSDATE, 0)";
 
-                if (type.BaseType.Equals(typeof(AbstractStoredData)))
+                if(type.BaseType.Equals(typeof(StoredData)))
                 {
                     mSql_ += Environment.NewLine + "RETURNING ID INTO :LASTID";
                 }

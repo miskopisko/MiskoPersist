@@ -1,10 +1,13 @@
 using System;
 using System.Security.Cryptography;
+using log4net;
 
 namespace MiskoPersist.Tools
 {
 	public static class PasswordHash
-	{        
+	{
+		private static ILog Log = LogManager.GetLogger(typeof(PasswordHash));
+		
 		private const Char DELIMITER = ':';
 		
 		private const Int32 ITERATION_INDEX = 0;

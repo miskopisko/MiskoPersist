@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
+using log4net;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
@@ -17,7 +18,7 @@ namespace MiskoPersist.Core
 {
 	public abstract class Persistence
 	{
-		private static Logger Log = Logger.GetInstance(typeof(Persistence));
+		private static ILog Log = LogManager.GetLogger(typeof(Persistence));
 
 		#region Fields
 
@@ -70,19 +71,19 @@ namespace MiskoPersist.Core
 
 		public static Persistence GetInstance(Session session)
 		{
-			if (session.Connection is OracleConnection)
+			if(session.Connection is OracleConnection)
 			{
 				return new OraclePersistence(session);
 			}
-			if (session.Connection is MySqlConnection)
+			if(session.Connection is MySqlConnection)
 			{
 				return new MySqlPersistence(session);
 			}
-			if (session.Connection is SQLiteConnection)
+			if(session.Connection is SQLiteConnection)
 			{
 				return new SqlitePersistence(session);
 			}
-			if (session.Connection is OleDbConnection)
+			if(session.Connection is OleDbConnection)
 			{
 				return new FoxProPersistence(session);
 			}
@@ -98,7 +99,7 @@ namespace MiskoPersist.Core
 				Exception e = null;
 				try
 				{
-					if (mRs_ != null)
+					if(mRs_ != null)
 					{
 						mRs_.Dispose();
 						mRs_ = null;
@@ -112,7 +113,7 @@ namespace MiskoPersist.Core
 
 				try
 				{
-					if (mCommand_ != null)
+					if(mCommand_ != null)
 					{
 						mCommand_.Dispose();
 						mCommand_ = null;
@@ -120,14 +121,14 @@ namespace MiskoPersist.Core
 				}
 				catch (Exception ex)
 				{
-					if (e == null)
+					if(e == null)
 					{
 						e = ex;
 					}
 					mCommand_ = null;
 				}
 
-				if (e != null)
+				if(e != null)
 				{
 					throw e;
 				}
@@ -153,15 +154,15 @@ namespace MiskoPersist.Core
 			mSql_ = sql;
 		}
 
-		public void SetSql(String sql, Object[] values)
+		public void SetSql(String sql, params Object[] values)
 		{
 			mSql_ = sql;
 			mParameters_.AddRange(values);
 		}
 
-		public void SqlWhere(Boolean condition, String expression, Object[] value)
+		public void SqlWhere(Boolean condition, String expression, params Object[] value)
 		{
-			if (condition)
+			if(condition)
 			{
 				mSql_ = mSql_ + Environment.NewLine + (!mSql_.Contains("WHERE") ? "WHERE " : "AND ") + expression;
 				foreach (Object item in value)
@@ -173,10 +174,10 @@ namespace MiskoPersist.Core
 
 		public void SqlOrderBy(String columnName)
 		{
-			SqlOrderBy(columnName, SortDirection.Ascending);
+			SqlOrderBy(columnName, SqlSortDirection.Ascending);
 		}
 
-		public void SqlOrderBy(String columnName, SortDirection sortDirection)
+		public void SqlOrderBy(String columnName, SqlSortDirection sortDirection)
 		{
 			mSql_ = mSql_ + (!mSql_.Contains("ORDER BY") ? Environment.NewLine + "ORDER BY " : ", ") + columnName + sortDirection.Code;
 		}
@@ -187,7 +188,7 @@ namespace MiskoPersist.Core
 
 		public void ExecuteQuery()
 		{
-			if (String.IsNullOrEmpty(mSql_))
+			if(String.IsNullOrEmpty(mSql_))
 			{
 				mSession_.Error(ErrorLevel.Error, ErrorStrings.errSqlNotSet);
 			}
@@ -197,10 +198,10 @@ namespace MiskoPersist.Core
 
 		public void ExecuteQuery(String sql)
 		{
-			ExecuteQuery(sql, new Object[] { });
+			ExecuteQuery(sql, null);
 		}
 
-		public void ExecuteQuery(String sql, Object[] parameters)
+		public void ExecuteQuery(String sql, params Object[] parameters)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -225,7 +226,7 @@ namespace MiskoPersist.Core
 			return ExecuteUpdate(session, sql, null);
 		}
 
-		public static Int32 ExecuteUpdate(Session session, String sql, Object[] parameters)
+		public static Int32 ExecuteUpdate(Session session, String sql, params Object[] parameters)
 		{
 			Persistence persistence = Persistence.GetInstance(session);
 			Int32 result = persistence.ExecuteUpdate(sql, parameters);
@@ -234,7 +235,7 @@ namespace MiskoPersist.Core
 			return result;
 		}
 
-		public static void ExecuteUpdate(Session session, AbstractStoredData clazz, Type type)
+		public static void ExecuteUpdate(Session session, StoredData clazz, Type type)
 		{
 			Persistence persistence = Persistence.GetInstance(session);
 			persistence.ExecuteUpdate(clazz, type);
@@ -242,7 +243,7 @@ namespace MiskoPersist.Core
 			persistence = null;
 		}
 
-		public static void ExecuteInsert(Session session, AbstractStoredData clazz, Type type)
+		public static void ExecuteInsert(Session session, StoredData clazz, Type type)
 		{
 			Persistence persistence = Persistence.GetInstance(session);
 			persistence.ExecuteInsert(clazz, type);
@@ -250,7 +251,7 @@ namespace MiskoPersist.Core
 			persistence = null;
 		}
 
-		public static void ExecuteDelete(Session session, AbstractStoredData clazz, Type type)
+		public static void ExecuteDelete(Session session, StoredData clazz, Type type)
 		{
 			Persistence persistence = Persistence.GetInstance(session);
 			persistence.ExecuteDelete(clazz, type);
@@ -260,10 +261,10 @@ namespace MiskoPersist.Core
 		
 		public void ExecuteRSFunction(String function)
 		{
-			ExecuteRSFunction(function, new Object[] { });
+			ExecuteRSFunction(function, null);
 		}
 		
-		public void ExecuteRSFunction(String function, Object[] parameters)
+		public void ExecuteRSFunction(String function, params Object[] parameters)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -288,22 +289,22 @@ namespace MiskoPersist.Core
 
 		#region Private Methods
 
-		private void ExecuteInsert(AbstractStoredData clazz, Type type)
+		private void ExecuteInsert(StoredData clazz, Type type)
 		{
 			mSession_.PersistencePool.Add(this);
 
-			PrimaryKey newId = new PrimaryKey();
+			PrimaryKey newId = new PrimaryKey(0);
 			
 			GenerateInsertStatement(clazz, type);
 			
 			mCommand_.Prepare();           
 
 			Stopwatch timer = Stopwatch.StartNew();
-			if (mCommand_ is MySqlCommand || mCommand_ is SQLiteCommand)
+			if(mCommand_ is MySqlCommand || mCommand_ is SQLiteCommand)
 			{
 				newId = new PrimaryKey(mCommand_.ExecuteScalar().ToString());
 			}
-			else if (mCommand_ is OracleCommand)
+			else if(mCommand_ is OracleCommand)
 			{
 				OracleParameter lastId = new OracleParameter();
 				lastId.ParameterName = ":LASTID";
@@ -315,24 +316,24 @@ namespace MiskoPersist.Core
 
 				newId = new PrimaryKey(Convert.ToInt64(lastId.Value));
 			}
-			else if (mCommand_ is OleDbCommand)
+			else if(mCommand_ is OleDbCommand)
 			{
 				// FoxPro INSERT is done on a class by class basis by overriding the Create method
 			}
 			timer.Stop();            
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			if (mSession_.MessageMode.Equals(MessageMode.Normal))
+			if(mSession_.MessageMode.Equals(MessageMode.Normal))
 			{
 				clazz.Id = newId;
 			}
 		}
 
-		private void ExecuteUpdate(AbstractStoredData clazz, Type type)
+		private void ExecuteUpdate(StoredData clazz, Type type)
 		{
 			mSession_.PersistencePool.Add(this);
 
-			if (type.BaseType.Equals(typeof(AbstractStoredData)))
+			if(type.BaseType.Equals(typeof(StoredData)))
 			{
 				clazz.RowVer++;
 			}
@@ -346,13 +347,13 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
-			if (result == 0)
+			if(result == 0)
 			{
-				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, new Object[] { clazz.GetType().Name });
+				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, clazz.GetType().Name);
 			}
 		}
 
-		private void ExecuteDelete(AbstractStoredData clazz, Type type)
+		private void ExecuteDelete(StoredData clazz, Type type)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -365,13 +366,13 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
-			if (result == 0)
+			if(result == 0)
 			{
-				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, new Object[] { GetType().Name });
+				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, GetType().Name);
 			}
 		}
 
-		private Int32 ExecuteUpdate(String sql, Object[] parameters)
+		private Int32 ExecuteUpdate(String sql, params Object[] parameters)
 		{
 			mSession_.PersistencePool.Add(this);
 
@@ -396,9 +397,9 @@ namespace MiskoPersist.Core
 		#region Abstract Methods
 
 		protected abstract void SetParameters();
-		protected abstract void GenerateUpdateStatement(AbstractStoredData clazz, Type type);
-		protected abstract void GenerateDeleteStatement(AbstractStoredData clazz, Type type);
-		protected abstract void GenerateInsertStatement(AbstractStoredData clazz, Type type);
+		protected abstract void GenerateUpdateStatement(StoredData clazz, Type type);
+		protected abstract void GenerateDeleteStatement(StoredData clazz, Type type);
+		protected abstract void GenerateInsertStatement(StoredData clazz, Type type);
 
 		#endregion
 		
@@ -407,13 +408,13 @@ namespace MiskoPersist.Core
 		public PrimaryKey GetPrimaryKey(String key)
 		{
 			Int64? value = GetLong(key);
-			return (value != null && value.HasValue && value.Value > 0) ? new PrimaryKey(value.Value) : new PrimaryKey(0);
+			return value.HasValue ? new PrimaryKey(value.Value) : null;
 		}
 
 		public Money GetMoney(String key)
 		{
 			Decimal? value = GetDecimal(key);
-			return value.HasValue ? new Money(value.Value) : Money.ZERO;
+			return value.HasValue ? new Money(value.Value) : null;
 		}
 
 		public String GetString(String key)

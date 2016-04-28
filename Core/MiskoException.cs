@@ -1,48 +1,40 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using log4net;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 
 namespace MiskoPersist.Core
 {
-	[Serializable]
 	public class MiskoException : Exception
 	{
-		private static Logger Log = Logger.GetInstance(typeof(MiskoException));
+		private static ILog Log = LogManager.GetLogger(typeof(MiskoException));
 
 		#region Fields
 
-		private readonly Type mClass_;
-		private readonly MethodBase mMethod_;
-		private readonly ErrorMessage mErrorMessage_;
-
+		
+		
 		#endregion
 
 		#region Properties
 
 		public Type Class 
 		{
-			get 
-			{
-				return mClass_;
-			}
+			get;
+			set;
 		}
 		
 		public MethodBase Method
 		{
-			get
-			{
-				return mMethod_;
-			}
+			get;
+			set;
 		}
 		
 		public ErrorMessage ErrorMessage
 		{
-			get
-			{
-				return mErrorMessage_;
-			}
+			get;
+			set;
 		}
 		
 		public override String Message
@@ -57,49 +49,44 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-		public MiskoException(ErrorMessage message) 
-			: base(message != null ? message.ToString() : "")
+		public MiskoException(ErrorMessage message) : base(message != null ? message.ToString() : "")
 		{
 			StackFrame stackframe = new StackFrame(1);
-			mClass_ = stackframe.GetMethod().DeclaringType;
-			mMethod_ = stackframe.GetMethod();
-			mErrorMessage_ = message;
+			Class = stackframe.GetMethod().DeclaringType;
+			Method = stackframe.GetMethod();
+			ErrorMessage = message;
 		}
 
-		public MiskoException(String message) 
-			: base(message)
+		public MiskoException(String message) : base(message)
 		{
 			StackFrame stackframe = new StackFrame(1);
-			mClass_ = stackframe.GetMethod().DeclaringType;
-			mMethod_ = stackframe.GetMethod();
-			mErrorMessage_ = new ErrorMessage(mClass_, mMethod_, ErrorLevel.Error, message, null);
+			Class = stackframe.GetMethod().DeclaringType;
+			Method = stackframe.GetMethod();
+			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, null);
 		}
 
-		public MiskoException(String message, String[] parameters) 
-			: base(message)
+		public MiskoException(String message, params Object[] parameters) : base(message)
 		{
 			StackFrame stackframe = new StackFrame(1);
-			mClass_ = stackframe.GetMethod().DeclaringType;
-			mMethod_ = stackframe.GetMethod();
-			mErrorMessage_ = new ErrorMessage(mClass_, mMethod_, ErrorLevel.Error, message, parameters);
+			Class = stackframe.GetMethod().DeclaringType;
+			Method = stackframe.GetMethod();
+			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, parameters);
 		}
 
-		public MiskoException(String message, Exception inner) 
-			: base(message, inner)
+		public MiskoException(String message, Exception inner) : base(message, inner)
 		{
 			StackFrame stackframe = new StackFrame(1);
-			mClass_ = stackframe.GetMethod().DeclaringType;
-			mMethod_ = stackframe.GetMethod();
-			mErrorMessage_ = new ErrorMessage(mClass_, mMethod_, ErrorLevel.Error, message, null);
+			Class = stackframe.GetMethod().DeclaringType;
+			Method = stackframe.GetMethod();
+			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, null);
 		}
 
-		public MiskoException(String message, String[] parameters, Exception inner) 
-			: base(message, inner)
+		public MiskoException(String message, Exception inner, params Object[] parameters) : base(message, inner)
 		{
 			StackFrame stackframe = new StackFrame(1);
-			mClass_ = stackframe.GetMethod().DeclaringType;
-			mMethod_ = stackframe.GetMethod();
-			mErrorMessage_ = new ErrorMessage(mClass_, mMethod_, ErrorLevel.Error, message, parameters);
+			Class = stackframe.GetMethod().DeclaringType;
+			Method = stackframe.GetMethod();
+			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, parameters);
 		}
 
 		#endregion

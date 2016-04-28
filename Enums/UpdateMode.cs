@@ -2,7 +2,7 @@ using System;
 
 namespace MiskoPersist.Enums
 {
-	public class UpdateMode : AbstractEnum
+	public class UpdateMode : MiskoEnum
     {
         #region Fields
 
@@ -46,7 +46,7 @@ namespace MiskoPersist.Enums
         {
             for (Int32 i = 0; mElements_ != null && i < mElements_.Length; i++)
             {
-                if (mElements_[i].Value == index)
+                if(mElements_[i].Value == index)
                 {
                     return mElements_[i];
                 }
@@ -59,7 +59,7 @@ namespace MiskoPersist.Enums
         {
             for (Int32 i = 0; descriptionCode != null && mElements_ != null && i < mElements_.Length; i++)
             {
-                if (mElements_[i].Description.ToLower().Equals(descriptionCode.ToLower()) || mElements_[i].Code.ToLower().Equals(descriptionCode.ToLower()))
+                if(mElements_[i].Description.ToLower().Equals(descriptionCode.ToLower()) || mElements_[i].Code.ToLower().Equals(descriptionCode.ToLower()))
                 {
                     return mElements_[i];
                 }

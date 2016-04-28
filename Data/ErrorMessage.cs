@@ -2,59 +2,62 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Xml;
-using MiskoPersist.Core;
+using log4net;
+using MiskoPersist.Attributes;
 using MiskoPersist.Enums;
 using MiskoPersist.Tools;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Data
 {
-	[JsonConverter(typeof(ErrorSerializer))]
-	public class ErrorMessage : AbstractViewedData
+	public class ErrorMessage : ViewedData
     {
-        private static Logger Log = Logger.GetInstance(typeof(ErrorMessage));
+        private static ILog Log = LogManager.GetLogger(typeof(ErrorMessage));
 
         #region Fields
 
         private Boolean? mConfirmed_ = false;
 
-        #endregion
+		#endregion
 
-        #region Properties
+		#region Properties
 
+		[Viewed]
 		public String Class 
 		{
 			get;
 			set;
 		}
-		
+
+		[Viewed]
 		public String Method 
 		{
 			get;
 			set;
 		}
-		
-		public List<String> Parameters 
+
+		[Viewed]
+		public ErrorMessageParameters Parameters
 		{
 			get;
 			set;
 		}
-		
+
+		[Viewed]
 		public ErrorLevel ErrorLevel
 		{
 			get;
 			set;
 		}
-		
-        public String Message
+
+		[Viewed]
+		public String Message
         {
             get;
             set;
         }
 
-        public Boolean? Confirmed 
+		[Viewed]
+		public Boolean? Confirmed 
         { 
         	get  
         	{ 
@@ -69,10 +72,11 @@ namespace MiskoPersist.Data
         #endregion
 
         #region Constructors
-
+        
         public ErrorMessage()
         {
-        }
+        	ErrorLevel = ErrorLevel.Success;
+        }     
 
         public ErrorMessage(Exception e) 
         {
@@ -90,27 +94,31 @@ namespace MiskoPersist.Data
         	
             ErrorLevel = ErrorLevel.Error;
             Message = e.Message;
-            Parameters = new List<String>();
+            Parameters = new ErrorMessageParameters();
+        }
+        
+        public ErrorMessage(String message, Exception e) : this(e)
+        {
+        	Message = message + Environment.NewLine + e.Message;
         }
 
-        public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message) 
-        	: this(clazz, method, level, message, null)
+        public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message) : this(clazz, method, level, message, null)
         {
         }
 
-        public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message, Object[] parameters)
+        public ErrorMessage(Type clazz, MethodBase method, ErrorLevel level, String message, params Object[] parameters)
         {
             Class = clazz.Name;
             Method = method.Name;
             ErrorLevel = level;
             Message = message;
-            Parameters = new List<String>();
+            Parameters = new ErrorMessageParameters();
 
             if(parameters != null)
             {
                 foreach(Object parameter in parameters)
                 {
-                    Parameters.Add(parameter == null ? "" : parameter.ToString());
+                	Parameters.Add(new ErrorMessageParameter() { Parameter = parameter.ToString() });
                 }
             }
         }
@@ -121,40 +129,36 @@ namespace MiskoPersist.Data
 
         public override String ToString()
         {
-            return Utils.ResolveTextParameters(Message, Parameters != null ? Parameters.ToArray() : null);
+        	return String.Format(Message, Parameters.ToStringArray());
         }
         
-        #endregion
-
-		#region Equals and GetHashCode implementation
-		
-		public override Int32 GetHashCode()
+        public override Int32 GetHashCode()
 		{
 			Int32 hashCode = 0;
 			
 			unchecked
 			{
-				if (Message != null) 
+				if(Message != null) 
 				{
 					hashCode += 1000000007 * Message.GetHashCode();
 				}
 				
-				if (Class != null) 
+				if(Class != null) 
 				{
 					hashCode += 1000000021 * Class.GetHashCode();
 				}
 				
-				if (Method != null) 
+				if(Method != null) 
 				{
 					hashCode += 1000000033 * Method.GetHashCode();
 				}
 				
-				if (Parameters != null) 
+				if(Parameters != null) 
 				{
 					hashCode += 1000000087 * Parameters.GetHashCode();
 				}
 				
-				if (ErrorLevel != null) 
+				if(ErrorLevel != null) 
 				{
 					hashCode += 1000000093 * ErrorLevel.GetHashCode();
 				}
@@ -172,23 +176,21 @@ namespace MiskoPersist.Data
 				return false;
 			}
 			
-			Boolean parametersEqual = true;
-			if((Parameters != null && other.Parameters != null) && (Parameters.Count.Equals(other.Parameters.Count)))
-			{
-				parametersEqual = new HashSet<Object>(Parameters).SetEquals(new HashSet<Object>(other.Parameters));
-			}
-						
-			return Message.Equals(other.Message) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && parametersEqual;
+			return Message.Equals(other.Message) && Class.Equals(other.Class) && Method.Equals(other.Method) && ErrorLevel.Equals(other.ErrorLevel) && Parameters.Equals(other.Parameters);
 		}
+        
+        #endregion
+
+		#region Operators
 
 		public static Boolean operator ==(ErrorMessage lhs, ErrorMessage rhs) 
 		{
-			if (ReferenceEquals(lhs, rhs)) 
+			if(ReferenceEquals(lhs, rhs)) 
 			{
 				return true;
 			}
 			
-			if (ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null)) 
+			if(ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null)) 
 			{
 				return false;
 			}
@@ -202,119 +204,5 @@ namespace MiskoPersist.Data
 		}
 
         #endregion
-        
-        #region XmlSerialization
-
-        public override void ReadXml(XmlReader reader)
-		{
-        	Class = GetElement("Class");
-        	Method = GetElement("Method");
-        	
-        	XmlNodeList parameters = XML.GetElementsByTagName("Parameters");
-        	if(parameters != null && parameters.Count > 0)
-        	{
-        		Parameters = new List<String>();
-				foreach (XmlElement parameter in parameters) 
-	        	{
-	        		Parameters.Add(parameter.InnerText);
-	        	}        		
-        	}
-        	
-        	ErrorLevel = (ErrorLevel)GetEnumElement("ErrorLevel", typeof(ErrorLevel));
-        	Message = GetElement("Message");
-		}
-
-		public override void WriteXml(XmlWriter writer)
-		{
-			writer.WriteStartElement("ErrorMessage");
-			
-			writer.WriteStartElement("Class");
-			writer.WriteValue(Class);
-            writer.WriteEndElement();
-
-            writer.WriteStartElement("Method");
-			writer.WriteValue(Method);
-            writer.WriteEndElement();
-
-            if(Parameters != null && Parameters.Count > 0)
-            {
-            	foreach (Object parameter in Parameters) 
-            	{
-	            	writer.WriteStartElement("Parameters");
-					writer.WriteValue(parameter);
-	            	writer.WriteEndElement();
-            	}  
-            }
-
-            writer.WriteStartElement("ErrorLevel");
-            writer.WriteValue(ErrorLevel.Value);
-            writer.WriteEndElement();
-
-            writer.WriteStartElement("Message");
-			writer.WriteValue(Message);
-            writer.WriteEndElement();
-			
-			writer.WriteEndElement();
-		}
-
-		#endregion
-    }
-
-    internal sealed class ErrorSerializer : JsonConverter
-    {
-        #region implemented abstract members of JsonConverter
-
-        public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
-        {
-            ErrorMessage errorMessage = value as ErrorMessage;
-
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("$type");
-            writer.WriteValue(errorMessage.GetType().ToString() + ", " + errorMessage.GetType().Assembly.GetName().Name);
-
-            writer.WritePropertyName("Class");
-            serializer.Serialize(writer, errorMessage.Class);
-
-            writer.WritePropertyName("Method");
-            serializer.Serialize(writer, errorMessage.Method);
-
-            if(errorMessage.Parameters != null && errorMessage.Parameters.Count > 0)
-            {
-                writer.WritePropertyName("Parameters");
-                serializer.Serialize(writer, errorMessage.Parameters);    
-            }
-
-            writer.WritePropertyName("ErrorLevel");
-            serializer.Serialize(writer, errorMessage.ErrorLevel);
-
-            writer.WritePropertyName("Message");
-            serializer.Serialize(writer, errorMessage.Message);
-
-            writer.WriteEndObject();
-        }
-
-        public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
-        {
-            JObject jsonObject = JObject.Load(reader);
-
-            ErrorMessage result = new ErrorMessage();
-            result.Class = (String)jsonObject["Class"];
-            result.Method = (String)jsonObject["Method"];
-            result.Parameters = jsonObject["Parameters"] != null ? jsonObject["Parameters"].ToObject<List<String>>() : null;
-            result.ErrorLevel = ErrorLevel.GetElement((Int32)jsonObject["ErrorLevel"]);
-            result.Message = (String)jsonObject["Message"];
-
-            return result;
-        }
-
-        public override Boolean CanConvert(Type objectType)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-
     }
 }

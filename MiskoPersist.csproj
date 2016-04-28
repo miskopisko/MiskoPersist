@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiskoPersist</RootNamespace>
     <AssemblyName>MiskoPersist</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <FileUpgradeFlags>
@@ -85,6 +85,9 @@
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>Libraries\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>Libraries\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -100,48 +103,47 @@
     <Reference Include="System.Data.SQLite">
       <HintPath>Libraries\System.Data.SQLite.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Serialization" />
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\ServerConnection.cs" />
+    <Compile Include="Core\MessageProcessor.cs" />
+    <Compile Include="Core\Server.cs" />
     <Compile Include="Data\DatabaseConnection.cs" />
     <Compile Include="Data\DatabaseConnections.cs" />
     <Compile Include="Data\ErrorMessage.cs" />
+    <Compile Include="Data\ErrorMessageParameter.cs" />
+    <Compile Include="Data\ErrorMessageParameters.cs" />
     <Compile Include="Data\ErrorMessages.cs" />
     <Compile Include="Enums\DatabaseType.cs" />
     <Compile Include="Enums\MessageStatus.cs" />
     <Compile Include="Enums\SerializationType.cs" />
-    <Compile Include="Interfaces\IOController.cs" />
+    <Compile Include="Enums\SqlSortDirection.cs" />
+    <Compile Include="Money\MidpointRoundingRule.cs" />
+    <Compile Include="Money\RoundingPlaces.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />
+    <Compile Include="Serialization\MiskoConverter.cs" />
+    <Compile Include="Serialization\Serializer.cs" />
+    <Compile Include="Serialization\JsonFormatter.cs" />
+    <Compile Include="Serialization\XmlFormatter.cs" />
     <Compile Include="Tools\CommandLineProcess.cs" />
     <Compile Include="Attributes\StoredAttribute.cs" />
     <Compile Include="Attributes\ViewedAttribute.cs" />
     <Compile Include="Data\Page.cs" />
     <Compile Include="Data\PrimaryKey.cs" />
-    <Compile Include="Enums\SortDirection.cs" />
-    <Compile Include="Data\AbstractData.cs" />
-    <Compile Include="Data\AbstractStoredData.cs" />
-    <Compile Include="Data\AbstractStoredDataList.cs" />
-    <Compile Include="Data\AbstractViewedData.cs" />
-    <Compile Include="Data\AbstractViewedDataList.cs">
+    <Compile Include="Data\StoredData.cs" />
+    <Compile Include="Data\StoredDataList.cs" />
+    <Compile Include="Data\ViewedData.cs" />
+    <Compile Include="Data\ViewedDataList.cs">
     </Compile>
     <Compile Include="Enums\MessageMode.cs" />
-    <Compile Include="Core\Logger.cs" />
-    <Compile Include="Core\MessageProcessor.cs" />
     <Compile Include="Message\MessageWrapper.cs" />
     <Compile Include="Message\Request\RequestMessage.cs" />
     <Compile Include="Message\Response\ResponseMessage.cs" />
     <Compile Include="Money\Currency.cs" />
-    <Compile Include="Money\FractionReceivers.cs" />
-    <Compile Include="Money\MersenneTwister.cs" />
-    <Compile Include="Money\MidpointRoundingRule.cs" />
-    <Compile Include="Money\MoneyAllocationException.cs" />
-    <Compile Include="Money\MoneyDistributor.cs" />
-    <Compile Include="Money\MoneyExtensions.cs" />
-    <Compile Include="Money\RoundingPlaces.cs" />
     <Compile Include="Core\MiskoException.cs" />
     <Compile Include="Core\Persistence.cs" />
     <Compile Include="Persistences\MySqlPersistence.cs" />
@@ -152,7 +154,7 @@
     <Compile Include="Tools\PasswordHash.cs" />
     <Compile Include="Tools\Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Enums\AbstractEnum.cs" />
+    <Compile Include="Enums\MiskoEnum.cs" />
     <Compile Include="Enums\ErrorLevel.cs" />
     <Compile Include="Enums\UpdateMode.cs" />
     <Compile Include="Enums\ServerLocation.cs" />
@@ -204,6 +206,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Serialization" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

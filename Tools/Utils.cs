@@ -3,90 +3,26 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-using MiskoPersist.Core;
-using MiskoPersist.Enums;
-using Newtonsoft.Json.Linq;
+using log4net;
 
 namespace MiskoPersist.Tools
 {
 	public static class Utils
     {
-        private static Logger Log = Logger.GetInstance(typeof(Utils));
+        private static ILog Log = LogManager.GetLogger(typeof(Utils));
 
         #region Fields
 
+        private const String mSharedSecret_ = "bn89*(HG)*h80I&*(*)Y*Hjkjub";    	
         private static Byte[] mSalt_ = Encoding.ASCII.GetBytes("b780gU&G&*GP&G&*)");
-        private const String mSharedSecret_ = "bn89*(HG)*h80I&*(*)Y*Hjkjub";
 
 		#endregion
 
 		#region Public Static Methods
 
-		public static SerializationType GetSerializationType(this String str)
-		{
-			try
-			{
-				XmlDocument document = new XmlDocument();
-				document.LoadXml(str);
-				return SerializationType.Xml;
-			}
-			catch
-			{
-				try
-				{
-					JObject.Parse(str);
-					return SerializationType.Json;
-				}
-				catch
-				{
-					throw new MiskoException("Invalid input. Not a valid XML or Json string.");
-				}
-			}			
-		}
-
-		public static String ResolveTextParameters(String text, Object[] parameters)
-        {
-            if (text != null)
-            {
-                String param = (String)text.Clone();
-
-                Regex reg = new Regex("[{]([0-9]+|D-[LS]{1}:[0-9]+|N-[0-9]+,[0-9]+:[0-9]+)[}]");
-                Int32[] groups = reg.GetGroupNumbers();
-
-                Match match = reg.Match(param);
-                Int32 counter = 0;
-
-                while (match.Success)
-                {
-                    if (groups.Length == 2)
-                    {
-                        CaptureCollection collect = match.Groups[groups[1]].Captures;
-                        foreach (Object t in collect)
-                        {
-                            if (Regex.IsMatch(param, "[{]" + counter + "[}]")) // Text
-                            {
-                                String paramVal = parameters != null && parameters[counter] != null ? parameters[counter].ToString() : "";
-                                param = Regex.Replace(param, "[{]" + counter + "[}]", paramVal);
-                            }
-
-                            counter++;
-                        }
-                    }
-
-                    match = match.NextMatch();
-                }
-
-                return param;
-            }
-
-            return "";
-        }
-
         public static String EncryptStringAES(String plainText)
         {
-            if (String.IsNullOrEmpty(plainText))
+            if(String.IsNullOrEmpty(plainText))
             {
                 return "";
             }
@@ -126,7 +62,7 @@ namespace MiskoPersist.Tools
             finally
             {
                 // Clear the RijndaelManaged object.
-                if (aesAlg != null)
+                if(aesAlg != null)
                 {
                     aesAlg.Clear();
                 }
@@ -138,7 +74,7 @@ namespace MiskoPersist.Tools
 
         public static String DecryptStringAES(String cipherText)
         {
-            if (String.IsNullOrEmpty(cipherText))
+            if(String.IsNullOrEmpty(cipherText))
             {
                 return "";
             }
@@ -181,7 +117,7 @@ namespace MiskoPersist.Tools
             finally
             {
                 // Clear the RijndaelManaged object.
-                if (aesAlg != null)
+                if(aesAlg != null)
                 {
                     aesAlg.Clear();
                 }
@@ -201,7 +137,7 @@ namespace MiskoPersist.Tools
 			{
 				newDate = newDate.AddDays(direction);
 				
-				if (newDate.DayOfWeek != DayOfWeek.Saturday && newDate.DayOfWeek != DayOfWeek.Sunday && !holidays.Contains(newDate))
+				if(newDate.DayOfWeek != DayOfWeek.Saturday && newDate.DayOfWeek != DayOfWeek.Sunday && !holidays.Contains(newDate))
 				{
 					workingDays -= direction;
 				}
@@ -223,7 +159,7 @@ namespace MiskoPersist.Tools
         	
         	while (date <= endDate)
 			{
-				if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday && !holidays.Contains(date))
+				if(date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday && !holidays.Contains(date))
 				{
 					result += 1;
 				}
@@ -240,13 +176,13 @@ namespace MiskoPersist.Tools
         private static Byte[] ReadByteArray(Stream s)
         {
             Byte[] rawLength = new Byte[sizeof(Int32)];
-            if (s.Read(rawLength, 0, rawLength.Length) != rawLength.Length)
+            if(s.Read(rawLength, 0, rawLength.Length) != rawLength.Length)
             {
                 throw new SystemException("Stream did not contain properly formatted Byte array");
             }
 
             Byte[] buffer = new Byte[BitConverter.ToInt32(rawLength, 0)];
-            if (s.Read(buffer, 0, buffer.Length) != buffer.Length)
+            if(s.Read(buffer, 0, buffer.Length) != buffer.Length)
             {
                 throw new SystemException("Did not read Byte array properly");
             }

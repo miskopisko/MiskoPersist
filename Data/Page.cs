@@ -1,16 +1,13 @@
 using System;
-using System.Xml;
+using log4net;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MiskoPersist.Data
 {
-	[JsonConverter(typeof(PageSerializer))]
-    public class Page : AbstractViewedData
+	public class Page
     {
-        private static Logger Log = Logger.GetInstance(typeof(Page));
+        private static ILog Log = LogManager.GetLogger(typeof(Page));
 
         #region Fields
 
@@ -26,23 +23,23 @@ namespace MiskoPersist.Data
 			get;
 			set;
 		}
-		
+
 		[Viewed]
 		public Int32 RowsPerPage 
         { 
         	get;
         	set;
         }
-        
+
 		[Viewed]
-        public Boolean IncludeRecordCount 
+		public Boolean IncludeRecordCount 
         { 
         	get;
         	set;
         }
-        
-        [Viewed]
-        public Int32 TotalRowCount 
+
+		[Viewed]
+		public Int32 TotalRowCount 
 		{
 			get;
 			set;
@@ -72,22 +69,24 @@ namespace MiskoPersist.Data
         { 
         	get 
         	{ 
-        		return HasNext ? new Page(PageNo + 1) : new Page(1);
+        		return new Page(HasNext ? PageNo + 1 : 1) { RowsPerPage = RowsPerPage, IncludeRecordCount = IncludeRecordCount };
         	}
         }
 
         #endregion
 
         #region Constructors
-
-        public Page()
-        {
+        
+        public Page() : this(1)
+        {        	
         }
 
         public Page(Int32 page)
-        	: this()
         {
             PageNo = page;
+            RowsPerPage = 0;
+            IncludeRecordCount = false;
+            TotalRowCount = 0;
         }
 
         #endregion
@@ -109,83 +108,5 @@ namespace MiskoPersist.Data
         
 
         #endregion
-
-		#region XmlSerialization
-
-		public override void WriteXml(XmlWriter writer)
-		{
-			writer.WriteStartElement("PageNo");
-			writer.WriteValue(PageNo);
-			writer.WriteEndElement();
-    		
-    		if(RowsPerPage > 0)
-    		{
-    			writer.WriteStartElement("RowsPerPage");
-				writer.WriteValue(RowsPerPage);
-				writer.WriteEndElement();
-    		}
-    		
-    		writer.WriteStartElement("IncludeRecordCount");
-			writer.WriteValue(IncludeRecordCount);
-			writer.WriteEndElement();
-    		
-    		if(IncludeRecordCount && RowsPerPage > 0)
-    		{
-    			writer.WriteStartElement("TotalRowCount");
-				writer.WriteValue(TotalRowCount);
-				writer.WriteEndElement();
-    		}
-		}
-
-		#endregion
-    }
-    
-    internal sealed class PageSerializer : JsonConverter
-    {
-		#region implemented abstract members of JsonConverter
-		
-		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
-		{
-			Page page = value as Page;
-			
-			writer.WriteStartObject();
-			writer.WritePropertyName("PageNo");
-    		serializer.Serialize(writer, page.PageNo);
-    		
-    		if(page.RowsPerPage > 0)
-    		{
-    			writer.WritePropertyName("RowsPerPage");
-    			serializer.Serialize(writer, page.RowsPerPage);
-    		}
-    		
-    		writer.WritePropertyName("IncludeRecordCount");
-    		serializer.Serialize(writer, page.IncludeRecordCount);
-    		
-    		if(page.IncludeRecordCount && page.RowsPerPage > 0)
-    		{
-    			writer.WritePropertyName("TotalRowCount");
-    			serializer.Serialize(writer, page.TotalRowCount);
-    		}
-	    		
-			writer.WriteEndObject();
-		}
-		
-		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
-		{
-			JObject jsonObject = JObject.Load(reader);
-			
-			return new Page{PageNo = (Int32)jsonObject["PageNo"],
-							RowsPerPage = ((Int32?)jsonObject["RowsPerPage"]).HasValue ? ((Int32?)jsonObject["RowsPerPage"]).Value : 0,
-							IncludeRecordCount = (Boolean)jsonObject["IncludeRecordCount"],
-							TotalRowCount = ((Int32?)jsonObject["TotalRowCount"]).HasValue ? ((Int32?)jsonObject["TotalRowCount"]).Value : 0
-						   };
-		}
-		
-		public override Boolean CanConvert(Type objectType)
-		{
-			throw new NotImplementedException();
-		}
-		
-		#endregion    	
     }
 }

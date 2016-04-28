@@ -1,4 +1,5 @@
-﻿using MiskoPersist.Core;
+﻿using log4net;
+using MiskoPersist.Core;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
 
@@ -6,7 +7,7 @@ namespace MiskoPersist.Message
 {
 	public abstract class MessageWrapper
     {
-        private static Logger Log = Logger.GetInstance(typeof(MessageWrapper));
+        private static ILog Log = LogManager.GetLogger(typeof(MessageWrapper));
 
         #region Fields
 

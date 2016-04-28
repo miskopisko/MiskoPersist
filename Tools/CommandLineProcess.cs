@@ -1,31 +1,28 @@
 ﻿using System;
 using System.Diagnostics;
+using log4net;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Tools
 {
 	public class CommandLineProcess
     {
-        private static Logger Log = Logger.GetInstance(typeof(CommandLineProcess));
+        private static ILog Log = LogManager.GetLogger(typeof(CommandLineProcess));
 
         #region Fields
 
-        private String mCommand_;
-        private String mArgs_;
-        private Int32 mReturnCode_;
-        private String mStandardOutput_;
-        private String mStandardError_;
+        
 
         #endregion
 
         #region Properties
 
-        public String Command { get { return mCommand_; } set { mCommand_ = value; } }
-        public String Args { get { return mArgs_; } set { mArgs_ = value; } }
-        public Int32 ReturnCode { get { return mReturnCode_; } set { mReturnCode_ = value; } }
-        public String StandardOutput { get { return mStandardOutput_; } set { mStandardOutput_ = value; } }
-        public String StandardError { get { return mStandardError_; } set { mStandardError_ = value; } }
-        public Boolean Success { get { return String.IsNullOrEmpty(mStandardError_); } }
+        public String Command { get; set; }
+		public String Args { get; set; }
+		public Int32 ReturnCode  { get; set; }
+        public String StandardOutput { get; set; }
+		public String StandardError { get; set; }
+        public Boolean Success { get { return String.IsNullOrEmpty(StandardError); } }
 
         #endregion
 
@@ -33,8 +30,8 @@ namespace MiskoPersist.Tools
 
         public CommandLineProcess(String command, String args)
         {
-            mCommand_ = command;
-            mArgs_ = args;
+            Command = command;
+            Args = args;
         }
 
         #endregion
@@ -56,7 +53,7 @@ namespace MiskoPersist.Tools
         {
             try
             {
-                ProcessStartInfo procStartInfo = new ProcessStartInfo(mCommand_, mArgs_);
+                ProcessStartInfo procStartInfo = new ProcessStartInfo(Command, Args);
                 procStartInfo.RedirectStandardOutput = true;
                 procStartInfo.RedirectStandardError = true;
                 procStartInfo.RedirectStandardInput = true;
@@ -68,20 +65,20 @@ namespace MiskoPersist.Tools
                 mProcess_.Start();
 
                 mProcess_.StandardInput.Close(); // Close any input streams as they just lock the app
-                mStandardOutput_ = mProcess_.StandardOutput.ReadToEnd();
-                mStandardError_ = mProcess_.StandardError.ReadToEnd();
+                StandardOutput = mProcess_.StandardOutput.ReadToEnd();
+                StandardError = mProcess_.StandardError.ReadToEnd();
 
                 // Wait for the process to complete
                 mProcess_.WaitForExit();
 
-                mReturnCode_ = mProcess_.ExitCode;
+                ReturnCode = mProcess_.ExitCode;
                 mProcess_.Close();
             }
             catch (Exception e)
             {
-                mStandardError_ = e.Message;
-                mStandardOutput_ = null;
-                mReturnCode_ = -1;
+                StandardError = e.Message;
+                StandardOutput = null;
+                ReturnCode = -1;
             }
             finally
             {
