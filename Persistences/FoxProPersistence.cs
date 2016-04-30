@@ -43,6 +43,11 @@ namespace MiskoPersist.Persistences
 
         protected override void SetParameters()
         {
+        	if(mParameters_.Count == 0)
+        	{
+        		return;
+        	}
+        	
             Int32 position = 0;
             String paramString = "[";
             foreach (Object parameter in mParameters_)

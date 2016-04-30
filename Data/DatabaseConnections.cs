@@ -39,6 +39,11 @@ namespace MiskoPersist.Data
 			{
 				return mConnections_;
 			}
+			set
+			{
+				mConnections_.Clear();
+				mConnections_.Concatenate(value);
+			}
 		}
 		
 		#endregion

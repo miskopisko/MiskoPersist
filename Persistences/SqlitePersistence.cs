@@ -45,6 +45,11 @@ namespace MiskoPersist.Persistences
 
 		protected override void SetParameters()
 		{
+			if(mParameters_.Count == 0)
+        	{
+        		return;
+        	}
+			
 			// Normalize the parameters by replacing typical ? marks with @param values
 			Int32 end = 0;
 			Int32 position = 0;

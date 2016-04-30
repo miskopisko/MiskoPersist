@@ -65,7 +65,17 @@ namespace MiskoPersist.Enums
 
             return null;
         }
+        
+        public String ToHttpContentType()
+        {
+        	return this.Equals(Json) ? "text/json" : "text/xml";
+        }
 
+        public static SerializationType FromHttpContentType(String contentType)
+        {
+        	return "text/json".Equals(contentType) ? SerializationType.Json : SerializationType.Xml;
+        }
+        
         #endregion
     }
 }

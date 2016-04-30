@@ -26,7 +26,7 @@ namespace MiskoPersist.Core
 		protected DbDataReader mRs_ = null;
 		protected DbCommand mCommand_ = null;
 		protected String mSql_ = "";
-		protected List<Object> mParameters_ = new List<Object>();
+		protected List<Object> mParameters_;
 		protected Boolean mEof_ = true;
 		protected Int32 mRecordCount_ = 0;
 
@@ -63,6 +63,7 @@ namespace MiskoPersist.Core
 			mSession_ = session;
 			mCommand_ = mSession_.Connection.CreateCommand();
 			mCommand_.Transaction = session.Transaction;
+			mParameters_ = new List<Object>();
 		}
 
 		#endregion
@@ -151,23 +152,26 @@ namespace MiskoPersist.Core
 
 		public void SetSql(String sql)
 		{
-			mSql_ = sql;
+			SetSql(sql, null);
 		}
 
-		public void SetSql(String sql, params Object[] values)
+		public void SetSql(String sql, params Object[] parameters)
 		{
 			mSql_ = sql;
-			mParameters_.AddRange(values);
+			if(parameters != null)
+			{
+				mParameters_.AddRange(parameters);	
+			}
 		}
 
-		public void SqlWhere(Boolean condition, String expression, params Object[] value)
+		public void SqlWhere(Boolean condition, String expression, params Object[] parameters)
 		{
 			if(condition)
 			{
 				mSql_ = mSql_ + Environment.NewLine + (!mSql_.Contains("WHERE") ? "WHERE " : "AND ") + expression;
-				foreach (Object item in value)
+				if(parameters != null)
 				{
-					mParameters_.Add(item);
+					mParameters_.AddRange(parameters);	
 				}
 			}
 		}
@@ -206,7 +210,10 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			mParameters_ = new List<Object>(parameters);
+			if(parameters != null)
+			{
+				mParameters_.AddRange(parameters);	
+			}
 
 			mCommand_.CommandText = mSql_;
 			SetParameters();
@@ -269,7 +276,10 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = function;
-			mParameters_ = new List<Object>(parameters);
+			if(parameters != null)
+			{
+				mParameters_.AddRange(parameters);	
+			}
 
 			mCommand_.CommandText = mSql_;
 			mCommand_.CommandType = CommandType.StoredProcedure;
@@ -377,7 +387,10 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			mParameters_ = new List<Object>(parameters);
+			if(parameters != null)
+			{
+				mParameters_.AddRange(parameters);	
+			}
 
 			mCommand_.CommandText = mSql_;
 			SetParameters();

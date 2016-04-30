@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
@@ -119,15 +119,20 @@ namespace MiskoPersist.Core
 					throw new MiskoException("Server location is online but host is not defined");	
 				}
 				
+				if(Port == 0)
+				{
+					Port = 80;
+				}
+				
 				if(String.IsNullOrEmpty(Script))
 				{
 					throw new MiskoException("Server location is online but script is not defined");
 				}
-			}
-
-			if(SerializationType == null || SerializationType.IsNotSet)
-			{
-				throw new MiskoException("Serialization type is not defined");
+				
+				if(SerializationType == null || SerializationType.IsNotSet)
+				{
+					throw new MiskoException("Serialization type is not defined");
+				}
 			}
 		}
 		
@@ -267,17 +272,14 @@ namespace MiskoPersist.Core
 				webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
 				webRequest.Method = "POST";
 				webRequest.KeepAlive = true;
-				webRequest.ContentType = "application/x-www-form-urlencoded";
-				
-				using(StreamWriter writer = new StreamWriter(webRequest.GetRequestStream()))
+				webRequest.ContentType = SerializationType.ToHttpContentType();
+								
+				using(StreamWriter sw = new StreamWriter(webRequest.GetRequestStream()))
 				{
-					writer.Write("message=" + HttpUtility.UrlEncode(Serializer.Serialize(mRequest_, SerializationType)));
+					sw.Write(Serializer.Serialize(mRequest_, SerializationType));
 				}
-
-				using(StreamReader reader = new StreamReader(((HttpWebResponse)webRequest.GetResponse()).GetResponseStream()))
-				{
-					responseMessage = (ResponseMessage)Serializer.Deserialize(reader.ReadToEnd());
-				}                
+				
+				responseMessage = (ResponseMessage)Serializer.Deserialize(webRequest.GetResponse().GetResponseStream(), SerializationType);
 			}
 			catch(Exception ex)
 			{
@@ -304,6 +306,11 @@ namespace MiskoPersist.Core
 		
 		#region Public Methods
 
+		public static void SendRequest(RequestMessage request)
+		{
+			SendRequest(request, null, null);
+		}
+		
 		public static void SendRequest(RequestMessage request, MessageCompleteHandler successHandler)
 		{
 			SendRequest(request, successHandler, null);

@@ -78,7 +78,7 @@ namespace MiskoPersist.Serialization
 		#endregion
 		
 		#region Public Methods
-		
+				
 		public static String Serialize(Object o, SerializationType serializationType)
 		{
 			if(o == null)
@@ -103,23 +103,32 @@ namespace MiskoPersist.Serialization
 		{
 			using(MemoryStream ms = new MemoryStream(ENCODING.GetBytes(str)))
 			{
-				IFormatter formatter;
 				if(str.StartsWith("<", StringComparison.Ordinal))
 				{
-					formatter = new XmlFormatter();
+					return Deserialize(ms, SerializationType.Xml);
 				}
-				else if(str.StartsWith("{", StringComparison.Ordinal))
+				if(str.StartsWith("{", StringComparison.Ordinal))
 				{
-					formatter = new JsonFormatter();
+					return Deserialize(ms, SerializationType.Json);
 				}
-				else
-				{
-					throw new MiskoException("Invalid input. Not a valid XML or Json string.");
-				}
-				return formatter.Deserialize(ms);
+				throw new MiskoException("Invalid input. Not a valid XML or Json string.");
 			}
 		}
 		
+		public static Object Deserialize(Stream stream, SerializationType serializationType)
+		{
+			IFormatter formatter = null;
+			if(serializationType.Equals(SerializationType.Xml))
+			{
+				formatter = new XmlFormatter();
+			}
+			else if(serializationType.Equals(SerializationType.Json))
+			{
+				formatter = new JsonFormatter();
+			}
+			return formatter != null ? formatter.Deserialize(stream) : null;
+		}
+	
 		#endregion
 		
 		#region Internal Methods

@@ -106,8 +106,6 @@
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Serialization" />
-    <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\MessageProcessor.cs" />
@@ -129,7 +127,6 @@
     <Compile Include="Serialization\Serializer.cs" />
     <Compile Include="Serialization\JsonFormatter.cs" />
     <Compile Include="Serialization\XmlFormatter.cs" />
-    <Compile Include="Tools\CommandLineProcess.cs" />
     <Compile Include="Attributes\StoredAttribute.cs" />
     <Compile Include="Attributes\ViewedAttribute.cs" />
     <Compile Include="Data\Page.cs" />
