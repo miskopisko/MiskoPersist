@@ -4,7 +4,7 @@ using log4net;
 
 namespace MiskoPersist.MoneyType
 {
-	public class Money : IComparable<Money>, IEquatable<Money>, IFormattable, IConvertible
+	public class Money : IComparable<Money>, IComparable, IEquatable<Money>, IFormattable, IConvertible
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Money));
 
@@ -436,6 +436,20 @@ namespace MiskoPersist.MoneyType
 			var unitCompare = mUnits_.CompareTo(other.mUnits_);
 
 			return unitCompare == 0 ? mDecimalFraction_.CompareTo(other.mDecimalFraction_) : unitCompare;
+		}
+
+		#endregion
+
+		#region Implementation of IComparable
+
+		public Int32 CompareTo(Object other)
+		{
+			Money money = other as Money;
+			if(money != null)
+			{
+				return CompareTo(money);
+			}
+			throw new InvalidCastException();
 		}
 
 		#endregion

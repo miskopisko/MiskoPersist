@@ -15,39 +15,39 @@ namespace MiskoPersist.Data
 
 		
 
-        #endregion
+		#endregion
 
-        #region Viewed Properties
+		#region Viewed Properties
 
-        [Viewed]
-        public String Name { get; set; }
 		[Viewed]
-        public DatabaseType DatabaseType { get; set; }
+		public String Name { get; set; }
 		[Viewed]
-        public String Server { get; set; }
+		public DatabaseType DatabaseType { get; set; }
 		[Viewed]
-        public Int32? Port { get; set; }
+		public String Server { get; set; }
 		[Viewed]
-        public String Datasource { get; set; }
+		public Int32? Port { get; set; }
 		[Viewed]
-        public String Username { get; set; }
+		public String Datasource { get; set; }
 		[Viewed]
-        public String Password { get; set; }
+		public String Username { get; set; }
 		[Viewed]
-        public String ConnectionString { get; set; }	
-        
-        #endregion
-        
-        #region Properties
-        
-        public ConnectionState State
-        {
-        	get
-        	{
-        		return ServiceLocator.GetConnection(Name).State;
-        	}
-        }
-        
-        #endregion
+		public String Password { get; set; }
+		[Viewed]
+		public String ConnectionString { get; set; }	
+		
+		#endregion
+		
+		#region Properties
+		
+		public ConnectionState State
+		{
+			get
+			{
+				return ServiceLocator.GetConnection(Name).State;
+			}
+		}
+		
+		#endregion
 	}
 }

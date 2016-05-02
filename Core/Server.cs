@@ -32,16 +32,16 @@ namespace MiskoPersist.Core
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public delegate void StatusHandler(MessageStatus status);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        public delegate void ErrorHandler(ErrorMessage message);
+		public delegate void ErrorHandler(ErrorMessage message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        public delegate void WarningHandler(ErrorMessage message);
+		public delegate void WarningHandler(ErrorMessage message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        public delegate void InfoHandler(ErrorMessage message);
+		public delegate void InfoHandler(ErrorMessage message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        public delegate void ConfirmHandler(ErrorMessage message, ConfirmationEventArgs args);
+		public delegate void ConfirmHandler(ErrorMessage message, ConfirmationEventArgs args);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-        public delegate void DebugHandler(CoreMessage message);
-        
+		public delegate void DebugHandler(CoreMessage message);
+		
 		#endregion
 		
 		#region Events
@@ -70,13 +70,25 @@ namespace MiskoPersist.Core
 		#endregion
 		
 		#region Properties
-        
+		
 		public static SerializationType SerializationType { get; set; }		
 		public static ServerLocation Location { get; set; }
 		public static String Host { get; set; }
 		public static Int16 Port { get; set; }
 		public static String Script { get; set; }
-		public static Boolean UseSSL { get; set; }		
+		public static Boolean UseSSL { get; set; }
+		
+		public static String ConnectedTo
+		{
+			get
+			{
+				if(Location.Equals(ServerLocation.Local))
+				{
+					return DatabaseConnections.Connections["Default"].Datasource;
+				}
+				return Url.Host;
+			}
+		}	
 		
 		private static Uri Url
 		{
