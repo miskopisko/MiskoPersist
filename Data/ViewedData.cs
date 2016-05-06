@@ -9,7 +9,7 @@ using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Data
 {
-	public class ViewedData : ICloneable
+	public class ViewedData
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(ViewedData));
 
@@ -35,13 +35,45 @@ namespace MiskoPersist.Data
 			return result;
 		}
 		
-		#endregion
-		
-		#region ICloneable implementation
-		
-		public object Clone()
+		public override int GetHashCode()
 		{
-			return MemberwiseClone();
+			int hashCode = 0;
+			unchecked
+			{
+				foreach (PropertyInfo property in GetViewedProperties())
+				{
+					Object value = property.GetValue(this);
+					if (value != null)
+					{
+						hashCode += 515153 * value.GetHashCode();
+					}
+				}
+			}
+			return hashCode;
+		}
+		
+		public override Boolean Equals(object obj)
+		{
+			ViewedData other = obj as ViewedData;
+			return other != null && GetHashCode().Equals(obj.GetHashCode());
+		}
+
+		public static Boolean operator ==(ViewedData lhs, ViewedData rhs)
+		{
+			if (ReferenceEquals(lhs, rhs))
+			{
+				return true;
+			}
+			if (ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null))
+			{
+				return false;
+			}
+			return lhs.Equals(rhs);
+		}
+
+		public static Boolean operator !=(ViewedData lhs, ViewedData rhs)
+		{
+			return !(lhs == rhs);
 		}
 		
 		#endregion
@@ -53,6 +85,11 @@ namespace MiskoPersist.Data
 		#endregion
 
 		#region Public Methods
+		
+		public ViewedData Clone()
+		{
+			return (ViewedData)MemberwiseClone();
+		}
 
 		public virtual void Fetch(Session session)
 		{
@@ -69,84 +106,84 @@ namespace MiskoPersist.Data
 		
 		public void Set(Session session, Persistence persistence)
 		{
-			if(!persistence.IsEof)
+			if (!persistence.IsEof)
 			{
 				foreach (PropertyInfo property in GetViewedProperties())
 				{
 					String columnName = GetColumnName(property);
-	
-					if(property.PropertyType == typeof(String))
+					
+					if (property.PropertyType == typeof(String))
 					{
 						property.SetValue(this, persistence.GetString(columnName));
 					}
-					else if(property.PropertyType == typeof(Boolean))
+					else if (property.PropertyType == typeof(Boolean))
 					{
 						Boolean? value = persistence.GetBoolean(columnName);
 						property.SetValue(this, value.HasValue && value.Value);
 					}
-					else if(property.PropertyType == typeof(Boolean?))
+					else if (property.PropertyType == typeof(Boolean?))
 					{
 						property.SetValue(this, persistence.GetBoolean(columnName));
 					}
-					else if(property.PropertyType == typeof(Int32))
+					else if (property.PropertyType == typeof(Int32))
 					{
 						Int32? value = persistence.GetInt(columnName);
 						property.SetValue(this, value.HasValue ? value.Value : 0);
 					}
-					else if(property.PropertyType == typeof(Int32?))
+					else if (property.PropertyType == typeof(Int32?))
 					{
 						property.SetValue(this, persistence.GetInt(columnName));
 					}
-					else if(property.PropertyType == typeof(Int64))
+					else if (property.PropertyType == typeof(Int64))
 					{
 						Int64? value = persistence.GetLong(columnName);
 						property.SetValue(this, value.HasValue ? value.Value : 0L);
 					}
-					else if(property.PropertyType == typeof(Int64?))
+					else if (property.PropertyType == typeof(Int64?))
 					{
 						property.SetValue(this, persistence.GetLong(columnName));
 					}
-					else if(property.PropertyType == typeof(Double))
+					else if (property.PropertyType == typeof(Double))
 					{
 						Double? value = persistence.GetDouble(columnName);
 						property.SetValue(this, value.HasValue ? value.Value : 0d);
 					}
-					else if(property.PropertyType == typeof(Double?))
+					else if (property.PropertyType == typeof(Double?))
 					{
 						property.SetValue(this, persistence.GetDouble(columnName));
 					}
-					else if(property.PropertyType == typeof(DateTime))
+					else if (property.PropertyType == typeof(DateTime))
 					{
 						property.SetValue(this, persistence.GetDate(columnName).Value);
 					}
-					else if(property.PropertyType == typeof(DateTime?))
+					else if (property.PropertyType == typeof(DateTime?))
 					{
 						property.SetValue(this, persistence.GetDate(columnName));
 					}
-					else if(property.PropertyType == typeof(Guid))
+					else if (property.PropertyType == typeof(Guid))
 					{
 						property.SetValue(this, new Guid(persistence.GetString(columnName)));
 					}
-					else if(property.PropertyType == typeof(Guid?))
+					else if (property.PropertyType == typeof(Guid?))
 					{
 						String value = persistence.GetString(columnName);
 						property.SetValue(this, !String.IsNullOrEmpty(value) ? new Guid(value) : (Guid?)null);
 					}
-					else if(property.PropertyType == typeof(Money))
+					else if (property.PropertyType == typeof(Money))
 					{
 						property.SetValue(this, persistence.GetMoney(columnName));
-					}				
-					else if(property.PropertyType == typeof(PrimaryKey))
+					}
+					else if (property.PropertyType == typeof(PrimaryKey))
 					{
 						property.SetValue(this, persistence.GetPrimaryKey(columnName));
 					}
-					else if(property.PropertyType.IsSubclassOf(typeof(MiskoEnum)))
+					else if (property.PropertyType.IsSubclassOf(typeof(MiskoEnum)))
 					{
-						if(persistence.GetLong(columnName).HasValue)
+						if (persistence.GetLong(columnName).HasValue)
 						{
 							property.SetValue(this, (MiskoEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { persistence.GetLong(columnName) }));
 						}
-						else if(persistence.GetString(columnName) != null)
+						else if (persistence.GetString(columnName) != null)
 						{
 							property.SetValue(this, (MiskoEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { persistence.GetString(columnName) }));
 						}
@@ -155,7 +192,7 @@ namespace MiskoPersist.Data
 							property.SetValue(this, (MiskoEnum)property.PropertyType.InvokeMember("GetElement", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, new Object[] { -1 }));
 						}
 					}
-					else if(property.PropertyType.IsSubclassOf(typeof(ViewedData)))
+					else if (property.PropertyType.IsSubclassOf(typeof(ViewedData)))
 					{
 						ViewedData item = (ViewedData)Activator.CreateInstance(property.PropertyType);
 						item.Set(session, persistence);
@@ -169,7 +206,7 @@ namespace MiskoPersist.Data
 		{
 			foreach (Attribute attribute in property.GetCustomAttributes(false))
 			{
-				if(attribute is ViewedAttribute && !String.IsNullOrEmpty(((ViewedAttribute)attribute).ColumnName))
+				if (attribute is ViewedAttribute && !String.IsNullOrEmpty(((ViewedAttribute)attribute).ColumnName))
 				{
 					return ((ViewedAttribute)attribute).ColumnName;
 				}
@@ -177,12 +214,12 @@ namespace MiskoPersist.Data
 
 			return property.Name;
 		}
-			   
+		
 		private IEnumerable<PropertyInfo> GetViewedProperties()
 		{
 			foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 			{
-				if(property.GetCustomAttribute(typeof(ViewedAttribute)) != null)
+				if (property.GetCustomAttribute(typeof(ViewedAttribute)) != null)
 				{
 					yield return property;
 				}

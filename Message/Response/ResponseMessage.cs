@@ -23,8 +23,8 @@ namespace MiskoPersist.Message.Response
 		#region Viewed Properties
 		
 		[Viewed]
-		public ErrorLevel Status 
-		{ 
+		public ErrorLevel Status
+		{
 			get
 			{
 				return mStatus_;
@@ -74,14 +74,14 @@ namespace MiskoPersist.Message.Response
 			}
 		}
 		
-		[Viewed]
+		[Viewed(typeof(ResponseMessage), "TimeSpanSerializer", "TimeSpanDeserializer")]
 		public TimeSpan? MessageExecutionTime
 		{
 			get;
 			set;
 		}
 
-		[Viewed]
+		[Viewed(typeof(ResponseMessage), "TimeSpanSerializer", "TimeSpanDeserializer")]
 		public TimeSpan? SqlExecutionTime
 		{
 			get;
@@ -92,28 +92,28 @@ namespace MiskoPersist.Message.Response
 
 		#region Properties
 
-		public Boolean HasErrors 
-		{ 
-			get 
-			{ 
-				return Errors != null && Errors.Count > 0; 
-			} 
+		public Boolean HasErrors
+		{
+			get
+			{
+				return Errors != null && Errors.Count > 0;
+			}
 		}
 
-		public Boolean HasInfos 
-		{ 
-			get 
-			{ 
-				return Infos != null && Infos.Count > 0; 
-			} 
+		public Boolean HasInfos
+		{
+			get
+			{
+				return Infos != null && Infos.Count > 0;
+			}
 		}
 		
-		public Boolean HasWarnings 
-		{ 
-			get 
-			{ 
-				return Warnings != null && Warnings.Count > 0; 
-			} 
+		public Boolean HasWarnings
+		{
+			get
+			{
+				return Warnings != null && Warnings.Count > 0;
+			}
 		}
 		
 		public ErrorMessages ErrorMessages
@@ -136,6 +136,20 @@ namespace MiskoPersist.Message.Response
 			}
 		}
 
-		#endregion		
+		#endregion
+		
+		#region Public Static Methods
+		
+		public static String TimeSpanSerializer(Object value)
+		{
+			return ((TimeSpan?)value).GetValueOrDefault().ToString();
+		}
+		
+		public static Object TimeSpanDeserializer(String value)
+		{
+			return TimeSpan.Parse(value);
+		}
+		
+		#endregion
 	}
 }

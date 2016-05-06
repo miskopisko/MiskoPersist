@@ -19,26 +19,25 @@ namespace MiskoPersist.Core
 
 		public static ResponseMessage Process(RequestMessage request)
 		{
-			if(request != null)
+			if (request != null)
 			{
 				ResponseMessage response = new ResponseMessage();
-				Session session = new Session();
-				TimeSpan messageExecutionTime = TimeSpan.Zero;
-					
+				Session session = null;
+				
+				//TimeSpan messageExecutionTime = TimeSpan.Zero;
+				Stopwatch stopwatch = new Stopwatch();
+				
 				try
 				{
-					response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);				
-					MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
-
-					session.Connection = ServiceLocator.GetConnection(request.Connection ?? "Default");
-					session.MessageMode = request.MessageMode ?? MessageMode.Normal;
-					session.ErrorMessages.Concatenate(request.Confirmations);
+					session = new Session(request);
 					session.BeginTransaction();
-
-					Stopwatch watch = Stopwatch.StartNew();
+					
+					response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);
+					MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
+					
+					stopwatch.Start();
 					wrapper.GetType().InvokeMember(request.Command ?? "Execute", BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });
-					watch.Stop();
-					messageExecutionTime = watch.Elapsed;
+					stopwatch.Stop();
 				}
 				catch (TargetInvocationException e)
 				{
@@ -51,7 +50,7 @@ namespace MiskoPersist.Core
 						ActualException = ActualException.InnerException;
 					}
 
-					if(ActualException is MiskoException)
+					if (ActualException is MiskoException)
 					{
 						MiskoException ex = (MiskoException)ActualException;
 
@@ -60,10 +59,6 @@ namespace MiskoPersist.Core
 						{
 							Log.Error("Unexpected Error: (" + ex.Message + ")", ex);
 							session.ErrorMessages.Add(ex.ErrorMessage);
-							
-							#if DEBUG
-								Debug.WriteLine(ActualException.StackTrace);
-							#endif                   
 						}
 					}
 					else
@@ -72,46 +67,47 @@ namespace MiskoPersist.Core
 						
 						Log.Error("Unexpected Error: (" + ActualException.Message + ")", ActualException);
 						session.ErrorMessages.Add(new ErrorMessage(ActualException));
-						
-						#if DEBUG
-							Debug.WriteLine(ActualException.StackTrace);
-						#endif
 					}
 				}
-				catch(Exception e)
+				catch (Exception e)
 				{
 					Log.Error("Unexpected Error: (" + e.Message + ")", e);
-					session.ErrorMessages.Add(new ErrorMessage(e));
-						
-					#if DEBUG
-						Debug.WriteLine(e.StackTrace);
-					#endif
+					response.Status = ErrorLevel.Error;
+					
+					while (e != null)
+					{
+						response.Errors.Add(new ErrorMessage(e));
+						e = e.InnerException;
+					}
 				}
 				finally
 				{
-					if(session != null)
+					if (session != null)
 					{
 						session.EndTransaction();
 						session.FlushPersistence();
 
 						response.Status = session.Status;
 						response.ErrorMessages = session.ErrorMessages;
-						response.MessageExecutionTime = messageExecutionTime;
-						response.SqlExecutionTime = session.SqlExecutionTime;
 						
-						if(session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
+						#if DEBUG
+						response.MessageExecutionTime = stopwatch.Elapsed;
+						response.SqlExecutionTime = session.SqlExecutionTime;
+						#endif
+						
+						if (session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
 						{
 							session.Connection.Close();
-						}                        
+						}
 					}
 				}
 				
 				return response;
 			}
 
-			return new ResponseMessage();
+			throw new ArgumentNullException();
 		}
 
-		#endregion        
+		#endregion
 	}
 }

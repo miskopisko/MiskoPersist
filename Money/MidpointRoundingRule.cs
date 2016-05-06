@@ -1,12 +1,12 @@
 ﻿namespace MiskoPersist.MoneyType
 {
 	public enum MidpointRoundingRule
-    {
-        ToEven,
-        AwayFromZero,
-        TowardZero,
-        Up,
-        Down,
-        Stochastic
-    }
+	{
+		ToEven,
+		AwayFromZero,
+		TowardZero,
+		Up,
+		Down,
+		Stochastic
+	}
 }

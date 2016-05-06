@@ -3,9 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Web;
 using System.Windows.Forms;
 using log4net;
 using Message;
@@ -60,51 +58,36 @@ namespace MiskoPersist.Core
 		#region Fields
 		
 		private static Int32 mActive_ = 0;
-		private static Uri mUrl_;
 		
 		private Thread mThread_;
 		private MessageCompleteHandler mSuccessHandler_;
 		private MessageCompleteHandler mErrorHandler_;
-		private RequestMessage mRequest_;        
+		private RequestMessage mRequest_;
 		
 		#endregion
 		
 		#region Properties
 		
-		public static SerializationType SerializationType { get; set; }		
+		public static SerializationType SerializationType { get; set; }
 		public static ServerLocation Location { get; set; }
 		public static String Host { get; set; }
 		public static Int16 Port { get; set; }
 		public static String Script { get; set; }
 		public static Boolean UseSSL { get; set; }
 		
-		public static String ConnectedTo
+		public static String Datasource
 		{
 			get
 			{
-				if(Location.Equals(ServerLocation.Local))
-				{
-					return DatabaseConnections.Connections["Default"].Datasource;
-				}
-				return Url.Host;
+				return Location.Equals(ServerLocation.Local) ? DatabaseConnections.Connections["Default"].Datasource : Uri.Host;
 			}
-		}	
+		}
 		
-		private static Uri Url
+		private static Uri Uri
 		{
 			get
 			{
-				if(mUrl_ == null)
-				{
-					String url = UseSSL ? "https://" : "http://";
-					url += Host;
-					url += ":" + Port;
-					url += Script;
-					
-					mUrl_ = new Uri(url);
-				}
-				
-				return mUrl_;
+				return new Uri((UseSSL ? "https://" : "http://") + Host + ":" + Port + Script);
 			}
 		}
 		
@@ -119,29 +102,29 @@ namespace MiskoPersist.Core
 			mErrorHandler_ = errorHandler;
 			
 			// Do some validations
-			if(Location == null || Location.IsNotSet)
+			if (Location == null || Location.IsNotSet)
 			{
 				throw new MiskoException("Server location is not defined");
 			}
 			
-			if(Location.Equals(ServerLocation.Online))
+			if (Location.Equals(ServerLocation.Online))
 			{
-				if(String.IsNullOrEmpty(Host))
+				if (String.IsNullOrEmpty(Host))
 				{
-					throw new MiskoException("Server location is online but host is not defined");	
+					throw new MiskoException("Server location is online but host is not defined");
 				}
 				
-				if(Port == 0)
+				if (Port == 0)
 				{
 					Port = 80;
 				}
 				
-				if(String.IsNullOrEmpty(Script))
+				if (String.IsNullOrEmpty(Script))
 				{
 					throw new MiskoException("Server location is online but script is not defined");
 				}
 				
-				if(SerializationType == null || SerializationType.IsNotSet)
+				if (SerializationType == null || SerializationType.IsNotSet)
 				{
 					throw new MiskoException("Serialization type is not defined");
 				}
@@ -154,26 +137,26 @@ namespace MiskoPersist.Core
 		
 		private void Send()
 		{
-			Interlocked.Increment(ref mActive_);			
+			Interlocked.Increment(ref mActive_);
 			Invoke(MessageSent);
 			
 			mThread_ = new Thread(new ThreadStart(Run));
 			mThread_.Name = mRequest_.GetType().Name;
-			mThread_.IsBackground = true;			
-			mThread_.Start();         
+			mThread_.IsBackground = true;
+			mThread_.Start();
 		}
 		
 		private void Run()
 		{
-			Invoke(Status, MessageStatus.Processing);			
+			Invoke(Status, MessageStatus.Processing);
 			
 			Invoke(Debug, mRequest_);
 			
 			ResponseMessage response = Location.Equals(ServerLocation.Local) ? MessageProcessor.Process(mRequest_) : SendToServer();
 			
 			Invoke(Debug, response);
-				
-			if(HandleErrors(response.ErrorMessages))
+			
+			if (HandleErrors(response.ErrorMessages))
 			{
 				// No errors in the message; call the successfulHandler
 				if (!response.HasErrors && !response.HasUnconfirmed)
@@ -182,8 +165,8 @@ namespace MiskoPersist.Core
 				}
 			}
 			
-			// If errors in the message; call errorHandler            
-			if(response.HasErrors || response.HasUnconfirmed)
+			// If errors in the message; call errorHandler
+			if (response.HasErrors || response.HasUnconfirmed)
 			{
 				Invoke(mErrorHandler_, response);
 			}
@@ -195,34 +178,34 @@ namespace MiskoPersist.Core
 		{
 			Boolean continueProcessing = true;
 			
-			foreach(ErrorMessage message in errorMessages)				
-			{			
-				if(message.ErrorLevel.Equals(ErrorLevel.Error))
+			foreach (ErrorMessage message in errorMessages)
+			{
+				if (message.ErrorLevel.Equals(ErrorLevel.Error))
 				{
 					Invoke(Status, MessageStatus.Error);
 					Invoke(Error, message);
 				}
-				else if(message.ErrorLevel.Equals(ErrorLevel.Warning))
+				else if (message.ErrorLevel.Equals(ErrorLevel.Warning))
 				{
 					Invoke(Status, MessageStatus.Warning);
 					Invoke(Warning, message);
 				}
-				else if(message.ErrorLevel.Equals(ErrorLevel.Information))
+				else if (message.ErrorLevel.Equals(ErrorLevel.Information))
 				{
 					Invoke(Status, MessageStatus.Information);
 					Invoke(Info, message);
 				}
-				else if(message.ErrorLevel.Equals(ErrorLevel.Confirmation))
+				else if (message.ErrorLevel.Equals(ErrorLevel.Confirmation))
 				{
-					if(message.Confirmed.HasValue && !message.Confirmed.Value)
+					if (message.Confirmed.HasValue && !message.Confirmed.Value)
 					{
 						Invoke(Status, MessageStatus.Confirmation);
 						ConfirmationEventArgs args = new ConfirmationEventArgs();
 						Invoke(Confirm, message, args);
 						
-						if(args.Confirmed)
+						if (args.Confirmed)
 						{
-							message.Confirmed = true;							
+							message.Confirmed = true;
 							mRequest_.Confirmations.Add(message);
 							SendRequest(mRequest_, mSuccessHandler_, mErrorHandler_);
 							continueProcessing = false;
@@ -231,7 +214,7 @@ namespace MiskoPersist.Core
 						Invoke(Status, MessageStatus.Error);
 						break;
 					}
-				}               
+				}
 			}
 			
 			return continueProcessing;
@@ -239,7 +222,7 @@ namespace MiskoPersist.Core
 		
 		private void Done()
 		{
-			Interlocked.Decrement(ref mActive_);			
+			Interlocked.Decrement(ref mActive_);
 			Invoke(Status, mActive_ == 0 ? MessageStatus.Success : MessageStatus.Processing);
 			Invoke(MessageReceived);
 		}
@@ -248,54 +231,54 @@ namespace MiskoPersist.Core
 		{
 			try
 			{
-				if(d != null)
+				if (d != null)
 				{
 					Control control = d.Target as System.Windows.Forms.Control;
-				
-					if(control != null && control.InvokeRequired)
+					
+					if (control != null && control.InvokeRequired)
 					{
 						control.Invoke(d, args);
 					}
 					else
 					{
 						d.DynamicInvoke(args);
-					}	
+					}
 				}
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				while(e.InnerException != null)
+				while (e.InnerException != null)
 				{
 					e = e.InnerException;
 				}
 				
-				Log.Error("Error invoking method " + d.Target.GetType().Name + "." + d.Method.Name, e);
-				Invoke(Error, new ErrorMessage("Error invoking method " + d.Target.GetType().Name + "." + d.Method.Name, e));
+				Log.Error("Error invoking method " + d.Method.DeclaringType.Name + "." + d.Method.Name, e);
+				Invoke(Error, new ErrorMessage("Error invoking method " + d.Method.DeclaringType.Name + "." + d.Method.Name, e));
 			}
 		}
 		
 		private ResponseMessage SendToServer()
-		{   
+		{
 			ResponseMessage responseMessage = new ResponseMessage();
 
 			try
 			{
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(Url);
+				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(Uri);
 				webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
 				webRequest.Method = "POST";
 				webRequest.KeepAlive = true;
 				webRequest.ContentType = SerializationType.ToHttpContentType();
-								
-				using(StreamWriter sw = new StreamWriter(webRequest.GetRequestStream()))
+				
+				using (StreamWriter sw = new StreamWriter(webRequest.GetRequestStream()))
 				{
 					sw.Write(Serializer.Serialize(mRequest_, SerializationType));
 				}
 				
 				responseMessage = (ResponseMessage)Serializer.Deserialize(webRequest.GetResponse().GetResponseStream(), SerializationType);
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
-				if(ex is TargetInvocationException)
+				if (ex is TargetInvocationException)
 				{
 					ex = ex.InnerException;
 				}
@@ -304,7 +287,7 @@ namespace MiskoPersist.Core
 				responseMessage.Status = ErrorLevel.Error;
 				responseMessage.Errors.Add(new ErrorMessage(ex));
 				
-				while(ex.InnerException != null)
+				while (ex.InnerException != null)
 				{
 					ex = ex.InnerException;
 					responseMessage.Errors.Add(new ErrorMessage(ex));
@@ -348,8 +331,8 @@ namespace MiskoPersist.Core
 		
 		#region Properties
 		
-		public Boolean Confirmed 
-		{ 
+		public Boolean Confirmed
+		{
 			get
 			{
 				return mConfirmed_;

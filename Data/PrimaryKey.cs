@@ -15,27 +15,27 @@ namespace MiskoPersist.Data
 
 		#region Properties
 
-		public Int64 Value 
-		{ 
+		public Int64 Value
+		{
 			get;
 			set;
 		}
 		
-		public Boolean IsSet 
-        { 
-        	get 
-        	{ 
-        		return Value != 0; 
-        	} 
-        }
+		public Boolean IsSet
+		{
+			get
+			{
+				return Value != 0;
+			}
+		}
 
-        public Boolean IsNotSet 
-        { 
-        	get 
-        	{ 
-        		return !IsSet; 
-        	} 
-        }
+		public Boolean IsNotSet
+		{
+			get
+			{
+				return !IsSet;
+			}
+		}
 
 		#endregion
 
@@ -135,7 +135,7 @@ namespace MiskoPersist.Data
 			return Value.CompareTo(other.Value);
 		}
 
-		#endregion		
+		#endregion
 
 		#region IEquatable<PrimaryKey> Members
 

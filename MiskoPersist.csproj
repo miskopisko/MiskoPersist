@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiskoPersist</RootNamespace>
     <AssemblyName>MiskoPersist</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <FileUpgradeFlags>
@@ -91,19 +91,17 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>Libraries\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="Oracle.ManagedDataAccess">
+      <HintPath>Libraries\Oracle.ManagedDataAccess.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="MySql.Data">
       <HintPath>Libraries\MySql.Data.dll</HintPath>
     </Reference>
-    <Reference Include="Oracle.DataAccess">
-      <HintPath>Libraries\Oracle.DataAccess.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite">
       <HintPath>Libraries\System.Data.SQLite.dll</HintPath>
     </Reference>
-    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -146,7 +144,6 @@
     <Compile Include="Persistences\MySqlPersistence.cs" />
     <Compile Include="Persistences\OraclePersistence.cs" />
     <Compile Include="Persistences\SqlitePersistence.cs" />
-    <Compile Include="Core\ServiceLocator.cs" />
     <Compile Include="Core\Session.cs" />
     <Compile Include="Tools\PasswordHash.cs" />
     <Compile Include="Tools\Utils.cs" />

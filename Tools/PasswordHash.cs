@@ -65,6 +65,6 @@ namespace MiskoPersist.Tools
 			return pbkdf2.GetBytes(outputBytes);
 		}
 		
-		#endregion        
+		#endregion
 	}
-} 
+}

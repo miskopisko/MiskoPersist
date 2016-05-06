@@ -4,7 +4,7 @@ using MiskoPersist.Attributes;
 
 namespace MiskoPersist.Data
 {
-	public class ErrorMessageParameter : ViewedData 
+	public class ErrorMessageParameter : ViewedData
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(ErrorMessageParameter));
 		
@@ -12,13 +12,13 @@ namespace MiskoPersist.Data
 
 		
 
-        #endregion
+		#endregion
 
-        #region Viewed Properties
-        
-        [Viewed]
-        public String Parameter { get; set; }
-        
-        #endregion
+		#region Viewed Properties
+		
+		[Viewed]
+		public String Parameter { get; set; }
+		
+		#endregion
 	}
 }

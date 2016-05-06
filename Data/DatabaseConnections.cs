@@ -1,48 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.OleDb;
+using System.Data.SQLite;
 using log4net;
-using MiskoPersist.Attributes;
 using MiskoPersist.Enums;
+using MySql.Data.MySqlClient;
+using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Data
 {
-	public class DatabaseConnections : ViewedDataList
+	public static class DatabaseConnections
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(DatabaseConnections));
 
 		#region Fields
 		
-		private static readonly DatabaseConnections mConnections_ = new DatabaseConnections();
+		private static readonly Dictionary<String, DatabaseConnection> mConnections_ = new Dictionary<String, DatabaseConnection>();
 		
 		#endregion
 		
 		#region Properties
 		
-		public DatabaseConnection this[String index]
-		{
-			get
-			{
-				foreach (DatabaseConnection item in mConnections_)
-				{
-					if(item.Name.Equals(index, StringComparison.CurrentCultureIgnoreCase))
-					{
-						return item;
-					}
-				}
-				return null; 
-			}
-		}
-
-		[Viewed]
-		public static DatabaseConnections Connections
+		public static Dictionary<String, DatabaseConnection> Connections
 		{
 			get
 			{
 				return mConnections_;
-			}
-			set
-			{
-				mConnections_.Clear();
-				mConnections_.Concatenate(value);
 			}
 		}
 		
@@ -50,13 +34,37 @@ namespace MiskoPersist.Data
 		
 		#region Constructors
 		
-		public DatabaseConnections() : base(typeof(DatabaseConnection))
-		{			
-		}
+		
 		
 		#endregion
 		
 		#region Static Methods
+
+		public static DbConnection GetConnection(String name)
+		{
+			if (mConnections_.ContainsKey(name))
+			{
+				DatabaseConnection databaseConnection = mConnections_[name];
+				
+				if (databaseConnection.DatabaseType.Equals(DatabaseType.SQLite))
+				{
+					return new SQLiteConnection(databaseConnection.ConnectionString);
+				}
+				if (databaseConnection.DatabaseType.Equals(DatabaseType.MySql))
+				{
+					return new MySqlConnection(databaseConnection.ConnectionString);
+				}
+				if (databaseConnection.DatabaseType.Equals(DatabaseType.Oracle))
+				{
+					return new OracleConnection(databaseConnection.ConnectionString);
+				}
+				if (databaseConnection.DatabaseType.Equals(DatabaseType.FoxPro))
+				{
+					return new OleDbConnection(databaseConnection.ConnectionString);
+				}
+			}
+			return null;
+		}
 		
 		public static void AddMySqlConnection(String server, String datasource, String username, String password)
 		{
@@ -75,9 +83,9 @@ namespace MiskoPersist.Data
 			item.Password = password;
 			item.ConnectionString = "SERVER=" + server + ";DATABASE=" + datasource + ";UID=" + username + ";PASSWORD=" + password + ";Pooling=True;ConvertZeroDateTime=True;";
 
-			if(!mConnections_.Contains(item))
+			if (!mConnections_.ContainsKey(name))
 			{
-				mConnections_.Add(item);
+				mConnections_.Add(name, item);
 			}
 		}
 
@@ -98,9 +106,9 @@ namespace MiskoPersist.Data
 			item.Password = password;
 			item.ConnectionString = "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=" + host + ")(PORT=" + port + ")))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=" + datasource + ")));User Id=" + username + ";Password=" + password + ";Pooling=True;";
 
-			if(!mConnections_.Contains(item))
+			if (!mConnections_.ContainsKey(name))
 			{
-				mConnections_.Add(item);
+				mConnections_.Add(name, item);
 			}
 		}
 
@@ -121,9 +129,9 @@ namespace MiskoPersist.Data
 			item.Password = null;
 			item.ConnectionString = "Data Source=" + datasource + ";Version=3;Pooling=True;";
 
-			if(!mConnections_.Contains(item))
+			if (!mConnections_.ContainsKey(name))
 			{
-				mConnections_.Add(item);
+				mConnections_.Add(name, item);
 			}
 		}
 
@@ -144,10 +152,10 @@ namespace MiskoPersist.Data
 			item.Password = null;
 			item.ConnectionString = "Provider=vfpoledb.1;Data Source=" + datasource + ";Exclusive=No;Collate=Machine;NULL=YES;";
 			
-			if(!mConnections_.Contains(item))
+			if (!mConnections_.ContainsKey(name))
 			{
-				mConnections_.Add(item);
-			}            
+				mConnections_.Add(name, item);
+			}
 		}
 		
 		#endregion

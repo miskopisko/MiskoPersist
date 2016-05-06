@@ -5,84 +5,85 @@ using MiskoPersist.Enums;
 namespace MiskoPersist.Data
 {
 	public class ErrorMessages : ViewedDataList
-    {
-        private static ILog Log = LogManager.GetLogger(typeof(ErrorMessages));
+	{
+		private static ILog Log = LogManager.GetLogger(typeof(ErrorMessages));
 
-        #region Fields
-
-
-
-        #endregion
-
-        #region Properties
-
-        
-
-        #endregion
-
-        #region Constructors
-
-        public ErrorMessages() : base(typeof(ErrorMessage))
-        {
-        }
-
-        #endregion
-
-        #region Private Methods
+		#region Fields
 
 
 
-        #endregion
+		#endregion
 
-        #region Public Methods
-        
-        public Boolean IsConfirmed(ErrorMessage errorMessage)
-        {
-        	foreach(ErrorMessage message in this)
-        	{
-        		if(message.Equals(errorMessage))
-        		{
-        			return message.Confirmed.HasValue && message.Confirmed.Value;
-        		}
-        	}
-        	
-        	return false;
-        }
+		#region Properties
 
-        public Boolean Contains(ErrorLevel level)
-        {
-            if(level != null && Count > 0)
-            {
-                foreach (ErrorMessage message in this)
-                {
-                    if(message.ErrorLevel.Equals(level))
-                    {
-                        return true;
-                    }
-                }
-            }
+		
 
-            return false;
-        }
+		#endregion
 
-        public ErrorMessages ListOf(ErrorLevel level)
-        {
-            ErrorMessages list = new ErrorMessages();
+		#region Constructors
 
-            if(level != null && Count > 0)
-            {
-                foreach (ErrorMessage message in this)
-                {
-                    if(message.ErrorLevel.Equals(level))
-                    {
-                        list.Add(message);
-                    }
-                }
-            }
+		public ErrorMessages()
+			: base(typeof(ErrorMessage))
+		{
+		}
 
-            return list;
-        }
+		#endregion
 
-        #endregion
-    }
+		#region Private Methods
+
+
+
+		#endregion
+
+		#region Public Methods
+		
+		public Boolean IsConfirmed(ErrorMessage errorMessage)
+		{
+			foreach (ErrorMessage message in this)
+			{
+				if (message.Equals(errorMessage))
+				{
+					return message.Confirmed.HasValue && message.Confirmed.Value;
+				}
+			}
+			
+			return false;
+		}
+
+		public Boolean Contains(ErrorLevel level)
+		{
+			if (level != null && Count > 0)
+			{
+				foreach (ErrorMessage message in this)
+				{
+					if (message.ErrorLevel.Equals(level))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public ErrorMessages ListOf(ErrorLevel level)
+		{
+			ErrorMessages list = new ErrorMessages();
+
+			if (level != null && Count > 0)
+			{
+				foreach (ErrorMessage message in this)
+				{
+					if (message.ErrorLevel.Equals(level))
+					{
+						list.Add(message);
+					}
+				}
+			}
+
+			return list;
+		}
+
+		#endregion
+	}
 }

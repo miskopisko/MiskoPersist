@@ -29,8 +29,9 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public SqlitePersistence(Session session) : base(session)
-		{            
+		public SqlitePersistence(Session session)
+			: base(session)
+		{
 		}
 
 		#endregion
@@ -45,10 +46,10 @@ namespace MiskoPersist.Persistences
 
 		protected override void SetParameters()
 		{
-			if(mParameters_.Count == 0)
-        	{
-        		return;
-        	}
+			if (mParameters_.Count == 0)
+			{
+				return;
+			}
 			
 			// Normalize the parameters by replacing typical ? marks with @param values
 			Int32 end = 0;
@@ -66,7 +67,7 @@ namespace MiskoPersist.Persistences
 				SQLiteParameter param = (SQLiteParameter)mCommand_.CreateParameter();
 				param.ParameterName = "@param" + position;
 
-				if(parameter == null || (parameter is String && String.IsNullOrEmpty((String)parameter)))
+				if (parameter == null || (parameter is String && String.IsNullOrEmpty((String)parameter)))
 				{
 					param.IsNullable = true;
 					param.Value = DBNull.Value;
@@ -74,7 +75,7 @@ namespace MiskoPersist.Persistences
 					mCommand_.Parameters.Add(param);
 					paramString += "NULL, ";
 				}
-				else if(parameter is StoredData)
+				else if (parameter is StoredData)
 				{
 					param.IsNullable = false;
 					param.DbType = DbType.Int64;
@@ -82,7 +83,7 @@ namespace MiskoPersist.Persistences
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is MiskoEnum)
+				else if (parameter is MiskoEnum)
 				{
 					param.IsNullable = true;
 					param.DbType = DbType.Int32;
@@ -90,7 +91,7 @@ namespace MiskoPersist.Persistences
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is Array)
+				else if (parameter is Array)
 				{
 					String firstHalf = mCommand_.CommandText.Substring(0, mCommand_.CommandText.IndexOf(param.ParameterName));
 					String secondHalf = mCommand_.CommandText.Substring(mCommand_.CommandText.IndexOf(param.ParameterName) + 7);
@@ -109,49 +110,49 @@ namespace MiskoPersist.Persistences
 
 					mCommand_.CommandText = firstHalf + middle.Substring(0, middle.Length - 2) + secondHalf;
 				}
-				else if(parameter is Money)
+				else if (parameter is Money)
 				{
 					param.DbType = DbType.Currency;
 					param.Value = ((Money)parameter).ToDecimal(null);
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is PrimaryKey)
+				else if (parameter is PrimaryKey)
 				{
 					param.DbType = DbType.Int64;
 					param.Value = ((PrimaryKey)parameter).Value;
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is Int16)
+				else if (parameter is Int16)
 				{
 					param.DbType = DbType.Int16;
 					param.Value = parameter;
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is Int32)
+				else if (parameter is Int32)
 				{
 					param.DbType = DbType.Int32;
 					param.Value = parameter;
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is Int64)
+				else if (parameter is Int64)
 				{
 					param.DbType = DbType.Int64;
 					param.Value = parameter;
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is Guid)
+				else if (parameter is Guid)
 				{
 					param.DbType = DbType.Guid;
 					param.Value = ((Guid)parameter).ToString();
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is String)
+				else if (parameter is String)
 				{
 					param.Value = parameter;
 					param.DbType = DbType.String;
@@ -159,14 +160,14 @@ namespace MiskoPersist.Persistences
 					mCommand_.Parameters.Add(param);
 					paramString += param.Value + ", ";
 				}
-				else if(parameter is DateTime)
+				else if (parameter is DateTime)
 				{
 					param.Value = parameter;
 					param.DbType = DbType.DateTime;
 					mCommand_.Parameters.Add(param);
 					paramString += ((DateTime)param.Value).ToString(Serializer.DATEFORMAT) + ", ";
 				}
-				else if(parameter is Boolean)
+				else if (parameter is Boolean)
 				{
 					param.Value = parameter;
 					param.DbType = DbType.Int16;
@@ -183,14 +184,14 @@ namespace MiskoPersist.Persistences
 
 				position++;
 			}
-			paramString = paramString.Substring(0, paramString.Length-2) + "]";
+			paramString = paramString.Substring(0, paramString.Length - 2) + "]";
 			Log.Debug("Command: " + mCommand_.CommandText.Replace(Environment.NewLine, " "));
 			Log.Debug("Parameters: " + paramString);
 		}
 
 		protected override void GenerateUpdateStatement(StoredData clazz, Type type)
 		{
-			if(clazz != null)
+			if (clazz != null)
 			{
 				mSql_ += "UPDATE " + type.Name.ToUpper() + Environment.NewLine + "SET    ";
 
@@ -207,7 +208,7 @@ namespace MiskoPersist.Persistences
 
 				mParameters_.Add(clazz.RowVer);
 				mParameters_.Add(clazz.Id);
-				mParameters_.Add(clazz.RowVer-1);
+				mParameters_.Add(clazz.RowVer - 1);
 
 				mCommand_.CommandText = mSql_;
 				SetParameters();
@@ -216,7 +217,7 @@ namespace MiskoPersist.Persistences
 
 		protected override void GenerateDeleteStatement(StoredData clazz, Type type)
 		{
-			if(clazz != null)
+			if (clazz != null)
 			{
 				mSql_ += "DELETE" + Environment.NewLine;
 				mSql_ += "FROM   " + type.Name + Environment.NewLine;
@@ -233,7 +234,7 @@ namespace MiskoPersist.Persistences
 
 		protected override void GenerateInsertStatement(StoredData clazz, Type type)
 		{
-			if(clazz != null)
+			if (clazz != null)
 			{
 				mSql_ += "INSERT INTO " + type.Name.ToUpper() + " (ID";
 
@@ -244,13 +245,13 @@ namespace MiskoPersist.Persistences
 
 				mSql_ += ", DTCREATED, DTMODIFIED, ROWVER)" + Environment.NewLine + "VALUES (?, ";
 
-				if(clazz.Id > 0)
+				if (clazz.Id > 0)
 				{
 					mParameters_.Add(clazz.Id);
 				}
 				else
 				{
-					mParameters_.Add(DBNull.Value);
+					mParameters_.Add(null);
 				}
 
 				foreach (PropertyInfo property in StoredData.GetProperties(type))
@@ -261,7 +262,7 @@ namespace MiskoPersist.Persistences
 
 				mSql_ += "DATETIME('NOW'), DATETIME('NOW'), 0);";
 
-				if(type.BaseType.Equals(typeof(StoredData)))
+				if (type.BaseType.Equals(typeof(StoredData)))
 				{
 					mSql_ += Environment.NewLine + "SELECT LAST_INSERT_ROWID() AS ID;";
 				}

@@ -34,7 +34,7 @@ namespace MiskoPersist.Serialization
 		{
 			get
 			{
-				if(mConverter_ == null)
+				if (mConverter_ == null)
 				{
 					mConverter_ = new MiskoConverter();
 				}
@@ -78,122 +78,122 @@ namespace MiskoPersist.Serialization
 		#endregion
 		
 		#region Public Methods
-				
-		public static String Serialize(Object o, SerializationType serializationType)
+		
+		public static String Serialize(CoreMessage message, SerializationType serializationType)
 		{
-			if(o == null)
+			if (message == null)
 			{
-				throw new ArgumentNullException();
+				throw new ArgumentNullException("message");
 			}
 			
-			if(!(o is CoreMessage))
-			{
-				throw new MiskoException("Can only serialize messages");
-			}
-			
-			using(MemoryStream ms = new MemoryStream())
+			using (MemoryStream ms = new MemoryStream())
 			{
 				IFormatter formatter = serializationType.Equals(SerializationType.Xml) ? (IFormatter)new XmlFormatter() : (IFormatter)new JsonFormatter();
-				formatter.Serialize(ms, o);
+				formatter.Serialize(ms, message);
 				return ENCODING.GetString(ms.ToArray());
 			}
 		}
 		
-		public static Object Deserialize(String str)
+		public static CoreMessage Deserialize(String str)
 		{
-			using(MemoryStream ms = new MemoryStream(ENCODING.GetBytes(str)))
+			using (MemoryStream ms = new MemoryStream(ENCODING.GetBytes(str)))
 			{
-				if(str.StartsWith("<", StringComparison.Ordinal))
-				{
-					return Deserialize(ms, SerializationType.Xml);
-				}
-				if(str.StartsWith("{", StringComparison.Ordinal))
-				{
-					return Deserialize(ms, SerializationType.Json);
-				}
-				throw new MiskoException("Invalid input. Not a valid XML or Json string.");
+				return Deserialize(ms, GetSerializationType(str));
 			}
 		}
 		
-		public static Object Deserialize(Stream stream, SerializationType serializationType)
+		public static CoreMessage Deserialize(Stream stream, SerializationType serializationType)
 		{
-			IFormatter formatter = null;
-			if(serializationType.Equals(SerializationType.Xml))
-			{
-				formatter = new XmlFormatter();
-			}
-			else if(serializationType.Equals(SerializationType.Json))
-			{
-				formatter = new JsonFormatter();
-			}
-			return formatter != null ? formatter.Deserialize(stream) : null;
+			IFormatter formatter = serializationType.Equals(SerializationType.Xml) ? (IFormatter)new XmlFormatter() : (IFormatter)new JsonFormatter();
+			return (CoreMessage)formatter.Deserialize(stream);
 		}
-	
+		
+		public static SerializationType GetSerializationType(String str)
+		{
+			if (str.StartsWith("<", StringComparison.Ordinal))
+			{
+				return SerializationType.Xml;
+			}
+			if (str.StartsWith("{", StringComparison.Ordinal))
+			{
+				return SerializationType.Json;
+			}
+			throw new MiskoException("Invalid input. Not a valid XML or Json string.");
+		}
+		
 		#endregion
 		
 		#region Internal Methods
 		
 		internal static IEnumerable<SerializationElement> GetMemberInfo(Object objectToSerialize)
 		{
-			if(objectToSerialize == null)
+			if (objectToSerialize == null)
 			{
 				yield break;
 			}
 			
-			foreach(PropertyInfo property in GetViewedProperties(objectToSerialize))
+			foreach (PropertyInfo property in GetViewedProperties(objectToSerialize))
 			{
 				Object propertyValue = property.GetValue(objectToSerialize);
 
-				if(typeof(MiskoEnum).IsAssignableFrom(property.PropertyType))
+				if (((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedSerializer != null)
 				{
-					if(propertyValue != null && ((MiskoEnum)propertyValue).IsSet)
+					if (propertyValue != null)
+					{
+						String value = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedSerializer.Invoke(propertyValue);
+						yield return new SerializationElement(property.Name, typeof(String), value);
+					}
+				}
+				else if (typeof(MiskoEnum).IsAssignableFrom(property.PropertyType))
+				{
+					if (propertyValue != null && ((MiskoEnum)propertyValue).IsSet)
 					{
 						yield return new SerializationElement(property.Name, typeof(Int64), ((MiskoEnum)propertyValue).Value);
 					}
 				}
-				else if(typeof(PrimaryKey).IsAssignableFrom(property.PropertyType))
+				else if (typeof(PrimaryKey).IsAssignableFrom(property.PropertyType))
 				{
-					if(propertyValue != null && ((PrimaryKey)propertyValue).IsSet)
+					if (propertyValue != null && ((PrimaryKey)propertyValue).IsSet)
 					{
 						yield return new SerializationElement(property.Name, typeof(Int64), ((PrimaryKey)propertyValue).Value);
 					}
 				}
-				else if(typeof(DateTime).IsAssignableFrom(property.PropertyType) || typeof(DateTime?).IsAssignableFrom(property.PropertyType))
+				else if (typeof(DateTime).IsAssignableFrom(property.PropertyType) || typeof(DateTime?).IsAssignableFrom(property.PropertyType))
 				{
-					if(((DateTime?)propertyValue).HasValue)
+					if (((DateTime?)propertyValue).HasValue)
 					{
-						yield return new SerializationElement(property.Name, typeof(String), ((DateTime)propertyValue).ToString(DATEFORMAT));	
+						yield return new SerializationElement(property.Name, typeof(String), ((DateTime)propertyValue).ToString(DATEFORMAT));
 					}
 				}
-				else if(typeof(Money).IsAssignableFrom(property.PropertyType))
+				else if (typeof(Money).IsAssignableFrom(property.PropertyType))
 				{
-					if(propertyValue != null)
+					if (propertyValue != null)
 					{
 						yield return new SerializationElement(property.Name, typeof(String), ((Money)propertyValue).Value.ToString(MONEYFORMAT));
 					}
 				}
-				else if(typeof(String).IsAssignableFrom(property.PropertyType))
+				else if (typeof(String).IsAssignableFrom(property.PropertyType))
 				{
-					if(!String.IsNullOrEmpty(((String)propertyValue)))
+					if (!String.IsNullOrEmpty(((String)propertyValue)))
 					{
 						yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
 					}
 				}
-				else if(property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+				else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
 				{
-					if(propertyValue != null)
+					if (propertyValue != null)
 					{
 						yield return new SerializationElement(property.Name, Nullable.GetUnderlyingType(property.PropertyType), propertyValue);
 					}
 				}
-				else if(typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+				else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
 				{
-					if(propertyValue != null && ((ViewedDataList)propertyValue).Count > 0)
+					if (propertyValue != null && ((ViewedDataList)propertyValue).Count > 0)
 					{
 						yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
 					}
 				}
-				else if(propertyValue != null)
+				else if (propertyValue != null)
 				{
 					yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
 				}
@@ -202,9 +202,9 @@ namespace MiskoPersist.Serialization
 		
 		internal static IEnumerable<PropertyInfo> GetViewedProperties(Object objectToSerialize)
 		{
-			foreach(PropertyInfo property in objectToSerialize.GetType().GetProperties())
+			foreach (PropertyInfo property in objectToSerialize.GetType().GetProperties())
 			{
-				if(property.GetCustomAttribute(typeof(ViewedAttribute)) != null && property.CanRead && property.CanWrite)
+				if (property.GetCustomAttribute(typeof(ViewedAttribute)) != null && property.CanRead && property.CanWrite)
 				{
 					yield return property;
 				}

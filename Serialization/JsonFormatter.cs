@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using log4net;
 using Message;
+using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
+using MiskoPersist.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -31,13 +34,13 @@ namespace MiskoPersist.Serialization
 
 		public Object Deserialize(Stream serializationStream)
 		{
-			using(StreamReader reader = new StreamReader(serializationStream))
+			using (StreamReader reader = new StreamReader(serializationStream))
 			{
-				using(JsonReader jr = new JsonTextReader(reader))
+				using (JsonReader jr = new JsonTextReader(reader))
 				{
 					JObject jObject = JObject.Load(jr);
-					Type objectType = Type.GetType((String)jObject["Type"]);					
-					if(!objectType.IsSubclassOf(typeof(CoreMessage)))
+					Type objectType = Type.GetType((String)jObject["Type"]);
+					if (!objectType.IsSubclassOf(typeof(CoreMessage)))
 					{
 						throw new MiskoException("Can only deserialize messages");
 					}
@@ -48,22 +51,23 @@ namespace MiskoPersist.Serialization
 
 		public void Serialize(Stream serializationStream, Object graph)
 		{
-			if(graph == null)
+			if (graph == null)
 			{
 				return;
 			}
 
-			if(serializationStream == null)
+			if (serializationStream == null)
 			{
 				throw new ArgumentException("Empty serializationStream!");
 			}
 			
-			using(StreamWriter streamWriter = new StreamWriter(serializationStream))
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			using (StreamWriter streamWriter = new StreamWriter(serializationStream))
 			{
-				using(JsonTextWriter writer = new JsonTextWriter(streamWriter))
+				using (JsonTextWriter writer = new JsonTextWriter(streamWriter))
 				{
 					#if DEBUG
-						writer.Formatting = Formatting.Indented;
+					writer.Formatting = Formatting.Indented;
 					#endif
 					
 					writer.WriteStartObject();
@@ -72,13 +76,11 @@ namespace MiskoPersist.Serialization
 					Serialize(writer, graph);
 					writer.WriteEndObject();
 					writer.Flush();
-					
-					#if DEBUG
-						Byte[] newline = ENCODING.GetBytes(Environment.NewLine);
-	            		serializationStream.Write(newline, 0, newline.Length);
-					#endif
 				}
 			}
+			stopwatch.Stop();
+			
+			Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
 		}
 
 		#endregion
@@ -87,14 +89,14 @@ namespace MiskoPersist.Serialization
 		
 		private void Serialize(JsonWriter writer, Object objectToSerialize)
 		{
-			foreach(SerializationElement element in GetMemberInfo(objectToSerialize))
-			{	
-				if(element.ElementType.IsPrimitive || element.ElementType.Equals(typeof(String)) || element.ElementType.IsEnum || element.ElementType.Equals(typeof(TimeSpan)))
+			foreach (SerializationElement element in GetMemberInfo(objectToSerialize))
+			{
+				if (element.ElementType.IsPrimitive || element.ElementType.Equals(typeof(String)) || element.ElementType.IsEnum)
 				{
 					writer.WritePropertyName(element.ElementName);
 					writer.WriteValue(element.ElementValue.ToString());
 				}
-				else if(typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
+				else if (typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
 				{
 					writer.WritePropertyName(element.ElementName);
 					writer.WriteStartArray();
@@ -113,7 +115,7 @@ namespace MiskoPersist.Serialization
 					Serialize(writer, element.ElementValue);
 					writer.WriteEndObject();
 				}
-			}			
+			}
 		}
 
 		#endregion
@@ -122,26 +124,30 @@ namespace MiskoPersist.Serialization
 		
 		private Object InitializeObject(JToken token, Type objectType)
 		{
-			if(token == null)
+			if (token == null)
 			{
 				return null;
 			}
 			
-			Object initializedObject = Activator.CreateInstance(objectType);;
+			Object initializedObject = Activator.CreateInstance(objectType);
 			
-			foreach(PropertyInfo property in GetViewedProperties(initializedObject))
+			foreach (PropertyInfo property in GetViewedProperties(initializedObject))
 			{
 				Object obj = null;
-				if(Converter.CanConvert(property.PropertyType))
+				if (Converter.CanConvert(property.PropertyType))
 				{
 					obj = Converter.Convert((String)token[property.Name], property.PropertyType);
 				}
-				else if(typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+				else if (((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer != null)
+				{
+					obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke((String)token[property.Name]);
+				}
+				else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
 				{
 					obj = Activator.CreateInstance(property.PropertyType);
-					if(token[property.Name] != null)
+					if (token[property.Name] != null)
 					{
-						foreach(var innerToken in token[property.Name]) 
+						foreach (var innerToken in token[property.Name])
 						{
 							ViewedData data = (ViewedData)InitializeObject(innerToken, ((ViewedDataList)obj).ViewedDataType);
 							((ViewedDataList)obj).Add(data);

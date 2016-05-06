@@ -19,7 +19,7 @@ namespace MiskoPersist.Core
 
 		#region Properties
 
-		public Type Class 
+		public Type Class
 		{
 			get;
 			set;
@@ -41,7 +41,7 @@ namespace MiskoPersist.Core
 		{
 			get
 			{
-				return ErrorMessage.Message;
+				return ErrorMessage.ToString();
 			}
 		}
 
@@ -49,7 +49,8 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-		public MiskoException(ErrorMessage message) : base(message != null ? message.ToString() : "")
+		public MiskoException(ErrorMessage message)
+			: base(message != null ? message.ToString() : "")
 		{
 			StackFrame stackframe = new StackFrame(1);
 			Class = stackframe.GetMethod().DeclaringType;
@@ -57,7 +58,8 @@ namespace MiskoPersist.Core
 			ErrorMessage = message;
 		}
 
-		public MiskoException(String message) : base(message)
+		public MiskoException(String message)
+			: base(message)
 		{
 			StackFrame stackframe = new StackFrame(1);
 			Class = stackframe.GetMethod().DeclaringType;
@@ -65,7 +67,8 @@ namespace MiskoPersist.Core
 			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, null);
 		}
 
-		public MiskoException(String message, params Object[] parameters) : base(message)
+		public MiskoException(String message, params Object[] parameters)
+			: base(message)
 		{
 			StackFrame stackframe = new StackFrame(1);
 			Class = stackframe.GetMethod().DeclaringType;
@@ -73,7 +76,8 @@ namespace MiskoPersist.Core
 			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, parameters);
 		}
 
-		public MiskoException(String message, Exception inner) : base(message, inner)
+		public MiskoException(String message, Exception inner)
+			: base(message, inner)
 		{
 			StackFrame stackframe = new StackFrame(1);
 			Class = stackframe.GetMethod().DeclaringType;
@@ -81,7 +85,8 @@ namespace MiskoPersist.Core
 			ErrorMessage = new ErrorMessage(Class, Method, ErrorLevel.Error, message, null);
 		}
 
-		public MiskoException(String message, Exception inner, params Object[] parameters) : base(message, inner)
+		public MiskoException(String message, Exception inner, params Object[] parameters)
+			: base(message, inner)
 		{
 			StackFrame stackframe = new StackFrame(1);
 			Class = stackframe.GetMethod().DeclaringType;

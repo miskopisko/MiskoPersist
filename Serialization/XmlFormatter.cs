@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml;
 using log4net;
 using Message;
+using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data;
+using MiskoPersist.Enums;
 
 namespace MiskoPersist.Serialization
 {
@@ -33,29 +36,30 @@ namespace MiskoPersist.Serialization
 			XmlDocument document = new XmlDocument();
 			document.Load(serializationStream);
 			Type objectType = Type.GetType(document.DocumentElement.Attributes["Type"].Value);
-			if(!objectType.IsSubclassOf(typeof(CoreMessage)))
+			if (!objectType.IsSubclassOf(typeof(CoreMessage)))
 			{
 				throw new MiskoException("Can only deserialize messages");
-			}			
+			}
 			return InitializeObject(document.DocumentElement, objectType);
 		}
 
 		public void Serialize(Stream serializationStream, Object graph)
 		{
-			if(graph == null)
+			if (graph == null)
 			{
 				return;
 			}
 
-			if(serializationStream == null)
+			if (serializationStream == null)
 			{
 				throw new ArgumentException("Empty serializationStream!");
 			}
 
-			using(XmlTextWriter writer = new XmlTextWriter(serializationStream, ENCODING))
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			using (XmlTextWriter writer = new XmlTextWriter(serializationStream, ENCODING))
 			{
 				#if DEBUG
-					writer.Formatting = Formatting.Indented;
+				writer.Formatting = Formatting.Indented;
 				#endif
 				
 				writer.WriteStartDocument();
@@ -65,12 +69,10 @@ namespace MiskoPersist.Serialization
 				writer.WriteEndElement();
 				writer.WriteEndDocument();
 				writer.Flush();
-				
-				#if DEBUG
-					Byte[] newline = ENCODING.GetBytes(Environment.NewLine);
-            		serializationStream.Write(newline, 0, newline.Length);
-				#endif
 			}
+			stopwatch.Stop();
+			
+			Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
 		}
 
 		#endregion
@@ -79,15 +81,15 @@ namespace MiskoPersist.Serialization
 		
 		private void Serialize(XmlWriter writer, Object objectToSerialize)
 		{
-			foreach(SerializationElement element in GetMemberInfo(objectToSerialize))
+			foreach (SerializationElement element in GetMemberInfo(objectToSerialize))
 			{
-				if(element.ElementType.IsPrimitive || element.ElementType.Equals(typeof(String)) || element.ElementType.IsEnum || element.ElementType.Equals(typeof(TimeSpan)))
+				if (element.ElementType.IsPrimitive || element.ElementType.Equals(typeof(String)) || element.ElementType.IsEnum)
 				{
 					writer.WriteStartElement(element.ElementName);
 					writer.WriteValue(element.ElementValue.ToString());
 					writer.WriteEndElement();
 				}
-				else if(typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
+				else if (typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
 				{
 					foreach (ViewedData viewedData in (ViewedDataList)element.ElementValue)
 					{
@@ -102,7 +104,7 @@ namespace MiskoPersist.Serialization
 					Serialize(writer, element.ElementValue);
 					writer.WriteEndElement();
 				}
-			}			
+			}
 		}
 
 		#endregion
@@ -111,39 +113,51 @@ namespace MiskoPersist.Serialization
 
 		private Object InitializeObject(XmlNode node, Type objectType)
 		{
-			if(node == null)
+			if (node == null)
 			{
 				return null;
 			}
 			
-			Object initializedObject = Activator.CreateInstance(objectType);
+			Object initializedObject = null;
 			
-			foreach(PropertyInfo property in GetViewedProperties(initializedObject))
+			try
 			{
-				if(property.CanWrite)
+				initializedObject = Activator.CreateInstance(objectType);
+				
+				foreach (PropertyInfo property in GetViewedProperties(initializedObject))
 				{
-					Object obj = null;
-					if(Converter.CanConvert(property.PropertyType))
+					if (property.CanWrite)
 					{
-						obj = Converter.Convert(GetElement(node, property.Name), property.PropertyType);
-					}
-					else if(typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
-					{
-						obj = Activator.CreateInstance(property.PropertyType);
-						foreach(XmlNode innerNode in node.SelectNodes(property.Name)) 
+						Object obj = null;
+						if (Converter.CanConvert(property.PropertyType))
 						{
-							ViewedData data = (ViewedData)InitializeObject(innerNode, ((ViewedDataList)obj).ViewedDataType);
-							((ViewedDataList)obj).Add(data);
+							obj = Converter.Convert(GetElement(node, property.Name), property.PropertyType);
 						}
+						else if (((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer != null)
+						{
+							obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke(GetElement(node, property.Name));
+						}
+						else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+						{
+							obj = Activator.CreateInstance(property.PropertyType);
+							foreach (XmlNode innerNode in node.SelectNodes(property.Name))
+							{
+								ViewedData data = (ViewedData)InitializeObject(innerNode, ((ViewedDataList)obj).ViewedDataType);
+								((ViewedDataList)obj).Add(data);
+							}
+						}
+						else
+						{
+							obj = InitializeObject(node[property.Name], property.PropertyType);
+						}
+						property.SetValue(initializedObject, obj);
 					}
-					else
-					{
-						obj = InitializeObject(node[property.Name], property.PropertyType);
-					}
-					property.SetValue(initializedObject, obj);
 				}
 			}
-
+			catch (Exception e)
+			{
+				Log.Error(String.Format("Unable to create object {0}", objectType.Name), e);
+			}
 			return initializedObject;
 		}
 

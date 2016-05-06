@@ -39,11 +39,13 @@ namespace MiskoPersist.MoneyType
 
 		#region Constructors
 		
-		public Money() : this(0)
+		public Money()
+			: this(0)
 		{
 		}
 		
-		public Money(String s) : this(Decimal.Parse(s))
+		public Money(String s)
+			: this(Decimal.Parse(s))
 		{
 		}
 
@@ -54,7 +56,7 @@ namespace MiskoPersist.MoneyType
 			mUnits_ = (Int64)value;
 			mDecimalFraction_ = (Int32)Decimal.Round((value - mUnits_) * FractionScale);
 
-			if(mDecimalFraction_ >= FractionScale)
+			if (mDecimalFraction_ >= FractionScale)
 			{
 				mUnits_ += 1;
 				mDecimalFraction_ = mDecimalFraction_ - (Int32)FractionScale;
@@ -148,7 +150,7 @@ namespace MiskoPersist.MoneyType
 			var fractionSign = Math.Sign(fractionSum);
 			var absFractionSum = Math.Abs(fractionSum);
 
-			if(absFractionSum >= FractionScale)
+			if (absFractionSum >= FractionScale)
 			{
 				overflow = fractionSign;
 				absFractionSum -= (Int32)FractionScale;
@@ -157,7 +159,7 @@ namespace MiskoPersist.MoneyType
 
 			var newUnits = left.mUnits_ + right.mUnits_ + overflow;
 
-			if(fractionSign < 0 && Math.Sign(newUnits) > 0)
+			if (fractionSign < 0 && Math.Sign(newUnits) > 0)
 			{
 				newUnits -= 1;
 				fractionSum = (Int32)FractionScale - absFractionSum;
@@ -235,14 +237,14 @@ namespace MiskoPersist.MoneyType
 		{
 			money = ZERO;
 
-			if(s == null)
+			if (s == null)
 			{
 				return false;
 			}
 
 			s = s.Trim();
 
-			if(s == String.Empty)
+			if (s == String.Empty)
 			{
 				return false;
 			}
@@ -252,7 +254,7 @@ namespace MiskoPersist.MoneyType
 
 			if (!Currency.TryParse(s.Substring(0, 1), out currencyValue))
 			{
-				if(s.Length > 2 && Currency.TryParse(s.Substring(0, 3), out currencyValue))
+				if (s.Length > 2 && Currency.TryParse(s.Substring(0, 3), out currencyValue))
 				{
 					s = s.Substring(3);
 					currency = currencyValue;
@@ -316,12 +318,18 @@ namespace MiskoPersist.MoneyType
 				case MidpointRoundingRule.AwayFromZero:
 					{
 						var sign = Math.Sign(fraction);
-						fraction = Math.Abs(fraction); fraction = Math.Floor(fraction + 0.5M); fraction *= sign; break;
+						fraction = Math.Abs(fraction);
+						fraction = Math.Floor(fraction + 0.5M);
+						fraction *= sign;
+						break;
 					}
 				case MidpointRoundingRule.TowardZero:
 					{
 						var sign = Math.Sign(fraction);
-						fraction = Math.Abs(fraction); fraction = Math.Floor(fraction + 0.5M); fraction *= sign; break;
+						fraction = Math.Abs(fraction);
+						fraction = Math.Floor(fraction + 0.5M);
+						fraction *= sign;
+						break;
 					}
 				case MidpointRoundingRule.Up:
 					fraction = Math.Floor(fraction + 0.5M);
@@ -335,7 +343,7 @@ namespace MiskoPersist.MoneyType
 
 			fraction *= denominator;
 
-			if(fraction >= FractionScale)
+			if (fraction >= FractionScale)
 			{
 				unit = 1;
 				fraction = fraction - (Int32)FractionScale;
@@ -389,7 +397,7 @@ namespace MiskoPersist.MoneyType
 
 		private void checkValue(Decimal value)
 		{
-			if(value < Int64.MinValue || value > Int64.MaxValue)
+			if (value < Int64.MinValue || value > Int64.MaxValue)
 			{
 				throw new ArgumentOutOfRangeException("value", value, "Money value must be between " + Int64.MinValue + " and " + Int64.MaxValue);
 			}
@@ -445,7 +453,7 @@ namespace MiskoPersist.MoneyType
 		public Int32 CompareTo(Object other)
 		{
 			Money money = other as Money;
-			if(money != null)
+			if (money != null)
 			{
 				return CompareTo(money);
 			}

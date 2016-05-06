@@ -6,6 +6,7 @@ using System.Reflection;
 using log4net;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
+using MiskoPersist.Message.Request;
 using MiskoPersist.Resources;
 
 namespace MiskoPersist.Core
@@ -16,8 +17,9 @@ namespace MiskoPersist.Core
 
 		#region Fields
 
-		private List<Persistence> mPersistencePool_ = new List<Persistence>();
+		private DbConnection mConnection_;
 		private DbTransaction mTransaction_;
+		private List<Persistence> mPersistencePool_ = new List<Persistence>();
 		private ErrorMessages mErrorMessages_ = new ErrorMessages();
 		private ErrorLevel mStatus_ = ErrorLevel.Success;
 		private MessageMode mMessageMode_ = MessageMode.Normal;
@@ -29,8 +31,10 @@ namespace MiskoPersist.Core
 
 		public DbConnection Connection
 		{
-			get;
-			set;
+			get
+			{
+				return mConnection_;
+			}
 		}
 		
 		public List<Persistence> PersistencePool
@@ -97,7 +101,16 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-
+		public Session(RequestMessage request)
+		{
+			mConnection_ = DatabaseConnections.GetConnection(request.Connection ?? "Default");
+			mMessageMode_ = request.MessageMode ?? MessageMode.Normal;
+			mErrorMessages_.Concatenate(request.Confirmations);
+			if (mConnection_ != null)
+			{
+				mConnection_.Open();
+			}
+		}
 		
 		#endregion
 
@@ -105,19 +118,19 @@ namespace MiskoPersist.Core
 
 		public void BeginTransaction()
 		{
-			if(mTransaction_ != null)
+			if (mTransaction_ != null)
 			{
 				Error(ErrorLevel.Error, ErrorStrings.errTransactionAlreadyInProgress);
 			}
 			else
 			{
-				mTransaction_ = Connection.BeginTransaction();
+				mTransaction_ = mConnection_ != null ? Connection.BeginTransaction() : null;
 			}
 		}
 
 		public void EndTransaction()
 		{
-			if(mTransaction_ != null)
+			if (mTransaction_ != null)
 			{
 				if (!Status.IsCommitable || MessageMode.Equals(MessageMode.Trial))
 				{
@@ -156,12 +169,12 @@ namespace MiskoPersist.Core
 		{
 			ErrorMessage errorMessage = new ErrorMessage(clazz, method, errorLevel, message, parameters);
 
-			if(errorLevel.Equals(ErrorLevel.Confirmation) && ErrorMessages.IsConfirmed(errorMessage))
+			if (errorLevel.Equals(ErrorLevel.Confirmation) && ErrorMessages.IsConfirmed(errorMessage))
 			{
 				return;
 			}
 
-			if(Status.Value < errorLevel.Value)
+			if (Status.Value < errorLevel.Value)
 			{
 				mStatus_ = errorLevel;
 			}

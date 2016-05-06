@@ -16,53 +16,49 @@ namespace MiskoPersist.Serialization
 
 		public Object Convert(Object value, Type type)
 		{
-			if(value != null && value.GetType().Equals(typeof(String)) && !String.IsNullOrEmpty((String)value))
+			if (value != null && value.GetType().Equals(typeof(String)) && !String.IsNullOrEmpty((String)value))
 			{
-				if(type.Equals(typeof(String)))
+				if (type.Equals(typeof(String)))
 				{
 					return (String)value;
 				}
-				if(type.Equals(typeof(Boolean)) || type.Equals(typeof(Boolean?)))
+				if (type.Equals(typeof(Boolean)) || type.Equals(typeof(Boolean?)))
 				{
 					return ToBoolean(value);
 				}
-				if(type.Equals(typeof(DateTime)) || type.Equals(typeof(DateTime?)))
+				if (type.Equals(typeof(DateTime)) || type.Equals(typeof(DateTime?)))
 				{
 					return ToDateTime(value);
 				}
-				if(type.Equals(typeof(Decimal)) || type.Equals(typeof(Decimal?)))
+				if (type.Equals(typeof(Decimal)) || type.Equals(typeof(Decimal?)))
 				{
 					return ToDecimal(value);
 				}
-				if(type.Equals(typeof(Double)) || type.Equals(typeof(Double?)))
+				if (type.Equals(typeof(Double)) || type.Equals(typeof(Double?)))
 				{
 					return ToDouble(value);
 				}
-				if(type.Equals(typeof(Int16)) || type.Equals(typeof(Int16?)))
+				if (type.Equals(typeof(Int16)) || type.Equals(typeof(Int16?)))
 				{
 					return ToInt16(value);
 				}
-				if(type.Equals(typeof(Int32)) || type.Equals(typeof(Int32?)))
+				if (type.Equals(typeof(Int32)) || type.Equals(typeof(Int32?)))
 				{
 					return ToInt32(value);
 				}
-				if(type.Equals(typeof(Int64)) || type.Equals(typeof(Int64?)))
+				if (type.Equals(typeof(Int64)) || type.Equals(typeof(Int64?)))
 				{
 					return ToInt64(value);
 				}
-				if(type.Equals(typeof(Money)))
+				if (type.Equals(typeof(Money)))
 				{
 					return ToMoney(value);
 				}
-				if(type.Equals(typeof(PrimaryKey)))
+				if (type.Equals(typeof(PrimaryKey)))
 				{
 					return ToPrimaryKey(value);
 				}
-				if(type.Equals(typeof(TimeSpan)) || type.Equals(typeof(TimeSpan?)))
-				{
-					return ToTimeSpan(value);
-				}
-				if(typeof(MiskoEnum).IsAssignableFrom(type))
+				if (typeof(MiskoEnum).IsAssignableFrom(type))
 				{
 					return ToMiskoEnum(type, value);
 				}
@@ -159,24 +155,17 @@ namespace MiskoPersist.Serialization
 		{
 			return new PrimaryKey((String)value);
 		}
-		
-		public TimeSpan ToTimeSpan(Object value)
-		{
-			return TimeSpan.Parse((String)value);
-		}
 
 		public Boolean CanConvert(Type type)
 		{
-			return 	type.IsPrimitive || 
-					type.IsEnum ||
-					typeof(String).IsAssignableFrom(type) ||
-					typeof(DateTime).IsAssignableFrom(type) ||
-					typeof(Money).IsAssignableFrom(type) ||
-					typeof(PrimaryKey).IsAssignableFrom(type) ||
-					typeof(TimeSpan).IsAssignableFrom(type) ||
-					typeof(MiskoEnum).IsAssignableFrom(type) ||
-					(type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)) && CanConvert(Nullable.GetUnderlyingType(type)))
-				;
+			return 	type.IsPrimitive ||
+				type.IsEnum ||
+				typeof(String).IsAssignableFrom(type) ||
+				typeof(DateTime).IsAssignableFrom(type) ||
+				typeof(Money).IsAssignableFrom(type) ||
+				typeof(PrimaryKey).IsAssignableFrom(type) ||
+				typeof(MiskoEnum).IsAssignableFrom(type) ||
+				(type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)) && CanConvert(Nullable.GetUnderlyingType(type)));
 		}
 	}
 }

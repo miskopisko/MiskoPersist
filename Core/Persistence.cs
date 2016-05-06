@@ -12,7 +12,7 @@ using MiskoPersist.MoneyType;
 using MiskoPersist.Persistences;
 using MiskoPersist.Resources;
 using MySql.Data.MySqlClient;
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Core
 {
@@ -46,7 +46,7 @@ namespace MiskoPersist.Core
 		{
 			get
 			{
-				while(!IsEof)
+				while (!IsEof)
 				{
 					Next();
 				}
@@ -72,25 +72,23 @@ namespace MiskoPersist.Core
 
 		public static Persistence GetInstance(Session session)
 		{
-			if(session.Connection is OracleConnection)
+			if (session.Connection is OracleConnection)
 			{
 				return new OraclePersistence(session);
 			}
-			if(session.Connection is MySqlConnection)
+			if (session.Connection is MySqlConnection)
 			{
 				return new MySqlPersistence(session);
 			}
-			if(session.Connection is SQLiteConnection)
+			if (session.Connection is SQLiteConnection)
 			{
 				return new SqlitePersistence(session);
 			}
-			if(session.Connection is OleDbConnection)
+			if (session.Connection is OleDbConnection)
 			{
 				return new FoxProPersistence(session);
 			}
-			
-			session.Error(ErrorLevel.Error, ErrorStrings.errInvalicConnectionType);
-			return null;
+			throw new MiskoException("Unable to get datatabe connection");
 		}
 
 		public void Close()
@@ -100,7 +98,7 @@ namespace MiskoPersist.Core
 				Exception e = null;
 				try
 				{
-					if(mRs_ != null)
+					if (mRs_ != null)
 					{
 						mRs_.Dispose();
 						mRs_ = null;
@@ -114,7 +112,7 @@ namespace MiskoPersist.Core
 
 				try
 				{
-					if(mCommand_ != null)
+					if (mCommand_ != null)
 					{
 						mCommand_.Dispose();
 						mCommand_ = null;
@@ -122,14 +120,14 @@ namespace MiskoPersist.Core
 				}
 				catch (Exception ex)
 				{
-					if(e == null)
+					if (e == null)
 					{
 						e = ex;
 					}
 					mCommand_ = null;
 				}
 
-				if(e != null)
+				if (e != null)
 				{
 					throw e;
 				}
@@ -147,7 +145,7 @@ namespace MiskoPersist.Core
 		public void Next()
 		{
 			mEof_ = !mRs_.Read();
-			mRecordCount_ ++;
+			mRecordCount_++;
 		}
 
 		public void SetSql(String sql)
@@ -158,20 +156,20 @@ namespace MiskoPersist.Core
 		public void SetSql(String sql, params Object[] parameters)
 		{
 			mSql_ = sql;
-			if(parameters != null)
+			if (parameters != null)
 			{
-				mParameters_.AddRange(parameters);	
+				mParameters_.AddRange(parameters);
 			}
 		}
 
 		public void SqlWhere(Boolean condition, String expression, params Object[] parameters)
 		{
-			if(condition)
+			if (condition)
 			{
 				mSql_ = mSql_ + Environment.NewLine + (!mSql_.Contains("WHERE") ? "WHERE " : "AND ") + expression;
-				if(parameters != null)
+				if (parameters != null)
 				{
-					mParameters_.AddRange(parameters);	
+					mParameters_.AddRange(parameters);
 				}
 			}
 		}
@@ -192,7 +190,7 @@ namespace MiskoPersist.Core
 
 		public void ExecuteQuery()
 		{
-			if(String.IsNullOrEmpty(mSql_))
+			if (String.IsNullOrEmpty(mSql_))
 			{
 				mSession_.Error(ErrorLevel.Error, ErrorStrings.errSqlNotSet);
 			}
@@ -210,9 +208,9 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			if(parameters != null)
+			if (parameters != null)
 			{
-				mParameters_.AddRange(parameters);	
+				mParameters_.AddRange(parameters);
 			}
 
 			mCommand_.CommandText = mSql_;
@@ -276,9 +274,9 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = function;
-			if(parameters != null)
+			if (parameters != null)
 			{
-				mParameters_.AddRange(parameters);	
+				mParameters_.AddRange(parameters);
 			}
 
 			mCommand_.CommandText = mSql_;
@@ -287,7 +285,7 @@ namespace MiskoPersist.Core
 			
 			mCommand_.Prepare();
 			
-			Stopwatch timer = Stopwatch.StartNew();            
+			Stopwatch timer = Stopwatch.StartNew();
 			mRs_ = mCommand_.ExecuteReader();
 			mEof_ = !mRs_.Read();
 			mRecordCount_ = 0;
@@ -307,14 +305,14 @@ namespace MiskoPersist.Core
 			
 			GenerateInsertStatement(clazz, type);
 			
-			mCommand_.Prepare();           
+			mCommand_.Prepare();
 
 			Stopwatch timer = Stopwatch.StartNew();
-			if(mCommand_ is MySqlCommand || mCommand_ is SQLiteCommand)
+			if (mCommand_ is MySqlCommand || mCommand_ is SQLiteCommand)
 			{
 				newId = new PrimaryKey(mCommand_.ExecuteScalar().ToString());
 			}
-			else if(mCommand_ is OracleCommand)
+			else if (mCommand_ is OracleCommand)
 			{
 				OracleParameter lastId = new OracleParameter();
 				lastId.ParameterName = ":LASTID";
@@ -326,14 +324,14 @@ namespace MiskoPersist.Core
 
 				newId = new PrimaryKey(Convert.ToInt64(lastId.Value));
 			}
-			else if(mCommand_ is OleDbCommand)
+			else if (mCommand_ is OleDbCommand)
 			{
 				// FoxPro INSERT is done on a class by class basis by overriding the Create method
 			}
-			timer.Stop();            
+			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			if(mSession_.MessageMode.Equals(MessageMode.Normal))
+			if (mSession_.MessageMode.Equals(MessageMode.Normal))
 			{
 				clazz.Id = newId;
 			}
@@ -343,7 +341,7 @@ namespace MiskoPersist.Core
 		{
 			mSession_.PersistencePool.Add(this);
 
-			if(type.BaseType.Equals(typeof(StoredData)))
+			if (type.BaseType.Equals(typeof(StoredData)))
 			{
 				clazz.RowVer++;
 			}
@@ -357,7 +355,7 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
-			if(result == 0)
+			if (result == 0)
 			{
 				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, clazz.GetType().Name);
 			}
@@ -376,7 +374,7 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 
-			if(result == 0)
+			if (result == 0)
 			{
 				mSession_.Error(ErrorLevel.Error, ErrorStrings.errLockKeyFailed, GetType().Name);
 			}
@@ -387,9 +385,9 @@ namespace MiskoPersist.Core
 			mSession_.PersistencePool.Add(this);
 
 			mSql_ = sql;
-			if(parameters != null)
+			if (parameters != null)
 			{
-				mParameters_.AddRange(parameters);	
+				mParameters_.AddRange(parameters);
 			}
 
 			mCommand_.CommandText = mSql_;
@@ -437,11 +435,11 @@ namespace MiskoPersist.Core
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				return !mRs_.IsDBNull(ordinal) ? mRs_.GetString(ordinal).Trim() : "";
 			}
-			catch(IndexOutOfRangeException)
+			catch (IndexOutOfRangeException)
 			{
 				return "";
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -462,11 +460,11 @@ namespace MiskoPersist.Core
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				return !mRs_.IsDBNull(ordinal) ? (Int32?)mRs_.GetInt32(ordinal) : null;
 			}
-			catch(IndexOutOfRangeException)
+			catch (IndexOutOfRangeException)
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -491,7 +489,7 @@ namespace MiskoPersist.Core
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -516,7 +514,7 @@ namespace MiskoPersist.Core
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -541,7 +539,7 @@ namespace MiskoPersist.Core
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -566,7 +564,7 @@ namespace MiskoPersist.Core
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try
@@ -591,7 +589,7 @@ namespace MiskoPersist.Core
 			{
 				return null;
 			}
-			catch(InvalidCastException)
+			catch (InvalidCastException)
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
 				try

@@ -10,7 +10,8 @@ namespace MiskoPersist.Data
 		
 		#region Constructors
 		
-		public ErrorMessageParameters() : base(typeof(ErrorMessageParameter))
+		public ErrorMessageParameters()
+			: base(typeof(ErrorMessageParameter))
 		{
 		}
 		
@@ -21,7 +22,7 @@ namespace MiskoPersist.Data
 		public String[] ToStringArray()
 		{
 			List<String> result = new List<String>();
-			foreach (ErrorMessageParameter element in this) 
+			foreach (ErrorMessageParameter element in this)
 			{
 				result.Add(element.Parameter);
 			}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Linq;
 using log4net;
 using MiskoPersist.Core;
 
@@ -14,100 +15,100 @@ namespace MiskoPersist.Data
 		
 		private readonly Type mViewedDataType_;
 		private Boolean mIsSorted_;
-        private ListSortDirection mSortDirection_ = ListSortDirection.Ascending;
-        private PropertyDescriptor mSortProperty_;
-        private ListChangedEventHandler mOnListChanged_;
+		private ListSortDirection mSortDirection_ = ListSortDirection.Ascending;
+		private PropertyDescriptor mSortProperty_;
+		private ListChangedEventHandler mOnListChanged_;
 		
 		#endregion
 		
 		#region Properties
 
-        public Type ViewedDataType
-        {
-        	get
-        	{
-        		return mViewedDataType_;
-        	}
-        }
+		public Type ViewedDataType
+		{
+			get
+			{
+				return mViewedDataType_;
+			}
+		}
 		
 		#endregion
 		
 		#region Constructors
 		
 		public ViewedDataList(Type itemType)
-        {
-        	if(!typeof(ViewedData).IsAssignableFrom(itemType))
-        	{
-        		throw new MiskoException("Cannot add {0} to a ViewedDataList", itemType);
-        	}
-        	
-        	mViewedDataType_ = itemType;
-        }
+		{
+			if (!typeof(ViewedData).IsAssignableFrom(itemType))
+			{
+				throw new MiskoException("Cannot add {0} to a ViewedDataList", itemType);
+			}
+			
+			mViewedDataType_ = itemType;
+		}
 		
 		#endregion
 		
 		#region Public Methods
 		
 		public void Set(Session session, Persistence persistence)
-        {
-            Set(session, persistence, new Page());
-        }
+		{
+			Set(session, persistence, new Page());
+		}
 
-        public void Set(Session session, Persistence persistence, Page page)
-        {
-        	if(persistence.IsEof)
-        	{
-        		page.PageNo = 0;
-        		return;
-        	}
-        	
-            Int32 noRows = page.RowsPerPage;
-            Int32 pageNo = page.PageNo;
+		public void Set(Session session, Persistence persistence, Page page)
+		{
+			if (persistence.IsEof)
+			{
+				page.PageNo = 0;
+				return;
+			}
+			
+			Int32 noRows = page.RowsPerPage;
+			Int32 pageNo = page.PageNo;
 
-			for (Int32 i = 0; i <(pageNo - 1) * noRows && !persistence.IsEof; i++)
-            {
-                persistence.Next();
-            }
+			for (Int32 i = 0; i < (pageNo - 1) * noRows && !persistence.IsEof; i++)
+			{
+				persistence.Next();
+			}
 
 			for (Int32 i = 0; (noRows == 0 || i < noRows) && !persistence.IsEof; i++)
-            {
+			{
 				ViewedData data = (ViewedData)Activator.CreateInstance(ViewedDataType);
-                data.Set(session, persistence);
-                Add(data);
-                persistence.Next();
-            }
+				data.Set(session, persistence);
+				Add(data);
+				persistence.Next();
+			}
 
-            if(page.IncludeRecordCount)
-            {
-                page.TotalRowCount = persistence.RecordCount;
-            }
-        }
+			if (page.IncludeRecordCount)
+			{
+				page.TotalRowCount = persistence.RecordCount;
+			}
+		}
 
-        public void FetchAll(Session session)
-        {
-            Persistence persistence = Persistence.GetInstance(session);
-            persistence.ExecuteQuery("SELECT * FROM " + ViewedDataType.Name);
-            Set(session, persistence, new Page());
-            persistence.Close();
-            persistence = null;
-        }
-        
-        public void Concatenate(ViewedDataList list)
-        {
-        	if(list != null)
-        	{
-        		foreach(ViewedData data in list) 
-	        	{
-	        		this.InnerList.Add(data);
-	        	}
-	        	FireListChanged(ListChangedType.Reset, -1);	
-        	}
-        }
-        
-        public ViewedDataList Clone()
-        {
-        	return (ViewedDataList)MemberwiseClone();
-        }
+		public void FetchAll(Session session)
+		{
+			Persistence persistence = Persistence.GetInstance(session);
+			persistence.ExecuteQuery("SELECT * FROM " + ViewedDataType.Name);
+			Set(session, persistence, new Page());
+			persistence.Close();
+			persistence = null;
+		}
+		
+		public void Concatenate(ViewedDataList list)
+		{
+			if (list != null)
+			{
+				foreach (ViewedData data in list)
+				{
+					this.InnerList.Add(data);
+				}
+				FireListChanged(ListChangedType.Reset, -1);
+			}
+		}
+		
+		public ViewedDataList Clone()
+		{
+			return (ViewedDataList)MemberwiseClone();
+		}
 		
 		#endregion
 		
@@ -120,7 +121,7 @@ namespace MiskoPersist.Data
 		
 		public void Remove(ViewedData viewedData)
 		{
-			((IList)this).Remove(viewedData);			
+			((IList)this).Remove(viewedData);
 		}
 		
 		public Boolean Contains(ViewedData viewedData)
@@ -148,8 +149,22 @@ namespace MiskoPersist.Data
 		
 		public override Boolean Equals(Object obj)
 		{
-			ViewedDataList other = obj as ViewedDataList;				
-			return other != null && mViewedDataType_.Equals(other.ViewedDataType) && List.Equals(other.List);			
+			Boolean result = false;
+			
+			ViewedDataList other = obj as ViewedDataList;
+			if (other != null)
+			{
+				if (mViewedDataType_.Equals(other.ViewedDataType))
+				{
+					result = true;
+					foreach (ViewedData viewedData in other)
+					{
+						result = Contains(viewedData);
+					}
+				}
+			}
+			
+			return result;
 		}
 
 		public override Int32 GetHashCode()
@@ -157,12 +172,12 @@ namespace MiskoPersist.Data
 			int hashCode = 0;
 			unchecked
 			{
-				if(mViewedDataType_ != null)
+				if (mViewedDataType_ != null)
 				{
 					hashCode += 1000000007 * mViewedDataType_.GetHashCode();
 				}
 				
-				foreach (ViewedData data in this) 
+				foreach (ViewedData data in this)
 				{
 					hashCode += 1000000033 * data.GetHashCode();
 				}
@@ -172,11 +187,11 @@ namespace MiskoPersist.Data
 
 		public static bool operator ==(ViewedDataList lhs, ViewedDataList rhs)
 		{
-			if(ReferenceEquals(lhs, rhs))
+			if (ReferenceEquals(lhs, rhs))
 			{
 				return true;
 			}
-			if(ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null))
+			if (ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null))
 			{
 				return false;
 			}
@@ -193,35 +208,35 @@ namespace MiskoPersist.Data
 		#region Private Methods
 		
 		private void FireListChanged(ListChangedType type, Int32 index)
-        {           
-            if(mOnListChanged_ != null) 
-            {
-                mOnListChanged_(this, new ListChangedEventArgs(type, index));
-            }
-        }
+		{
+			if (mOnListChanged_ != null)
+			{
+				mOnListChanged_(this, new ListChangedEventArgs(type, index));
+			}
+		}
 
-        private Int32 OnComparison(ViewedData lhs, ViewedData rhs)
-        {
-            Object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
-            Object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
-            
-            if(lhsValue == null)
-            {
-                return (rhsValue == null) ? 0 : -1; //nulls are equal
-            }
-            
-            if(rhsValue == null)
-            {
-                return 1; //first has value, second doesn't
-            }
-            
-            if(lhsValue is IComparable)
-            {
-                return ((IComparable)lhsValue).CompareTo(rhsValue);
-            }
-            
+		private Int32 OnComparison(ViewedData lhs, ViewedData rhs)
+		{
+			Object lhsValue = lhs == null ? null : mSortProperty_.GetValue(lhs);
+			Object rhsValue = rhs == null ? null : mSortProperty_.GetValue(rhs);
+			
+			if (lhsValue == null)
+			{
+				return (rhsValue == null) ? 0 : -1; //nulls are equal
+			}
+			
+			if (rhsValue == null)
+			{
+				return 1; //first has value, second doesn't
+			}
+			
+			if (lhsValue is IComparable)
+			{
+				return ((IComparable)lhsValue).CompareTo(rhsValue);
+			}
+			
 			return lhsValue.Equals(rhsValue) ? 0 : String.Compare(lhsValue.ToString(), rhsValue.ToString(), StringComparison.Ordinal);
-        }
+		}
 
 		#endregion
 		
@@ -229,15 +244,15 @@ namespace MiskoPersist.Data
 		
 		public event ListChangedEventHandler ListChanged
 		{
-            add 
-            {
-                mOnListChanged_ = (ListChangedEventHandler)Delegate.Combine(mOnListChanged_, value);
-            }
-            remove 
-            {
-                mOnListChanged_ = (ListChangedEventHandler)Delegate.Remove(mOnListChanged_, value);
-            }
-        }        
+			add
+			{
+				mOnListChanged_ = (ListChangedEventHandler)Delegate.Combine(mOnListChanged_, value);
+			}
+			remove
+			{
+				mOnListChanged_ = (ListChangedEventHandler)Delegate.Remove(mOnListChanged_, value);
+			}
+		}
 
 		public Object AddNew()
 		{
@@ -254,12 +269,12 @@ namespace MiskoPersist.Data
 		public void ApplySort(PropertyDescriptor property, ListSortDirection direction)
 		{
 			mSortProperty_ = property;
-            mSortDirection_ = direction;
-            
-            InnerList.Sort(this);
-            
-            mIsSorted_ = true;
-            FireListChanged(ListChangedType.Reset, -1);
+			mSortDirection_ = direction;
+			
+			InnerList.Sort(this);
+			
+			mIsSorted_ = true;
+			FireListChanged(ListChangedType.Reset, -1);
 		}
 
 		public Int32 Find(PropertyDescriptor property, Object key)
@@ -275,7 +290,7 @@ namespace MiskoPersist.Data
 		public void RemoveSort()
 		{
 			mSortDirection_ = ListSortDirection.Ascending;
-            mSortProperty_ = null;
+			mSortProperty_ = null;
 		}
 
 		public Boolean AllowNew
@@ -358,12 +373,12 @@ namespace MiskoPersist.Data
 		{
 			Int32 result = OnComparison((ViewedData)x, (ViewedData)y);
 
-            if(mSortDirection_ == ListSortDirection.Descending)
-            {
-                result = -result;
-            }
-                
-            return result;
+			if (mSortDirection_ == ListSortDirection.Descending)
+			{
+				result = -result;
+			}
+			
+			return result;
 		}
 
 		#endregion

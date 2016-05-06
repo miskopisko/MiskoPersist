@@ -2,6 +2,7 @@
 using System.Reflection;
 using log4net;
 using MiskoPersist.Attributes;
+using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
@@ -35,26 +36,26 @@ namespace Message
 		
 		#endregion
 
-		#region Properties		
+		#region Properties
 		
-		public Boolean HasConfirmations 
-		{ 
-			get 
-			{ 
-				return Confirmations != null && Confirmations.Count > 0; 
-			} 
+		public Boolean HasConfirmations
+		{
+			get
+			{
+				return Confirmations != null && Confirmations.Count > 0;
+			}
 		}
 
-		public Boolean HasUnconfirmed 
+		public Boolean HasUnconfirmed
 		{
 			get
 			{
 				Boolean hasUnconfirmed = false;
-				if(HasConfirmations)
+				if (HasConfirmations)
 				{
-					foreach (ErrorMessage confirmMessage in Confirmations) 
+					foreach (ErrorMessage confirmMessage in Confirmations)
 					{
-						if(confirmMessage.Confirmed.HasValue && !confirmMessage.Confirmed.Value)
+						if (confirmMessage.Confirmed.HasValue && !confirmMessage.Confirmed.Value)
 						{
 							hasUnconfirmed = true;
 							break;
@@ -69,11 +70,16 @@ namespace Message
 		{
 			get
 			{
-				if(this is ResponseMessage)
+				if (this is ResponseMessage)
 				{
 					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
 					String msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
-					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RQ"));
+					Type requestClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RQ"));
+					if (requestClass == null)
+					{
+						throw new MiskoException("Could not find wrapper class {0}", msgPath + msgName);
+					}
+					return requestClass;
 				}
 				return GetType();
 			}
@@ -83,11 +89,16 @@ namespace Message
 		{
 			get
 			{
-				if(this is RequestMessage)
+				if (this is RequestMessage)
 				{
 					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
 					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
-					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RS"));
+					Type responseClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RS"));
+					if (responseClass == null)
+					{
+						throw new MiskoException("Could not find wrapper class {0}", msgPath + msgName);
+					}
+					return responseClass;
 				}
 				return GetType();
 			}
@@ -97,18 +108,26 @@ namespace Message
 		{
 			get
 			{
-				if(this is RequestMessage)
+				Type wrapperClass;
+				String msgName;
+				String msgPath;
+				if (this is RequestMessage)
 				{
-					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
-					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
-					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+					msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
 				else
 				{
-					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
-					String msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
-					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+					msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
+					msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
+					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
+				if (wrapperClass == null)
+				{
+					throw new MiskoException("Could not find wrapper class {0}", msgPath + msgName);
+				}
+				return wrapperClass;
 			}
 		}
 
