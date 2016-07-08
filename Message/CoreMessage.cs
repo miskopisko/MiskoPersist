@@ -6,6 +6,7 @@ using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Message.Request;
 using MiskoPersist.Message.Response;
+using MiskoPersist.Enums;
 
 namespace Message
 {
@@ -16,6 +17,7 @@ namespace Message
 		#region Fields
 
 		private ErrorMessages mConfirmations_ = new ErrorMessages();
+        private SerializationType mSerializationType_;
 
 		#endregion
 		
@@ -37,6 +39,22 @@ namespace Message
 		#endregion
 
 		#region Properties
+
+        public SerializationType SerializationType
+        {
+            get
+            {
+                if(mSerializationType_ == null)
+                {
+                    throw new ArgumentNullException("mSerializationType_");
+                }
+                return mSerializationType_;
+            }
+            set
+            {
+                mSerializationType_ = value;
+            }
+        }
 		
 		public Boolean HasConfirmations
 		{

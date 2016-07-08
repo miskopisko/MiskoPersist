@@ -24,7 +24,6 @@ namespace MiskoPersist.Core
 				ResponseMessage response = new ResponseMessage();
 				Session session = null;
 				
-				//TimeSpan messageExecutionTime = TimeSpan.Zero;
 				Stopwatch stopwatch = new Stopwatch();
 				
 				try
@@ -33,6 +32,7 @@ namespace MiskoPersist.Core
 					session.BeginTransaction();
 					
 					response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);
+                    response.SerializationType = request.SerializationType;
 					MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
 					
 					stopwatch.Start();

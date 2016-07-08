@@ -90,8 +90,8 @@ namespace MiskoPersist.Core
 				return new Uri((UseSSL ? "https://" : "http://") + Host + ":" + Port + Script);
 			}
 		}
-		
-		#endregion
+
+        #endregion
 		
 		#region Constructors
 		
@@ -129,6 +129,8 @@ namespace MiskoPersist.Core
 					throw new MiskoException("Serialization type is not defined");
 				}
 			}
+
+            mRequest_.SerializationType = SerializationType;
 		}
 		
 		#endregion
@@ -263,18 +265,25 @@ namespace MiskoPersist.Core
 
 			try
 			{
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(Uri);
+                String request = Serializer.Serialize(mRequest_);
+
+				WebRequest webRequest = WebRequest.Create(Uri);
 				webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
 				webRequest.Method = "POST";
-				webRequest.KeepAlive = true;
-				webRequest.ContentType = SerializationType.ToHttpContentType();
+                webRequest.ContentType = mRequest_.SerializationType.ToHttpContentType();
+                webRequest.Timeout = 10000; // 10 seconds
+                webRequest.ContentLength = Serializer.ENCODING.GetByteCount(request);
 				
-				using (StreamWriter sw = new StreamWriter(webRequest.GetRequestStream()))
+                using (StreamWriter writer = new StreamWriter(webRequest.GetRequestStream(), Serializer.ENCODING))
 				{
-					sw.Write(Serializer.Serialize(mRequest_, SerializationType));
+                    writer.Write(request);
 				}
-				
-				responseMessage = (ResponseMessage)Serializer.Deserialize(webRequest.GetResponse().GetResponseStream(), SerializationType);
+
+                using(MemoryStream ms = new MemoryStream())
+                {
+                    webRequest.GetResponse().GetResponseStream().CopyTo(ms);
+                    responseMessage = (ResponseMessage)Serializer.Deserialize(ms);
+                }
 			}
 			catch (Exception ex)
 			{
@@ -284,6 +293,7 @@ namespace MiskoPersist.Core
 				}
 				
 				responseMessage = new ResponseMessage();
+                responseMessage.SerializationType = SerializationType;
 				responseMessage.Status = ErrorLevel.Error;
 				responseMessage.Errors.Add(new ErrorMessage(ex));
 				

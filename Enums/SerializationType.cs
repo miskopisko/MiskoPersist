@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.Serialization;
+using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Enums
 {
@@ -69,14 +71,14 @@ namespace MiskoPersist.Enums
 		
 		public String ToHttpContentType()
 		{
-			return this.Equals(Json) ? "text/json" : "text/xml";
+			return this.Equals(Json) ? "application/json" : "application/xml";
 		}
 
-		public static SerializationType FromHttpContentType(String contentType)
-		{
-			return "text/json".Equals(contentType) ? SerializationType.Json : SerializationType.Xml;
-		}
-		
+        public IFormatter GetFormatter()
+        {
+            return Equals(SerializationType.Xml) ? (IFormatter)new XmlFormatter() : (IFormatter)new JsonFormatter();
+        }
+
 		#endregion
 	}
 }

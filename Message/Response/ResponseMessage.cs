@@ -147,7 +147,7 @@ namespace MiskoPersist.Message.Response
 		
 		public static Object TimeSpanDeserializer(String value)
 		{
-			return TimeSpan.Parse(value);
+			return !String.IsNullOrEmpty(value) ? TimeSpan.Parse(value) : (TimeSpan?)null;
 		}
 		
 		#endregion

@@ -16,70 +16,71 @@ namespace MiskoPersist.Serialization
 	public class XmlFormatter : Serializer, IFormatter
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(XmlFormatter));
-		
-		#region Fields
-		
-		
-		
-		#endregion
-		
-		#region Properties
-		
-		
-		
-		#endregion
 
-		#region IFormatter implementation
+        #region Fields
 
-		public Object Deserialize(Stream serializationStream)
-		{
-			XmlDocument document = new XmlDocument();
-			document.Load(serializationStream);
-			Type objectType = Type.GetType(document.DocumentElement.Attributes["Type"].Value);
-			if (!objectType.IsSubclassOf(typeof(CoreMessage)))
-			{
-				throw new MiskoException("Can only deserialize messages");
-			}
-			return InitializeObject(document.DocumentElement, objectType);
-		}
 
-		public void Serialize(Stream serializationStream, Object graph)
-		{
-			if (graph == null)
-			{
-				return;
-			}
 
-			if (serializationStream == null)
-			{
-				throw new ArgumentException("Empty serializationStream!");
-			}
+        #endregion
 
-			Stopwatch stopwatch = Stopwatch.StartNew();
-			using (XmlTextWriter writer = new XmlTextWriter(serializationStream, ENCODING))
-			{
-				#if DEBUG
-				writer.Formatting = Formatting.Indented;
-				#endif
-				
-				writer.WriteStartDocument();
-				writer.WriteStartElement(graph.GetType().Name);
-				writer.WriteAttributeString("Type", null, graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
-				Serialize(writer, graph);
-				writer.WriteEndElement();
-				writer.WriteEndDocument();
-				writer.Flush();
-			}
-			stopwatch.Stop();
-			
-			Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
-		}
+        #region Properties
 
-		#endregion
-		
-		#region Serialization
-		
-		private void Serialize(XmlWriter writer, Object objectToSerialize)
+
+
+        #endregion
+
+        #region IFormatter implementation
+
+        Object IFormatter.Deserialize(Stream serializationStream)
+        {
+            serializationStream.Position = 0;
+            XmlDocument document = new XmlDocument();
+            document.Load(serializationStream);
+            Type objectType = Type.GetType(document.DocumentElement.Attributes["Type"].Value);
+            if (!objectType.IsSubclassOf(typeof(CoreMessage)))
+            {
+                throw new MiskoException("Can only deserialize messages");
+            }
+            return InitializeObject(document.DocumentElement, objectType);
+        }
+
+        void IFormatter.Serialize(Stream serializationStream, Object graph)
+        {
+            if (graph == null)
+            {
+                return;
+            }
+
+            if (serializationStream == null)
+            {
+                throw new ArgumentNullException(nameof(serializationStream));
+            }
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            using (XmlTextWriter writer = new XmlTextWriter(serializationStream, ENCODING))
+            {
+                #if DEBUG
+                writer.Formatting = Formatting.Indented;
+                #endif
+
+                writer.WriteStartDocument();
+                writer.WriteStartElement(graph.GetType().Name);
+                writer.WriteAttributeString("Type", null, graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
+                Serialize(writer, graph);
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+                writer.Flush();
+            }
+            stopwatch.Stop();
+
+            Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
+        }
+
+        #endregion
+
+        #region Serialization
+
+        private void Serialize(XmlWriter writer, Object objectToSerialize)
 		{
 			foreach (SerializationElement element in GetMemberInfo(objectToSerialize))
 			{

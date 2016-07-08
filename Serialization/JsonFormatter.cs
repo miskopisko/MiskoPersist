@@ -17,77 +17,78 @@ namespace MiskoPersist.Serialization
 	public class JsonFormatter : Serializer, IFormatter
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(JsonFormatter));
-		
-		#region Fields
-		
 
-		
-		#endregion
-		
-		#region Properties
-		
-		
-		
-		#endregion
+        #region Fields
 
-		#region IFormatter implementation
 
-		public Object Deserialize(Stream serializationStream)
-		{
-			using (StreamReader reader = new StreamReader(serializationStream))
-			{
-				using (JsonReader jr = new JsonTextReader(reader))
-				{
-					JObject jObject = JObject.Load(jr);
-					Type objectType = Type.GetType((String)jObject["Type"]);
-					if (!objectType.IsSubclassOf(typeof(CoreMessage)))
-					{
-						throw new MiskoException("Can only deserialize messages");
-					}
-					return InitializeObject(jObject, objectType);
-				}
-			}
-		}
 
-		public void Serialize(Stream serializationStream, Object graph)
-		{
-			if (graph == null)
-			{
-				return;
-			}
+        #endregion
 
-			if (serializationStream == null)
-			{
-				throw new ArgumentException("Empty serializationStream!");
-			}
-			
-			Stopwatch stopwatch = Stopwatch.StartNew();
-			using (StreamWriter streamWriter = new StreamWriter(serializationStream))
-			{
-				using (JsonTextWriter writer = new JsonTextWriter(streamWriter))
-				{
-					#if DEBUG
-					writer.Formatting = Formatting.Indented;
-					#endif
-					
-					writer.WriteStartObject();
-					writer.WritePropertyName("Type");
-					writer.WriteValue(graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
-					Serialize(writer, graph);
-					writer.WriteEndObject();
-					writer.Flush();
-				}
-			}
-			stopwatch.Stop();
-			
-			Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
-		}
+        #region Properties
 
-		#endregion
-		
-		#region Serialization
-		
-		private void Serialize(JsonWriter writer, Object objectToSerialize)
+
+
+        #endregion
+
+        #region IFormatter implementation
+
+        Object IFormatter.Deserialize(Stream serializationStream)
+        {
+            serializationStream.Position = 0;
+            using (StreamReader reader = new StreamReader(serializationStream, ENCODING))
+            {
+                using (JsonReader jr = new JsonTextReader(reader))
+                {
+                    JObject jObject = JObject.Load(jr);
+                    Type objectType = Type.GetType((String)jObject["Type"]);
+                    if (!objectType.IsSubclassOf(typeof(CoreMessage)))
+                    {
+                        throw new MiskoException("Can only deserialize messages");
+                    }
+                    return InitializeObject(jObject, objectType);
+                }
+            }
+        }
+
+        void IFormatter.Serialize(Stream serializationStream, Object graph)
+        {
+            if (graph == null)
+            {
+                return;
+            }
+
+            if (serializationStream == null)
+            {
+                throw new ArgumentNullException(nameof(serializationStream));
+            }
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            using (StreamWriter streamWriter = new StreamWriter(serializationStream, ENCODING))
+            {
+                using (JsonTextWriter writer = new JsonTextWriter(streamWriter))
+                {
+                    #if DEBUG
+                    writer.Formatting = Formatting.Indented;
+                    #endif
+
+                    writer.WriteStartObject();
+                    writer.WritePropertyName("Type");
+                    writer.WriteValue(graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
+                    Serialize(writer, graph);
+                    writer.WriteEndObject();
+                    writer.Flush();
+                }
+            }
+            stopwatch.Stop();
+
+            Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
+        }
+
+        #endregion
+
+        #region Serialization
+
+        private void Serialize(JsonWriter writer, Object objectToSerialize)
 		{
 			foreach (SerializationElement element in GetMemberInfo(objectToSerialize))
 			{

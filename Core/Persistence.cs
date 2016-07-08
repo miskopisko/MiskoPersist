@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using log4net;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
@@ -433,7 +434,8 @@ namespace MiskoPersist.Core
 			try
 			{
 				Int32 ordinal = mRs_.GetOrdinal(key);
-				return !mRs_.IsDBNull(ordinal) ? mRs_.GetString(ordinal).Trim() : "";
+				String value = !mRs_.IsDBNull(ordinal) ? mRs_.GetString(ordinal).Trim() : "";
+				return Regex.Replace(value, @"\r\n|\n\r|\n|\r", Environment.NewLine);
 			}
 			catch (IndexOutOfRangeException)
 			{

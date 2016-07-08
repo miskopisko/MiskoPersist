@@ -24,7 +24,7 @@ namespace MiskoPersist.Serialization
 		
 		internal static readonly String DATEFORMAT = "yyyyMMddHHmmss";
 		internal static readonly String MONEYFORMAT = "F4";
-		internal static readonly Encoding ENCODING = Encoding.GetEncoding("ISO-8859-1");
+        public static readonly Encoding ENCODING = new UTF8Encoding(false);
 		
 		#endregion
 		
@@ -77,48 +77,53 @@ namespace MiskoPersist.Serialization
 		
 		#endregion
 		
-		#region Public Methods
+		#region Public Static Methods
 		
-		public static String Serialize(CoreMessage message, SerializationType serializationType)
+		public static String Serialize(CoreMessage message)
 		{
 			if (message == null)
 			{
-				throw new ArgumentNullException("message");
+				throw new ArgumentNullException(nameof(message));
 			}
-			
+
 			using (MemoryStream ms = new MemoryStream())
 			{
-				IFormatter formatter = serializationType.Equals(SerializationType.Xml) ? (IFormatter)new XmlFormatter() : (IFormatter)new JsonFormatter();
-				formatter.Serialize(ms, message);
+				message.SerializationType.GetFormatter().Serialize(ms, message);
 				return ENCODING.GetString(ms.ToArray());
 			}
 		}
 		
 		public static CoreMessage Deserialize(String str)
 		{
-			using (MemoryStream ms = new MemoryStream(ENCODING.GetBytes(str)))
+            using (MemoryStream ms = new MemoryStream(ENCODING.GetBytes(str)))
 			{
-				return Deserialize(ms, GetSerializationType(str));
+				return Deserialize(ms);
 			}
 		}
 		
-		public static CoreMessage Deserialize(Stream stream, SerializationType serializationType)
+		public static CoreMessage Deserialize(Stream stream)
 		{
-			IFormatter formatter = serializationType.Equals(SerializationType.Xml) ? (IFormatter)new XmlFormatter() : (IFormatter)new JsonFormatter();
-			return (CoreMessage)formatter.Deserialize(stream);
-		}
-		
-		public static SerializationType GetSerializationType(String str)
-		{
-			if (str.StartsWith("<", StringComparison.Ordinal))
-			{
-				return SerializationType.Xml;
-			}
-			if (str.StartsWith("{", StringComparison.Ordinal))
-			{
-				return SerializationType.Json;
-			}
-			throw new MiskoException("Invalid input. Not a valid XML or Json string.");
+            stream.Position = 0;
+            int firstByte = stream.ReadByte();
+
+            CoreMessage result = null;
+            if (firstByte.Equals(ENCODING.GetBytes("<")[0]))
+            {
+                XmlFormatter formatter = new XmlFormatter();
+                result = (CoreMessage)((IFormatter)formatter).Deserialize(stream);
+                result.SerializationType = SerializationType.Xml;
+            }
+            else if (firstByte.Equals(ENCODING.GetBytes("{")[0]))
+            {
+                JsonFormatter formatter = new JsonFormatter();
+                result = (CoreMessage)((IFormatter)formatter).Deserialize(stream);
+                result.SerializationType = SerializationType.Json;
+            }
+            else
+            {
+			    throw new MiskoException("Unable to determine serialization method");
+            }
+            return result;
 		}
 		
 		#endregion
