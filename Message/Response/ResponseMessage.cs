@@ -73,21 +73,7 @@ namespace MiskoPersist.Message.Response
 				mWarnings_ = value;
 			}
 		}
-		
-		[Viewed(typeof(ResponseMessage), "TimeSpanSerializer", "TimeSpanDeserializer")]
-		public TimeSpan? MessageExecutionTime
-		{
-			get;
-			set;
-		}
 
-		[Viewed(typeof(ResponseMessage), "TimeSpanSerializer", "TimeSpanDeserializer")]
-		public TimeSpan? SqlExecutionTime
-		{
-			get;
-			set;
-		}
-		
 		#endregion
 
 		#region Properties

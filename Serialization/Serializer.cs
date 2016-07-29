@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -7,14 +8,13 @@ using System.Text;
 using log4net;
 using Message;
 using MiskoPersist.Attributes;
-using MiskoPersist.Core;
 using MiskoPersist.Data;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Serialization
 {
-	public class Serializer
+    public class Serializer
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Serializer));
 
@@ -79,16 +79,21 @@ namespace MiskoPersist.Serialization
 		
 		#region Public Static Methods
 		
-		public static String Serialize(CoreMessage message)
+		public static String Serialize(CoreMessage message, SerializationType serializationType)
 		{
 			if (message == null)
 			{
-				throw new ArgumentNullException(nameof(message));
+				throw new ArgumentNullException("message");
+			}
+			
+			if (serializationType == null)
+			{
+				throw new ArgumentNullException("serializationType");
 			}
 
 			using (MemoryStream ms = new MemoryStream())
 			{
-				message.SerializationType.GetFormatter().Serialize(ms, message);
+				serializationType.GetFormatter().Serialize(ms, message);
 				return ENCODING.GetString(ms.ToArray());
 			}
 		}
@@ -103,26 +108,28 @@ namespace MiskoPersist.Serialization
 		
 		public static CoreMessage Deserialize(Stream stream)
 		{
-            stream.Position = 0;
+			CoreMessage result = null;            
+			SerializationType serializationtype = SerializationType.NULL;            
+            
+			stream.Position = 0;
             int firstByte = stream.ReadByte();
-
-            CoreMessage result = null;
             if (firstByte.Equals(ENCODING.GetBytes("<")[0]))
             {
-                XmlFormatter formatter = new XmlFormatter();
-                result = (CoreMessage)((IFormatter)formatter).Deserialize(stream);
-                result.SerializationType = SerializationType.Xml;
+                serializationtype = SerializationType.Xml;
             }
             else if (firstByte.Equals(ENCODING.GetBytes("{")[0]))
             {
-                JsonFormatter formatter = new JsonFormatter();
-                result = (CoreMessage)((IFormatter)formatter).Deserialize(stream);
-                result.SerializationType = SerializationType.Json;
+                serializationtype = SerializationType.Json;
             }
-            else
+            
+            if(serializationtype != null && serializationtype.IsSet)
             {
-			    throw new MiskoException("Unable to determine serialization method");
+            	Stopwatch stopwatch = Stopwatch.StartNew();
+            	result = (CoreMessage) serializationtype.GetFormatter().Deserialize(stream);
+            	stopwatch.Stop();
+            	Log.Debug(String.Format("{0} to {1} : {2}", serializationtype, result.GetType().Name, stopwatch.Elapsed));
             }
+            
             return result;
 		}
 		

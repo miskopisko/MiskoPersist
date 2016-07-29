@@ -53,16 +53,13 @@ namespace MiskoPersist.Serialization
 
             if (serializationStream == null)
             {
-                throw new ArgumentNullException(nameof(serializationStream));
+                throw new ArgumentNullException("serializationStream");
             }
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             using (XmlTextWriter writer = new XmlTextWriter(serializationStream, ENCODING))
             {
-                #if DEBUG
                 writer.Formatting = Formatting.Indented;
-                #endif
-
                 writer.WriteStartDocument();
                 writer.WriteStartElement(graph.GetType().Name);
                 writer.WriteAttributeString("Type", null, graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);

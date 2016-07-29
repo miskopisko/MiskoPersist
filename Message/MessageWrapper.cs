@@ -23,11 +23,7 @@ namespace MiskoPersist.Message
 
 		#endregion
 
-		#region Constructors
-
-		protected MessageWrapper()
-		{
-		}
+		#region Constructor
 
 		protected MessageWrapper(RequestMessage request, ResponseMessage response)
 		{

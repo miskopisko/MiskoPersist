@@ -17,7 +17,6 @@ namespace Message
 		#region Fields
 
 		private ErrorMessages mConfirmations_ = new ErrorMessages();
-        private SerializationType mSerializationType_;
 
 		#endregion
 		
@@ -39,22 +38,6 @@ namespace Message
 		#endregion
 
 		#region Properties
-
-        public SerializationType SerializationType
-        {
-            get
-            {
-                if(mSerializationType_ == null)
-                {
-                    throw new ArgumentNullException("mSerializationType_");
-                }
-                return mSerializationType_;
-            }
-            set
-            {
-                mSerializationType_ = value;
-            }
-        }
 		
 		public Boolean HasConfirmations
 		{
@@ -135,16 +118,16 @@ namespace Message
 					msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
 					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
-				else
+                else if (this is ResponseMessage)
 				{
 					msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
 					msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
 					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
-				if (wrapperClass == null)
-				{
-					throw new MiskoException("Could not find wrapper class {0}", msgPath + msgName);
-				}
+                else
+                {
+                    wrapperClass = GetType();
+                }
 				return wrapperClass;
 			}
 		}

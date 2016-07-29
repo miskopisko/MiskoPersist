@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -37,8 +38,6 @@ namespace MiskoPersist.Core
 		public delegate void InfoHandler(ErrorMessage message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public delegate void ConfirmHandler(ErrorMessage message, ConfirmationEventArgs args);
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public delegate void DebugHandler(CoreMessage message);
 		
 		#endregion
 		
@@ -51,7 +50,6 @@ namespace MiskoPersist.Core
 		public static event WarningHandler Warning;
 		public static event InfoHandler Info;
 		public static event ConfirmHandler Confirm;
-		public static event DebugHandler Debug;
 		
 		#endregion
 		
@@ -102,12 +100,12 @@ namespace MiskoPersist.Core
 			mErrorHandler_ = errorHandler;
 			
 			// Do some validations
-			if (Location == null || Location.IsNotSet)
-			{
-				throw new MiskoException("Server location is not defined");
-			}
+			//if (Location == null || Location.IsNotSet)
+			//{
+			//	throw new MiskoException("Server location is not defined");
+			//}
 			
-			if (Location.Equals(ServerLocation.Online))
+			if (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online))
 			{
 				if (String.IsNullOrEmpty(Host))
 				{
@@ -129,8 +127,6 @@ namespace MiskoPersist.Core
 					throw new MiskoException("Serialization type is not defined");
 				}
 			}
-
-            mRequest_.SerializationType = SerializationType;
 		}
 		
 		#endregion
@@ -152,11 +148,17 @@ namespace MiskoPersist.Core
 		{
 			Invoke(Status, MessageStatus.Processing);
 			
-			Invoke(Debug, mRequest_);
+			if (SerializationType != null && SerializationType.IsSet)
+			{
+				Log.Debug(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType));
+			}
 			
-			ResponseMessage response = Location.Equals(ServerLocation.Local) ? MessageProcessor.Process(mRequest_) : SendToServer();
+            ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
 			
-			Invoke(Debug, response);
+			if (SerializationType != null && SerializationType.IsSet)
+			{
+				Log.Debug(Environment.NewLine + Serializer.Serialize(response, SerializationType));
+			}
 			
 			if (HandleErrors(response.ErrorMessages))
 			{
@@ -261,41 +263,44 @@ namespace MiskoPersist.Core
 		
 		private ResponseMessage SendToServer()
 		{
-			ResponseMessage responseMessage = new ResponseMessage();
+			ResponseMessage responseMessage = null;
 
-			try
-			{
-                String request = Serializer.Serialize(mRequest_);
+            try
+            {
+                String request = Serializer.Serialize(mRequest_, SerializationType);
 
-				WebRequest webRequest = WebRequest.Create(Uri);
-				webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
-				webRequest.Method = "POST";
-                webRequest.ContentType = mRequest_.SerializationType.ToHttpContentType();
+                WebRequest webRequest = WebRequest.Create(Uri);
+                webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+                webRequest.Method = "POST";
+                webRequest.ContentType = SerializationType.ToHttpContentType();
                 webRequest.Timeout = 10000; // 10 seconds
                 webRequest.ContentLength = Serializer.ENCODING.GetByteCount(request);
-				
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
                 using (StreamWriter writer = new StreamWriter(webRequest.GetRequestStream(), Serializer.ENCODING))
-				{
+                {
                     writer.Write(request);
 				}
 
-                using(MemoryStream ms = new MemoryStream())
+                using (MemoryStream ms = new MemoryStream())
                 {
                     webRequest.GetResponse().GetResponseStream().CopyTo(ms);
                     responseMessage = (ResponseMessage)Serializer.Deserialize(ms);
                 }
+
+                stopwatch.Stop();
+                Log.Debug(String.Format("{0} round trip from {1} : {2}", mRequest_.WrapperClass.Name, Uri, stopwatch.Elapsed));
 			}
 			catch (Exception ex)
 			{
-				if (ex is TargetInvocationException)
-				{
-					ex = ex.InnerException;
-				}
-				
-				responseMessage = new ResponseMessage();
-                responseMessage.SerializationType = SerializationType;
+				responseMessage = (ResponseMessage)Activator.CreateInstance(mRequest_.ResponseClass);
 				responseMessage.Status = ErrorLevel.Error;
 				responseMessage.Errors.Add(new ErrorMessage(ex));
+
+                if (ex is TargetInvocationException)
+                {
+                    ex = ex.InnerException;
+                }
 				
 				while (ex.InnerException != null)
 				{

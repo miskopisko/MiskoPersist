@@ -18,6 +18,13 @@ namespace MiskoPersist.Data
 		#endregion
 
 		#region Properties
+		
+		[Viewed]
+		public ErrorLevel ErrorLevel
+		{
+			get;
+			set;
+		}
 
 		[Viewed]
 		public String Class
@@ -32,23 +39,16 @@ namespace MiskoPersist.Data
 			get;
 			set;
 		}
+		
+		[Viewed]
+		public String Message
+		{
+			get;
+			set;
+		}
 
 		[Viewed]
 		public ErrorMessageParameters Parameters
-		{
-			get;
-			set;
-		}
-
-		[Viewed]
-		public ErrorLevel ErrorLevel
-		{
-			get;
-			set;
-		}
-
-		[Viewed]
-		public String Message
 		{
 			get;
 			set;

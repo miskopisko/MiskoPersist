@@ -59,7 +59,7 @@ namespace MiskoPersist.Serialization
 
             if (serializationStream == null)
             {
-                throw new ArgumentNullException(nameof(serializationStream));
+                throw new ArgumentNullException("serializationStream");
             }
 
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -67,10 +67,7 @@ namespace MiskoPersist.Serialization
             {
                 using (JsonTextWriter writer = new JsonTextWriter(streamWriter))
                 {
-                    #if DEBUG
                     writer.Formatting = Formatting.Indented;
-                    #endif
-
                     writer.WriteStartObject();
                     writer.WritePropertyName("Type");
                     writer.WriteValue(graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
@@ -81,7 +78,7 @@ namespace MiskoPersist.Serialization
             }
             stopwatch.Stop();
 
-            Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Xml, stopwatch.Elapsed));
+            Log.Debug(String.Format("{0} to {1} : {2}", graph.GetType().Name, SerializationType.Json, stopwatch.Elapsed));
         }
 
         #endregion

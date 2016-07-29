@@ -15,9 +15,6 @@ namespace MiskoPersist.Data
 
 		#region Constructors
 
-		public ViewedData()
-		{
-		}
 
 		#endregion
 

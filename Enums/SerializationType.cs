@@ -4,7 +4,7 @@ using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Enums
 {
-	public class SerializationType : MiskoEnum
+    public class SerializationType : MiskoEnum
 	{
 		#region Fields
 
@@ -68,10 +68,31 @@ namespace MiskoPersist.Enums
 
 			return null;
 		}
+
+        public static SerializationType FromHttpContentType(String contentType)
+        {
+            if (String.IsNullOrEmpty(contentType))
+            {
+                throw new ArgumentNullException("contentType");
+            }
+
+            if(contentType.Equals("application/xml"))
+            {
+                return SerializationType.Xml;
+            }
+            else if(contentType.Equals("application/json"))
+            {
+                return SerializationType.Json;
+            }
+            else
+            {
+                throw new FormatException("Invalid or unsupported HTTP content type");
+            }
+        }
 		
 		public String ToHttpContentType()
 		{
-			return this.Equals(Json) ? "application/json" : "application/xml";
+			return Equals(Xml) ? "application/xml" : "application/json";
 		}
 
         public IFormatter GetFormatter()
