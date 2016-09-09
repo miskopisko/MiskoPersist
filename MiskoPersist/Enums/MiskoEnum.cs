@@ -1,4 +1,5 @@
 ﻿using System;
+using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Enums
 {
@@ -59,6 +60,19 @@ namespace MiskoPersist.Enums
 		#endregion
 		
 		#region Public Static Methods
+		
+		public Boolean InArray(MiskoEnum[] list)
+		{
+			foreach (MiskoEnum element in list) 
+			{
+				if (element.Equals(this))
+				{
+					return true;
+				}
+			}
+			
+			return false;
+		}
 		
         public static T Parse<T>(Int64 value) where T : MiskoEnum
 		{			

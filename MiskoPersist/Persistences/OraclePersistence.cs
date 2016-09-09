@@ -3,6 +3,7 @@ using System.Data;
 using System.Reflection;
 using log4net;
 using MiskoPersist.Core;
+using MiskoPersist.Data;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
@@ -95,7 +96,7 @@ namespace MiskoPersist.Persistences
 					String secondHalf = mCommand_.CommandText.Substring(mCommand_.CommandText.IndexOf(param.ParameterName) + 7);
 					String middle = "";
 
-					foreach (Object o in ((Array)parameter))
+					foreach (Object o in (Array)parameter)
 					{
 						OracleParameter innerParam = new OracleParameter();
 						innerParam.ParameterName = ":param" + position;
@@ -156,7 +157,7 @@ namespace MiskoPersist.Persistences
 
 				foreach (PropertyInfo property in StoredData.GetProperties(type))
 				{
-					mSql_ += StoredData.GetColumnName(property).ToUpper() + " = ?, ";
+					mSql_ += clazz.GetColumnName(property).ToUpper() + " = ?, ";
 					mParameters_.Add(property.GetValue(clazz, null));
 				}
 				
@@ -175,7 +176,7 @@ namespace MiskoPersist.Persistences
 		{
 			if (clazz != null)
 			{
-				mSql_ += "DELETE FROM " + type.Name.ToUpper() +  " WHERE ID = ? AND ROWVER = ?";
+				mSql_ += "DELETE FROM " + type.Name.ToUpper() + " WHERE ID = ? AND ROWVER = ?";
 
 				mParameters_.Add(-clazz.Id);
 				mParameters_.Add(clazz.RowVer);
@@ -193,7 +194,7 @@ namespace MiskoPersist.Persistences
 
 				foreach (PropertyInfo property in StoredData.GetProperties(type))
 				{
-					mSql_ += ", " + StoredData.GetColumnName(property).ToUpper();
+					mSql_ += ", " + clazz.GetColumnName(property).ToUpper();
 				}
 
 				mSql_ += ") VALUES (";

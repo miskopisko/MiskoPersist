@@ -8,8 +8,8 @@ using System.Windows.Forms;
 using log4net;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
-using MiskoPersist.Message.Request;
-using MiskoPersist.Message.Response;
+using MiskoPersist.Message.Requests;
+using MiskoPersist.Message.Responses;
 using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Core
@@ -59,6 +59,7 @@ namespace MiskoPersist.Core
 		private MessageCompleteHandler mSuccessHandler_;
 		private MessageCompleteHandler mErrorHandler_;
 		private RequestMessage mRequest_;
+		private Guid? mSessionToken_;
 		
 		#endregion
 		
@@ -119,6 +120,8 @@ namespace MiskoPersist.Core
 		public Server(RequestMessage request, MessageCompleteHandler successHandler, MessageCompleteHandler errorHandler)
 		{
 			mRequest_ = request;
+			mRequest_.SessionToken = mSessionToken_;
+			
 			mSuccessHandler_ = successHandler;
 			mErrorHandler_ = errorHandler;
 			
@@ -238,6 +241,7 @@ namespace MiskoPersist.Core
 						continueProcessing = false;
 						break;
 					}
+					
 					Invoke(Status, MessageStatus.Error);
 					break;
 				}

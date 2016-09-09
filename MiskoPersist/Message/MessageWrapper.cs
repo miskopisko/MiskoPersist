@@ -1,7 +1,7 @@
 ﻿using log4net;
 using MiskoPersist.Core;
-using MiskoPersist.Message.Request;
-using MiskoPersist.Message.Response;
+using MiskoPersist.Message.Requests;
+using MiskoPersist.Message.Responses;
 
 namespace MiskoPersist.Message
 {

@@ -4,16 +4,13 @@ using log4net;
 
 namespace MiskoPersist.Data.Viewed
 {
-	public class ErrorMessageParameters : ViewedDataList
+	public class ErrorMessageParameters : ViewedDataList<ErrorMessageParameter>
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(ErrorMessageParameters));
 		
 		#region Constructors
 		
-		public ErrorMessageParameters()
-			: base(typeof(ErrorMessageParameter))
-		{
-		}
+		
 		
 		#endregion
 		

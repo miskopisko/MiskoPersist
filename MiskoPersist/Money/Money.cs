@@ -166,12 +166,12 @@ namespace MiskoPersist.MoneyType
 
 		public static Money operator *(Money left, Money right)
 		{
-			return (left * right);
+			return left * right;
 		}
 
 		public static Money operator /(Money left, Money right)
 		{
-			return (left / right);
+			return left / right;
 		}
 
 		public static Boolean operator ==(Money left, Money right)
@@ -362,7 +362,7 @@ namespace MiskoPersist.MoneyType
 
 		private Decimal computeValue()
 		{
-			return mUnits_ + mDecimalFraction_ / FractionScale;
+			return mUnits_ + (mDecimalFraction_ / FractionScale);
 		}
 
 		private InvalidOperationException differentCurrencies()
@@ -386,7 +386,7 @@ namespace MiskoPersist.MoneyType
 		{
 			unchecked
 			{
-				return (397 * mUnits_.GetHashCode());
+				return 397 * mUnits_.GetHashCode();
 			}
 		}
 
@@ -432,7 +432,7 @@ namespace MiskoPersist.MoneyType
 		{
 			if (other is Money)
 			{
-				CompareTo((Money)other);
+				return CompareTo((Money)other);
 			}
 			throw new InvalidCastException();
 		}

@@ -60,7 +60,11 @@ namespace MiskoPersist.Serialization
 			}
 			if (typeof(MiskoEnum).IsAssignableFrom(type))
 			{
-				return (MiskoEnum)typeof(MiskoEnum).GetMethod("Parse", new Type[] { typeof(Int64)}).MakeGenericMethod(type).Invoke(null, new Object[] { Int64.Parse((String)value) });
+				return (MiskoEnum)typeof(MiskoEnum).GetMethod("Parse", new[] { typeof(Int64) }).MakeGenericMethod(type).Invoke(null, new Object[] { Int64.Parse((String)value) });
+			}
+			if (typeof(Guid).IsAssignableFrom(type))
+			{
+				return Guid.Parse((String)value);
 			}
 			throw new MiskoException(String.Format("Unknown type to convert : {0}", type.Name));
 		}
@@ -74,6 +78,7 @@ namespace MiskoPersist.Serialization
 					typeof(Money).IsAssignableFrom(type) ||
 					typeof(PrimaryKey).IsAssignableFrom(type) ||
 					typeof(MiskoEnum).IsAssignableFrom(type) ||
+					typeof(Guid).IsAssignableFrom(type) ||
 					(type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)) && CanConvert(Nullable.GetUnderlyingType(type)));
 		}
 		

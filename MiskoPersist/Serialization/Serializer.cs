@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using log4net;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
+using MiskoPersist.Message;
 using MiskoPersist.MoneyType;
 
 namespace MiskoPersist.Serialization
@@ -96,16 +97,30 @@ namespace MiskoPersist.Serialization
             {
                 serializationtype = SerializationType.Json;
             }
-            
-            if(serializationtype != null && serializationtype.IsSet)
+            else
             {
-            	Stopwatch stopwatch = Stopwatch.StartNew();
-            	result = (CoreMessage) serializationtype.GetFormatter().Deserialize(stream);
-            	stopwatch.Stop();
-            	Log.Debug(String.Format("{0} to {1} : {2}", serializationtype, result.GetType().Name, stopwatch.Elapsed));
+				throw new MiskoException("Unable to determine serialization method");
             }
             
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            result = (CoreMessage)serializationtype.GetFormatter().Deserialize(stream);
+            stopwatch.Stop();
+            Log.Debug(String.Format("{0} to {1} : {2}", serializationtype, result.GetType().Name, stopwatch.Elapsed));
+            
             return result;
+		}
+		
+		public static SerializationType GetSerializationType(this String message)
+		{
+			if (message.StartsWith("<", StringComparison.OrdinalIgnoreCase))
+			{
+				return SerializationType.Xml;
+			}
+			if (message.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+			{
+				return SerializationType.Json;
+			}
+			throw new MiskoException("Unrecognized string format");
 		}
 		
 		#endregion
@@ -122,25 +137,27 @@ namespace MiskoPersist.Serialization
 			foreach (PropertyInfo property in GetViewedProperties(objectToSerialize))
 			{
 				Object propertyValue = property.GetValue(objectToSerialize);
+				
+				if (propertyValue == null)
+				{
+					continue;
+				}
 
 				if (((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedSerializer != null)
 				{
-					if (propertyValue != null)
-					{
-						String value = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedSerializer.Invoke(propertyValue);
-						yield return new SerializationElement(property.Name, typeof(String), value);
-					}
+					String value = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedSerializer.Invoke(propertyValue);
+					yield return new SerializationElement(property.Name, typeof(String), value);
 				}
 				else if (typeof(MiskoEnum).IsAssignableFrom(property.PropertyType))
 				{
-					if (propertyValue != null && ((MiskoEnum)propertyValue).IsSet)
+					if (((MiskoEnum)propertyValue).IsSet)
 					{
 						yield return new SerializationElement(property.Name, typeof(Int64), ((MiskoEnum)propertyValue).Value);
 					}
 				}
 				else if (typeof(PrimaryKey).IsAssignableFrom(property.PropertyType))
 				{
-					if (propertyValue != null && ((PrimaryKey)propertyValue).IsSet)
+					if (((PrimaryKey)propertyValue).IsSet)
 					{
 						yield return new SerializationElement(property.Name, typeof(Int64), ((PrimaryKey)propertyValue).Value);
 					}
@@ -152,35 +169,36 @@ namespace MiskoPersist.Serialization
 						yield return new SerializationElement(property.Name, typeof(String), ((DateTime)propertyValue).ToString(DateFormat));
 					}
 				}
+				else if (typeof(Guid).IsAssignableFrom(property.PropertyType) || typeof(Guid?).IsAssignableFrom(property.PropertyType))
+				{
+					if (!((Guid?)propertyValue).Equals(Guid.Empty))
+					{
+						yield return new SerializationElement(property.Name, typeof(String), ((Guid?)propertyValue).Value);
+					}
+				}
 				else if (typeof(Money).IsAssignableFrom(property.PropertyType))
                 {
-                    if (propertyValue != null)
-                    {
-                        yield return new SerializationElement(property.Name, typeof(String), ((Money)propertyValue).Value.ToString(MoneyFormat));
-                    }
+                    yield return new SerializationElement(property.Name, typeof(String), ((Money)propertyValue).Value.ToString(MoneyFormat));
                 }
 				else if (typeof(String).IsAssignableFrom(property.PropertyType))
 				{
-					if (!String.IsNullOrEmpty(((String)propertyValue)))
+					if (!String.IsNullOrEmpty((String)propertyValue))
 					{
 						yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
 					}
 				}
 				else if (property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
 				{
-					if (propertyValue != null)
-					{
-						yield return new SerializationElement(property.Name, Nullable.GetUnderlyingType(property.PropertyType), propertyValue);
-					}
+					yield return new SerializationElement(property.Name, Nullable.GetUnderlyingType(property.PropertyType), propertyValue);
 				}
-				else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+				else if (property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 				{
-					if (propertyValue != null && ((ViewedDataList)propertyValue).Count > 0)
-					{
-						yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
-					}
+					if (((IList)propertyValue).Count > 0)
+				    {
+				    	yield return new SerializationElement(property.Name, property.PropertyType.BaseType, propertyValue);	
+				    }
 				}
-				else if (propertyValue != null)
+				else
 				{
 					yield return new SerializationElement(property.Name, property.PropertyType, propertyValue);
 				}

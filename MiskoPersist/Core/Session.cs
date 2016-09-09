@@ -7,7 +7,7 @@ using System.Reflection;
 using log4net;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
-using MiskoPersist.Message.Request;
+using MiskoPersist.Message.Requests;
 using MiskoPersist.Resources;
 
 namespace MiskoPersist.Core
@@ -102,7 +102,7 @@ namespace MiskoPersist.Core
 					if (request != null)
 					{
 						MessageMode = request.MessageMode ?? MessageMode.Normal;
-						ErrorMessages.Concatenate(request.Confirmations);
+						ErrorMessages.Add(request.Confirmations);
 					}
 					
 					if (Connection != null)
@@ -123,7 +123,7 @@ namespace MiskoPersist.Core
 			{
 				if (Transaction != null)
 				{
-					if (!Status.IsCommitable || MessageMode.Equals(MessageMode.Trial))
+					if (!Status.IsCommitable() || MessageMode.Equals(MessageMode.Trial))
 					{
 						Transaction.Rollback();
 					}

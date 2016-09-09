@@ -86,7 +86,7 @@ namespace MiskoPersist.Persistences
 					String secondHalf = mCommand_.CommandText.Substring(mCommand_.CommandText.IndexOf(param.ParameterName) + 7);
 					String middle = "";
 
-					foreach (Object o in ((Array)parameter))
+					foreach (Object o in (Array)parameter)
 					{
 						OleDbParameter innerParam = new OleDbParameter();
 						innerParam.ParameterName = position.ToString();

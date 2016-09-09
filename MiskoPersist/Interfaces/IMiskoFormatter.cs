@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MiskoPersist.Serialization
+namespace MiskoPersist.Interfaces
 {
 	public interface IMiskoFormatter
 	{

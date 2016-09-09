@@ -4,10 +4,10 @@ using log4net;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Viewed;
-using MiskoPersist.Message.Request;
-using MiskoPersist.Message.Response;
+using MiskoPersist.Message.Requests;
+using MiskoPersist.Message.Responses;
 
-namespace Message
+namespace MiskoPersist.Message
 {
 	public class CoreMessage : ViewedData
 	{
@@ -20,6 +20,13 @@ namespace Message
 		#endregion
 		
 		#region Viewed Properties
+		
+		[Viewed]
+		public Guid? SessionToken
+		{
+			get;
+			set;
+		}
 		
 		[Viewed]
 		public ErrorMessages Confirmations
@@ -86,7 +93,7 @@ namespace Message
 				if (this is RequestMessage)
 				{
 					String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
-					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");					
 					Type responseClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + "Responses." + msgName + "RS"));
 					if (responseClass == null)
 					{

@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Xml;
 using log4net;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
+using MiskoPersist.Interfaces;
+using MiskoPersist.Message;
 
 namespace MiskoPersist.Serialization
 {
@@ -83,9 +85,9 @@ namespace MiskoPersist.Serialization
 					writer.WriteValue(element.ElementValue.ToString());
 					writer.WriteEndElement();
 				}
-				else if (typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
+				else if (element.ElementType.IsGenericType && element.ElementType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 				{
-					foreach (ViewedData viewedData in (ViewedDataList)element.ElementValue)
+					foreach (ViewedData viewedData in (IList)element.ElementValue)
 					{
 						writer.WriteStartElement(element.ElementName);
 						Serialize(writer, viewedData);
@@ -125,13 +127,13 @@ namespace MiskoPersist.Serialization
 				{
 					obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke(GetElement(node, property.Name));
 				}
-				else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+				else if (property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 				{
 					obj = Activator.CreateInstance(property.PropertyType);
 					foreach (XmlNode innerNode in node.SelectNodes(property.Name))
 					{
-						ViewedData data = (ViewedData)InitializeObject(innerNode, ((ViewedDataList)obj).ViewedDataType);
-						((ViewedDataList)obj).Add(data);
+						ViewedData data = (ViewedData)InitializeObject(innerNode, property.PropertyType.BaseType.GetGenericArguments()[0]);
+						((IList)obj).Add(data);
 					}
 				}
 				else

@@ -29,14 +29,6 @@ namespace MiskoPersist.Enums
 		public static ErrorLevel Warning { get { return mWarning_; } }
 		public static ErrorLevel Confirmation { get { return mConfirmation_; } }
 		public static ErrorLevel Error { get { return mError_; } }
-
-		public Boolean IsCommitable
-		{
-			get
-			{
-				return this == Success || this == Warning || this == Information;
-			}
-		}
 		
 		#endregion
 
@@ -51,6 +43,15 @@ namespace MiskoPersist.Enums
 		{
 		}
 
+		#endregion
+		
+		#region Helpers
+		
+		public Boolean IsCommitable()
+		{
+			return this == Success || this == Warning || this == Information;
+		}
+		
 		#endregion
 	}
 }

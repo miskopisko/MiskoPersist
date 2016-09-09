@@ -4,7 +4,7 @@ using MiskoPersist.Enums;
 
 namespace MiskoPersist.Data.Viewed
 {
-	public class ErrorMessages : ViewedDataList
+	public class ErrorMessages : ViewedDataList<ErrorMessage>
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(ErrorMessages));
 
@@ -22,10 +22,7 @@ namespace MiskoPersist.Data.Viewed
 
 		#region Constructors
 
-		public ErrorMessages()
-			: base(typeof(ErrorMessage))
-		{
-		}
+		
 
 		#endregion
 

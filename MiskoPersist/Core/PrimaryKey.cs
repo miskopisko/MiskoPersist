@@ -9,7 +9,7 @@ namespace MiskoPersist.Core
 
 		#region Fields
 		
-		
+		public static readonly PrimaryKey NULL = new PrimaryKey();
 
 		#endregion
 
@@ -26,14 +26,6 @@ namespace MiskoPersist.Core
 			get
 			{
 				return Value != 0;
-			}
-		}
-
-		public Boolean IsNotSet
-		{
-			get
-			{
-				return !IsSet;
 			}
 		}
 

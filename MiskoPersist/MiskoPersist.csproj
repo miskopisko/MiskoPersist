@@ -100,14 +100,17 @@
     <Compile Include="Core\DatabaseConnection.cs" />
     <Compile Include="Core\MessageProcessor.cs" />
     <Compile Include="Core\Server.cs" />
+    <Compile Include="Data\Data.cs" />
+    <Compile Include="Data\Stored\Operator.cs" />
+    <Compile Include="Data\Stored\SessionLog.cs" />
     <Compile Include="Enums\DatabaseType.cs" />
     <Compile Include="Enums\MessageStatus.cs" />
     <Compile Include="Enums\SerializationType.cs" />
     <Compile Include="Enums\SqlSortDirection.cs" />
+    <Compile Include="Interfaces\IMiskoFormatter.cs" />
     <Compile Include="Money\MidpointRoundingRule.cs" />
     <Compile Include="Money\RoundingPlaces.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />
-    <Compile Include="Serialization\IMiskoFormatter.cs" />
     <Compile Include="Serialization\MiskoConverter.cs" />
     <Compile Include="Serialization\Serializer.cs" />
     <Compile Include="Serialization\JsonFormatter.cs" />
@@ -116,8 +119,8 @@
     <Compile Include="Attributes\ViewedAttribute.cs" />
     <Compile Include="Enums\MessageMode.cs" />
     <Compile Include="Message\MessageWrapper.cs" />
-    <Compile Include="Message\Request\RequestMessage.cs" />
-    <Compile Include="Message\Response\ResponseMessage.cs" />
+    <Compile Include="Message\Requests\RequestMessage.cs" />
+    <Compile Include="Message\Responses\ResponseMessage.cs" />
     <Compile Include="Money\Currency.cs" />
     <Compile Include="Core\MiskoException.cs" />
     <Compile Include="Core\Persistence.cs" />
@@ -126,7 +129,6 @@
     <Compile Include="Persistences\SqlitePersistence.cs" />
     <Compile Include="Core\Session.cs" />
     <Compile Include="Tools\PasswordHash.cs" />
-    <Compile Include="Tools\Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Enums\MiskoEnum.cs" />
     <Compile Include="Enums\ErrorLevel.cs" />
@@ -193,11 +195,17 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="DatabaseScripts\Sqlite\Tables.sql" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DatabaseScripts\MySql" />
+    <Folder Include="DatabaseScripts\Oracle" />
+    <Folder Include="DatabaseScripts\Sqlite" />
     <Folder Include="Data\Viewed\" />
     <Folder Include="Data\Stored\" />
+    <Folder Include="DatabaseScripts" />
+    <Folder Include="Interfaces" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

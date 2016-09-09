@@ -6,8 +6,8 @@ using log4net;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
 using MiskoPersist.Message;
-using MiskoPersist.Message.Request;
-using MiskoPersist.Message.Response;
+using MiskoPersist.Message.Requests;
+using MiskoPersist.Message.Responses;
 
 namespace MiskoPersist.Core
 {
@@ -32,10 +32,10 @@ namespace MiskoPersist.Core
 			{
 				session = new Session(DatabaseConnections.GetConnection(request.Connection));
                 response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);
-				MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, BindingFlags.CreateInstance, null, new Object[] { request, response }, null, null);
-
+                MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, request, response);
+                
 				session.BeginTransaction(request);
-				wrapper.GetType().InvokeMember(request.Command ?? "Execute", BindingFlags.Default | BindingFlags.InvokeMethod, null, wrapper, new Object[] { session });				
+				wrapper.Execute(session);
 			}
             catch(Exception ex)
             {

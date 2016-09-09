@@ -1,11 +1,10 @@
 ﻿using System;
 using log4net;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
 
-namespace MiskoPersist.Message.Response
+namespace MiskoPersist.Message.Responses
 {
 	public class ResponseMessage : CoreMessage
 	{

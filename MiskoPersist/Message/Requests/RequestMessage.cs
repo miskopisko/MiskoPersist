@@ -1,10 +1,9 @@
 ﻿using System;
 using log4net;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Enums;
 
-namespace MiskoPersist.Message.Request
+namespace MiskoPersist.Message.Requests
 {
 	public class RequestMessage : CoreMessage
 	{

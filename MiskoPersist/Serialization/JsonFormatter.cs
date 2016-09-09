@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using log4net;
-using Message;
 using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
+using MiskoPersist.Interfaces;
+using MiskoPersist.Message;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -90,11 +92,11 @@ namespace MiskoPersist.Serialization
 					writer.WritePropertyName(element.ElementName);
 					writer.WriteValue(element.ElementValue.ToString());
 				}
-				else if (typeof(ViewedDataList).IsAssignableFrom(element.ElementType))
+				else if (element.ElementType.IsGenericType && element.ElementType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 				{
 					writer.WritePropertyName(element.ElementName);
 					writer.WriteStartArray();
-					foreach (ViewedData viewedData in (ViewedDataList)element.ElementValue)
+					foreach (ViewedData viewedData in (IList)element.ElementValue)
 					{
 						writer.WriteStartObject();
 						Serialize(writer, viewedData);
@@ -136,15 +138,15 @@ namespace MiskoPersist.Serialization
 				{
 					obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke((String)token[property.Name]);
 				}
-				else if (typeof(ViewedDataList).IsAssignableFrom(property.PropertyType))
+				else if (property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 				{
 					obj = Activator.CreateInstance(property.PropertyType);
 					if (token[property.Name] != null)
 					{
 						foreach (var innerToken in token[property.Name])
 						{
-							ViewedData data = (ViewedData)InitializeObject(innerToken, ((ViewedDataList)obj).ViewedDataType);
-							((ViewedDataList)obj).Add(data);
+							ViewedData data = (ViewedData)InitializeObject(innerToken, property.PropertyType.BaseType.GetGenericArguments()[0]);
+							((IList)obj).Add(data);
 						}
 					}
 				}

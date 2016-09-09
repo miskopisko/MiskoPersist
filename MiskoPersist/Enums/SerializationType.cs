@@ -1,5 +1,6 @@
 ﻿using System;
 using MiskoPersist.Core;
+using MiskoPersist.Interfaces;
 using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Enums

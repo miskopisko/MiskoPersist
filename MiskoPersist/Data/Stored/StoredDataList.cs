@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using log4net;
 using MiskoPersist.Core;
 
 namespace MiskoPersist.Data.Stored
 {
-	public class StoredDataList : CollectionBase
+	public class StoredDataList<T> : List<T> where T : StoredData, new()
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(StoredDataList));
+		private static ILog Log = LogManager.GetLogger(typeof(StoredDataList<T>));
 		
 		#region Fields
 
@@ -17,26 +18,14 @@ namespace MiskoPersist.Data.Stored
 
 		#region Properties
 
-		public Type StoredDataType
-		{
-			get;
-			private set;
-		}
+		
 
 		#endregion
 
 		#region Constructors
 
-		public StoredDataList(Type itemType)
-		{
-			if (!typeof(StoredData).IsAssignableFrom(itemType))
-			{
-				throw new MiskoException("Cannot add {0} to a StoredDataList", itemType);
-			}
-			
-			StoredDataType = itemType;
-		}
-
+				
+		
 		#endregion
 
 		#region Private Methods
@@ -59,7 +48,7 @@ namespace MiskoPersist.Data.Stored
 		{
 			while (!persistence.IsEof)
 			{
-				StoredData data = (StoredData)Activator.CreateInstance(StoredDataType);
+				T data = new T();
 				data.Set(session, persistence);
 				((IList)this).Add(data);
 				persistence.Next();
@@ -69,13 +58,13 @@ namespace MiskoPersist.Data.Stored
 		public void FetchAll(Session session)
 		{
 			Persistence persistence = Persistence.GetInstance(session);
-			persistence.ExecuteQuery("SELECT * FROM " + StoredDataType.Name);
+			persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
 			Set(session, persistence);
 			persistence.Close();
 			persistence = null;
 		}
 
-		public void AddRange(StoredDataList list)
+		public void AddRange(StoredDataList<T> list)
 		{
 			foreach (StoredData item in list)
 			{

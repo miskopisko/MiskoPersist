@@ -97,7 +97,7 @@ namespace MiskoPersist.Persistences
 					String secondHalf = mCommand_.CommandText.Substring(mCommand_.CommandText.IndexOf(param.ParameterName) + 7);
 					String middle = "";
 
-					foreach (Object o in ((Array)parameter))
+					foreach (Object o in (Array)parameter)
 					{
 						SQLiteParameter innerParam = new SQLiteParameter();
 						innerParam.ParameterName = "@param" + position;
@@ -195,7 +195,7 @@ namespace MiskoPersist.Persistences
 
 				foreach (PropertyInfo property in StoredData.GetProperties(type))
 				{
-					mSql_ += StoredData.GetColumnName(property) + " = ?, ";
+					mSql_ += clazz.GetColumnName(property) + " = ?, ";
 					mParameters_.Add(property.GetValue(clazz, null));
 				}
 
@@ -232,7 +232,7 @@ namespace MiskoPersist.Persistences
 
 				foreach (PropertyInfo property in StoredData.GetProperties(type))
 				{
-					mSql_ += ", " + StoredData.GetColumnName(property);
+					mSql_ += ", " + clazz.GetColumnName(property);
 				}
 
 				mSql_ += ") VALUES (?";
