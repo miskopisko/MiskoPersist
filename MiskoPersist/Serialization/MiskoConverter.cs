@@ -18,6 +18,10 @@ namespace MiskoPersist.Serialization
 			{
 				return null;
 			}
+			if (type.IsEnum)
+			{
+				return Enum.Parse(type, value);
+			}
 			if (type.Equals(typeof(String)))
 			{
 				return (String)value;
@@ -49,23 +53,23 @@ namespace MiskoPersist.Serialization
 			if (type.Equals(typeof(Int64)) || type.Equals(typeof(Int64?)))
 			{
 				return Int64.Parse((String)value);
-			}
-			if (type.Equals(typeof(Money)))
+			}			
+			if (type.Equals(typeof(Money)) || type.Equals(typeof(Money?)))
 			{
 				return new Money((String)value); 
 			}
-			if (type.Equals(typeof(PrimaryKey)))
+			if (type.Equals(typeof(PrimaryKey)) || type.Equals(typeof(PrimaryKey?)))
 			{
 				return new PrimaryKey((String)value);
-			}
+			}			
 			if (typeof(MiskoEnum).IsAssignableFrom(type))
 			{
 				return (MiskoEnum)typeof(MiskoEnum).GetMethod("Parse", new[] { typeof(Int64) }).MakeGenericMethod(type).Invoke(null, new Object[] { Int64.Parse((String)value) });
 			}
-			if (typeof(Guid).IsAssignableFrom(type))
+			if (type.Equals(typeof(Guid)) || type.Equals(typeof(Guid?)))
 			{
 				return Guid.Parse((String)value);
-			}
+			}			
 			throw new MiskoException(String.Format("Unknown type to convert : {0}", type.Name));
 		}
 		
@@ -74,6 +78,7 @@ namespace MiskoPersist.Serialization
 			return 	type.IsPrimitive ||
 					type.IsEnum ||
 					typeof(String).IsAssignableFrom(type) ||
+					typeof(Decimal).IsAssignableFrom(type) ||
 					typeof(DateTime).IsAssignableFrom(type) ||
 					typeof(Money).IsAssignableFrom(type) ||
 					typeof(PrimaryKey).IsAssignableFrom(type) ||

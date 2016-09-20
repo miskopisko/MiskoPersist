@@ -21,14 +21,33 @@ namespace MiskoPersist.Data.Stored
         #region Stored Properties
 
         [Stored(Length = 128)]
-        public String Username { get; set; }
+        public String Username
+        { 
+        	get;
+        	set; 
+        }
+        
         [Stored(Length = 32)]
-        public String Password { get; set; }
+        public String Password
+        { 
+        	get;
+        	set; 
+        }
+        
         [Stored(Length = 128)]
-        public String FirstName { get; set; }
+        public String FirstName
+        { 
+        	get;
+        	set; 
+        }
+        
         [Stored(Length = 128)]
-        public String LastName { get; set; }
-
+        public String LastName
+        { 
+        	get;
+        	set; 
+        }
+        
         #endregion
 
         #region Other Properties

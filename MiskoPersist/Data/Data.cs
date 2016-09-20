@@ -198,9 +198,19 @@ namespace MiskoPersist.Data
 					{
 						property.SetValue(this, persistence.GetMoney(columnName));
 					}
+					else if (property.PropertyType == typeof(Money?))
+					{
+						Decimal? value = persistence.GetDecimal(columnName);
+						property.SetValue(this, value.HasValue ? new Money(value.Value) : (Money?)null);
+					}
 					else if (property.PropertyType == typeof(PrimaryKey))
 					{
 						property.SetValue(this, persistence.GetPrimaryKey(columnName));
+					}
+					else if (property.PropertyType == typeof(PrimaryKey?))
+					{						
+						Int64? value = persistence.GetLong(columnName);
+						property.SetValue(this, value.HasValue ? new PrimaryKey(value.Value) : (PrimaryKey?)null);
 					}
 					else if (property.PropertyType.IsSubclassOf(typeof(MiskoEnum)))
 					{

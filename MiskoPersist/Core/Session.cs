@@ -70,9 +70,9 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-        public Session(DbConnection connection)
+        public Session(DatabaseConnection? databaseConnection)
         {
-			Connection = connection;
+        	Connection = databaseConnection.HasValue ? databaseConnection.Value.GetConnection() : null;
             PersistencePool = new List<Persistence>();
             Status = ErrorLevel.Success;
             MessageMode = MessageMode.Normal;

@@ -4,7 +4,7 @@ using MiskoPersist.Attributes;
 
 namespace MiskoPersist.Data.Viewed
 {
-	public class Page
+    public class Page : ViewedData
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Page));
 

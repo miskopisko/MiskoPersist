@@ -5,7 +5,6 @@ using MiskoPersist.Core;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
-using MiskoPersist.Serialization;
 using MySql.Data.MySqlClient;
 
 namespace MiskoPersist.Persistences
@@ -164,7 +163,7 @@ namespace MiskoPersist.Persistences
 					param.Value = parameter;
 					param.MySqlDbType = MySqlDbType.DateTime;
 					mCommand_.Parameters.Add(param);
-					mParameterString_ += ((DateTime)param.Value).ToString(Serializer.DateFormat) + ", ";
+					mParameterString_ += ((DateTime)param.Value) + ", ";
 				}
 				else if (parameter is Boolean)
 				{

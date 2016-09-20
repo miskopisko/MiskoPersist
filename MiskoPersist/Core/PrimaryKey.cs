@@ -9,7 +9,7 @@ namespace MiskoPersist.Core
 
 		#region Fields
 		
-		public static readonly PrimaryKey NULL = new PrimaryKey();
+		
 
 		#endregion
 

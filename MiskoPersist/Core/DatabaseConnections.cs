@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Data.OleDb;
-using System.Data.SQLite;
 using log4net;
 using MiskoPersist.Enums;
-using MySql.Data.MySqlClient;
-using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Core
 {
@@ -22,13 +17,7 @@ namespace MiskoPersist.Core
 		
 		#region Properties
 		
-		public static Dictionary<String, DatabaseConnection> Connections
-		{
-			get
-			{
-				return mConnections_;
-			}
-		}
+		
 		
 		#endregion
 		
@@ -40,32 +29,19 @@ namespace MiskoPersist.Core
 		
 		#region Static Methods
 
-		public static DbConnection GetConnection(String name)
+		public static DatabaseConnection? GetDatabaseConnection(String name)
 		{
-			name = name ?? "Default";
-			
-			if (mConnections_.ContainsKey(name))
-			{
-				DatabaseConnection databaseConnection = mConnections_[name];
-				
-				if (databaseConnection.DatabaseType.Equals(DatabaseType.SQLite))
-				{
-					return new SQLiteConnection(databaseConnection.ConnectionString);
-				}
-				if (databaseConnection.DatabaseType.Equals(DatabaseType.MySql))
-				{
-					return new MySqlConnection(databaseConnection.ConnectionString);
-				}
-				if (databaseConnection.DatabaseType.Equals(DatabaseType.Oracle))
-				{
-					return new OracleConnection(databaseConnection.ConnectionString);
-				}
-				if (databaseConnection.DatabaseType.Equals(DatabaseType.FoxPro))
-				{
-					return new OleDbConnection(databaseConnection.ConnectionString);
-				}
-			}
-			return null;
+			return mConnections_.ContainsKey(name ?? "Default") ? mConnections_[name ?? "Default"] : (DatabaseConnection?)null;
+		}
+		
+		public static IEnumerable<DatabaseConnection> GetConnections()
+		{
+			return mConnections_.Values;
+		}
+		
+		public static void Clear()
+		{
+			mConnections_.Clear();
 		}
 		
 		public static void AddMySqlConnection(String server, String datasource, String username, String password)

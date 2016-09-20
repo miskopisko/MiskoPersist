@@ -1,5 +1,4 @@
 ﻿using System;
-using MiskoPersist.Serialization;
 
 namespace MiskoPersist.Enums
 {

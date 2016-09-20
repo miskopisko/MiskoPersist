@@ -10,7 +10,6 @@ using MiskoPersist.Core;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
 using MiskoPersist.Interfaces;
-using MiskoPersist.Message;
 
 namespace MiskoPersist.Serialization
 {
@@ -34,31 +33,39 @@ namespace MiskoPersist.Serialization
 
 		Object IMiskoFormatter.Deserialize(Stream serializationStream)
 		{
-			serializationStream.Position = 0;
+			Object o = null;
+			
+			Stopwatch stopwatch = Stopwatch.StartNew();			
 			XmlDocument document = new XmlDocument();
 			document.Load(serializationStream);
 			Type objectType = Type.GetType(document.DocumentElement.Attributes["Type"].Value);
-			if (!objectType.IsSubclassOf(typeof(CoreMessage)))
+            if (!objectType.IsSubclassOf(typeof(ViewedData)) && !(objectType.BaseType.IsGenericType && objectType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>))))
 			{
-				throw new MiskoException("Can only deserialize messages");
+				throw new MiskoException("Can only deserialize viewed data");
 			}
-			return InitializeObject(document.DocumentElement, objectType);
+			o = InitializeObject(document.DocumentElement, objectType);			
+			stopwatch.Stop();
+            Log.Debug(String.Format("{0} to {1} : {2}", SerializationType.Xml, o.GetType().Name, stopwatch.Elapsed));
+            
+			return o;
 		}
 
-		void IMiskoFormatter.Serialize(Stream serializationStream, Object graph)
+		void IMiskoFormatter.Serialize(Stream serializationStream, Object graph, Boolean indent)
 		{
 			if (graph == null)
 			{
 				return;
 			}
+			
 			if (serializationStream == null)
 			{
 				throw new ArgumentNullException("serializationStream");
 			}
+			
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			using (XmlTextWriter writer = new XmlTextWriter(serializationStream, Serializer.Encoding))
 			{
-				writer.Formatting = Formatting.Indented;
+				writer.Formatting = indent ? Formatting.Indented : Formatting.None;
 				writer.WriteStartDocument();
 				writer.WriteStartElement(graph.GetType().Name);
 				writer.WriteAttributeString("Type", null, graph.GetType() + ", " + graph.GetType().Assembly.GetName().Name);
@@ -115,41 +122,48 @@ namespace MiskoPersist.Serialization
 			}
 			
 			Object initializedObject = Activator.CreateInstance(objectType);
-				
-			foreach (PropertyInfo property in Serializer.GetViewedProperties(initializedObject))
+			
+			if (objectType.BaseType.IsGenericType && objectType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
 			{
-				Object obj = null;
-				if (MiskoConverter.CanConvert(property.PropertyType))
+				foreach (XmlNode innerNode in node.SelectNodes(objectType.Name))
 				{
-					obj = MiskoConverter.Convert(GetElement(node, property.Name), property.PropertyType);
+					ViewedData data = (ViewedData)InitializeObject(innerNode, objectType.BaseType.GetGenericArguments()[0]);
+					((IList)initializedObject).Add(data);
 				}
-				else if (((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer != null)
+			}
+			else
+			{
+				foreach (PropertyInfo property in Serializer.GetViewedProperties(initializedObject))
 				{
-					obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke(GetElement(node, property.Name));
-				}
-				else if (property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
-				{
-					obj = Activator.CreateInstance(property.PropertyType);
-					foreach (XmlNode innerNode in node.SelectNodes(property.Name))
+					Object obj = null;					
+					XmlElement e = node == null ? null : node[property.Name];
+					String value = e != null ? e.InnerText : null;					
+					if (MiskoConverter.CanConvert(property.PropertyType))
 					{
-						ViewedData data = (ViewedData)InitializeObject(innerNode, property.PropertyType.BaseType.GetGenericArguments()[0]);
-						((IList)obj).Add(data);
+						obj = MiskoConverter.Convert(value, property.PropertyType);
 					}
+					else if (!String.IsNullOrEmpty(value) && ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer != null)
+					{
+						obj = ((ViewedAttribute)property.GetCustomAttribute(typeof(ViewedAttribute))).ViewedDeserializer.Invoke(value);
+					}
+					else if (property.PropertyType.BaseType.IsGenericType && property.PropertyType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>)))
+					{
+						obj = Activator.CreateInstance(property.PropertyType);
+						foreach (XmlNode innerNode in node.SelectNodes(property.Name))
+						{
+							ViewedData data = (ViewedData)InitializeObject(innerNode, property.PropertyType.BaseType.GetGenericArguments()[0]);
+							((IList)obj).Add(data);
+						}
+					}
+					else
+					{
+						obj = InitializeObject(node[property.Name], property.PropertyType);
+					}						
+					property.SetValue(initializedObject, obj);
 				}
-				else
-				{
-					obj = InitializeObject(node[property.Name], property.PropertyType);
-				}						
-				property.SetValue(initializedObject, obj);
 			}
 			
 			return initializedObject;
-		}
-
-		private String GetElement(XmlNode element, String name)
-		{
-			XmlElement e = element == null ? null : element[name];
-			return e != null ? e.InnerText : null;
 		}
 
 		#endregion

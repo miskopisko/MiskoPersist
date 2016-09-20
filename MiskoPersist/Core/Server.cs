@@ -173,28 +173,22 @@ namespace MiskoPersist.Core
 		{
 			Invoke(Status, MessageStatus.Processing);
 			
-			if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet))
-			{
-				Log.Debug(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType));
-			}
-			
             ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
 			
             if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet))
 			{
-				Log.Debug(Environment.NewLine + Serializer.Serialize(response, SerializationType));
+            	Log.Debug(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType, true));
+				Log.Debug(Environment.NewLine + Serializer.Serialize(response, SerializationType, true));
 			}
 			
 			if (HandleErrors(response))
 			{
-				// No errors in the message; call the successfulHandler
 				if (!response.HasErrors && !response.HasUnconfirmed)
 				{
 					Invoke(mSuccessHandler_, response);
 				}
 			}
 			
-			// If errors in the message; call errorHandler
 			if (response.HasErrors || response.HasUnconfirmed)
 			{
 				Invoke(mErrorHandler_, response);
@@ -312,9 +306,8 @@ namespace MiskoPersist.Core
                 using (MemoryStream ms = new MemoryStream())
                 {
                     webRequest.GetResponse().GetResponseStream().CopyTo(ms);
-                    responseMessage = (ResponseMessage)Serializer.Deserialize(ms);
+                    responseMessage = Serializer.Deserialize(ms) as ResponseMessage;
                 }
-
                 stopwatch.Stop();
                 Log.Debug(String.Format("{0} round trip from {1} : {2}", mRequest_.WrapperClass.Name, uri, stopwatch.Elapsed));
 			}

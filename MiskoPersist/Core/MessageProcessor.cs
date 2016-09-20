@@ -30,7 +30,7 @@ namespace MiskoPersist.Core
 			
 			try
 			{
-				session = new Session(DatabaseConnections.GetConnection(request.Connection));
+				session = new Session(DatabaseConnections.GetDatabaseConnection(request.Connection));
                 response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);
                 MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, request, response);
                 
@@ -38,8 +38,15 @@ namespace MiskoPersist.Core
 				wrapper.Execute(session);
 			}
             catch(Exception ex)
-            {
-                response.Status = ErrorLevel.Error;
+            {   
+                if (session != null) 
+                {
+					session.Status = ErrorLevel.Error;
+                }
+                else
+                {
+                	response.Status = ErrorLevel.Error;
+                }
 
                 do
                 {
@@ -68,8 +75,8 @@ namespace MiskoPersist.Core
 			{
 				if (session != null) 
 				{
-					session.EndTransaction();
 					session.FlushPersistence();
+					session.EndTransaction();
 						
 					response.Status = session.Status;
 	                response.ErrorMessages = session.ErrorMessages;

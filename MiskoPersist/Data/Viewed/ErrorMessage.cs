@@ -88,15 +88,15 @@ namespace MiskoPersist.Data.Viewed
 			{
 				StackTrace stackTrace = new StackTrace(e, true);
 				StackFrame stackFrame = stackTrace.GetFrame(0);
-				LineNumber = stackFrame.GetFileLineNumber() > 0 ? stackFrame.GetFileLineNumber() : (Int32?)null;
-				Class = stackFrame.GetMethod().DeclaringType.Name;
-				Method = stackFrame.GetMethod().Name;
+				LineNumber = stackFrame != null ? stackFrame.GetFileLineNumber() > 0 ? stackFrame.GetFileLineNumber() : (Int32?)null : (Int32?)null;
+				Class = stackFrame != null ? stackFrame.GetMethod().DeclaringType.Name : "N/A";
+				Method = stackFrame != null ? stackFrame.GetMethod().Name : "N/A";
 			}
 			else
 			{
 				StackTrace stackTrace = new StackTrace(e, true);
                 StackFrame stackFrame = stackTrace.GetFrame(0);
-                LineNumber = stackFrame.GetFileLineNumber() > 0 ? stackFrame.GetFileLineNumber() : (Int32?)null;
+                LineNumber = stackFrame != null ? stackFrame.GetFileLineNumber() > 0 ? stackFrame.GetFileLineNumber() : (Int32?)null : (Int32?)null;
 				Class = e.TargetSite.DeclaringType.Name;
 				Method = e.TargetSite.Name;
 			}

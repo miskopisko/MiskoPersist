@@ -64,7 +64,7 @@ namespace MiskoPersist.Data.Stored
 			persistence = null;
 		}
 
-		public void AddRange(StoredDataList<T> list)
+		public void Add(StoredDataList<T> list)
 		{
 			foreach (StoredData item in list)
 			{

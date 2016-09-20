@@ -3,7 +3,6 @@ using System.Data;
 using System.Reflection;
 using log4net;
 using MiskoPersist.Core;
-using MiskoPersist.Data;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
