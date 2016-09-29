@@ -72,18 +72,7 @@ namespace MiskoPersist.Message.Responses
 			{
 				return Warnings != null && Warnings.Count > 0;
 			}
-		}
-		
-		public ErrorMessages ErrorMessages
-		{
-			set
-			{
-				Errors = ((ErrorMessages)value).ListOf(ErrorLevel.Error);
-				Confirmations = ((ErrorMessages)value).ListOf(ErrorLevel.Confirmation);
-				Warnings = ((ErrorMessages)value).ListOf(ErrorLevel.Warning);
-				Infos = ((ErrorMessages)value).ListOf(ErrorLevel.Information);
-			}
-		}
+		}		
 
 		#endregion
 		

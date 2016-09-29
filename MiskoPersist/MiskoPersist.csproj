@@ -99,6 +99,7 @@
   <ItemGroup>
     <Compile Include="Core\DatabaseConnection.cs" />
     <Compile Include="Core\MessageProcessor.cs" />
+    <Compile Include="Core\SecurityPolicy.cs" />
     <Compile Include="Core\Server.cs" />
     <Compile Include="Data\Data.cs" />
     <Compile Include="Data\Stored\Operator.cs" />
@@ -108,6 +109,12 @@
     <Compile Include="Enums\SerializationType.cs" />
     <Compile Include="Enums\SqlSortDirection.cs" />
     <Compile Include="Interfaces\IMiskoFormatter.cs" />
+    <Compile Include="Message\Logoff.cs" />
+    <Compile Include="Message\Logon.cs" />
+    <Compile Include="Message\Requests\LogoffRQ.cs" />
+    <Compile Include="Message\Requests\LogonRQ.cs" />
+    <Compile Include="Message\Responses\LogoffRS.cs" />
+    <Compile Include="Message\Responses\LogonRS.cs" />
     <Compile Include="Money\MidpointRoundingRule.cs" />
     <Compile Include="Money\RoundingPlaces.cs" />
     <Compile Include="Persistences\FoxProPersistence.cs" />

@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using System.Reflection;
 using log4net;
 using MiskoPersist.Core;
@@ -27,8 +28,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public MySqlPersistence(Session session)
-			: base(session)
+		public MySqlPersistence(Session session, DbCommand command)
+			: base(session, command)
 		{
 		}
 

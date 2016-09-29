@@ -44,7 +44,8 @@ namespace MiskoPersist.MoneyType
 		{
 		}
 
-		public Money(Decimal value) : this()
+		public Money(Decimal value) 
+			: this()
 		{
 			checkValue(value);
 

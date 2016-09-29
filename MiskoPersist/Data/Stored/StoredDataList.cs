@@ -57,7 +57,7 @@ namespace MiskoPersist.Data.Stored
 
 		public void FetchAll(Session session)
 		{
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
 			Set(session, persistence);
 			persistence.Close();

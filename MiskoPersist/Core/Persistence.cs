@@ -10,7 +10,6 @@ using log4net;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
 using MiskoPersist.MoneyType;
-using MiskoPersist.Persistences;
 using MiskoPersist.Resources;
 using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
@@ -27,7 +26,7 @@ namespace MiskoPersist.Core
 		protected DbDataReader mRs_ = null;
 		protected DbCommand mCommand_ = null;
 		protected String mSql_ = "";
-		protected List<Object> mParameters_;
+		protected List<Object> mParameters_ = new List<Object>();
 		protected Int32 mRecordCount_ = 0;
 		protected String mParameterString_;
 
@@ -57,38 +56,15 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-		protected Persistence(Session session)
+		protected Persistence(Session session, DbCommand command)
 		{
 			mSession_ = session;
-			mCommand_ = mSession_.Connection.CreateCommand();
-			mCommand_.Transaction = session.Transaction;
-			mParameters_ = new List<Object>();
+			mCommand_ = command;
 		}
 
 		#endregion
 
 		#region Public Methods
-
-		public static Persistence GetInstance(Session session)
-		{
-			if (session.Connection is OracleConnection)
-			{
-				return new OraclePersistence(session);
-			}
-			if (session.Connection is MySqlConnection)
-			{
-				return new MySqlPersistence(session);
-			}
-			if (session.Connection is SQLiteConnection)
-			{
-				return new SqlitePersistence(session);
-			}
-			if (session.Connection is OleDbConnection)
-			{
-				return new FoxProPersistence(session);
-			}
-			throw new MiskoException("Unable to get datatabe connection");
-		}
 
 		public void Close()
 		{
@@ -233,10 +209,22 @@ namespace MiskoPersist.Core
 		{
 			return ExecuteUpdate(session, sql, null);
 		}
+		
+		public static Int32 ExecuteAutonomousUpdate(Session session, String sql, params Object[] parameters)
+		{
+			Session newSession = new Session(DatabaseConnections.GetConnection(null));
+			
+			Persistence persistence = newSession.GetPersistence();
+			Int32 result = persistence.ExecuteUpdate(sql, parameters);
+			persistence.Close();
+			persistence = null;
+			newSession.Dispose();
+			return result;
+		}
 
 		public static Int32 ExecuteUpdate(Session session, String sql, params Object[] parameters)
 		{
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			Int32 result = persistence.ExecuteUpdate(sql, parameters);
 			persistence.Close();
 			persistence = null;
@@ -245,7 +233,7 @@ namespace MiskoPersist.Core
 
 		public static void ExecuteUpdate(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			persistence.ExecuteUpdate(clazz, type);
 			persistence.Close();
 			persistence = null;
@@ -253,7 +241,7 @@ namespace MiskoPersist.Core
 
 		public static void ExecuteInsert(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			persistence.ExecuteInsert(clazz, type);
 			persistence.Close();
 			persistence = null;
@@ -261,7 +249,7 @@ namespace MiskoPersist.Core
 
 		public static void ExecuteDelete(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			persistence.ExecuteDelete(clazz, type);
 			persistence.Close();
 			persistence = null;

@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 using log4net;
 using MiskoPersist.Core;
@@ -28,8 +29,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public OraclePersistence(Session session)
-			: base(session)
+		public OraclePersistence(Session session, DbCommand command)
+			: base(session, command)
 		{
 		}
 

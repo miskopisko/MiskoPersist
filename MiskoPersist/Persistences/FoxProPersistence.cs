@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using System.Data.OleDb;
 using log4net;
 using MiskoPersist.Core;
@@ -26,8 +27,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public FoxProPersistence(Session session)
-			: base(session)
+		public FoxProPersistence(Session session, DbCommand command)
+			: base(session, command)
 		{
 		}
 

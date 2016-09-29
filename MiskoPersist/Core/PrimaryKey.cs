@@ -33,12 +33,14 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-		public PrimaryKey(Int64 value) : this()
+		public PrimaryKey(Int64 value) 
+			: this()
 		{
 			Value = value;
 		}
 
-		public PrimaryKey(String s) : this()
+		public PrimaryKey(String s) 
+			: this()
 		{
 			Value = !String.IsNullOrEmpty(s) ? Convert.ToInt64(s) : 0;
 		}

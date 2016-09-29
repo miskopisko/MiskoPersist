@@ -61,7 +61,8 @@ namespace MiskoPersist.Data.Stored
         {
         }
 
-        public SessionLog(Session session, Persistence persistence) : base(session, persistence)
+        public SessionLog(Session session, Persistence persistence) 
+        	: base(session, persistence)
         {
         }
 

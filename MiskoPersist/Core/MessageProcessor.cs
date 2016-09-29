@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using log4net;
@@ -30,7 +29,7 @@ namespace MiskoPersist.Core
 			
 			try
 			{
-				session = new Session(DatabaseConnections.GetDatabaseConnection(request.Connection));
+				session = new Session(DatabaseConnections.GetConnection(request.Connection));
                 response = (ResponseMessage)Activator.CreateInstance(request.ResponseClass);
                 MessageWrapper wrapper = (MessageWrapper)Activator.CreateInstance(request.WrapperClass, request, response);
                 
@@ -39,14 +38,7 @@ namespace MiskoPersist.Core
 			}
             catch(Exception ex)
             {   
-                if (session != null) 
-                {
-					session.Status = ErrorLevel.Error;
-                }
-                else
-                {
-                	response.Status = ErrorLevel.Error;
-                }
+                response.Status = ErrorLevel.Error;
 
                 do
                 {
@@ -57,14 +49,7 @@ namespace MiskoPersist.Core
                         continue;
                     }
                     
-                    if (session != null) 
-                    {
-                    	session.ErrorMessages.Add(new ErrorMessage(ex));	
-                    }
-                    else
-                    {
-                    	response.Errors.Add(new ErrorMessage(ex));
-                    }
+                    response.Errors.Add(new ErrorMessage(ex));
                     
 					Log.Error(ex);
                     ex = ex.InnerException;
@@ -73,23 +58,19 @@ namespace MiskoPersist.Core
             }
 			finally
 			{
-				if (session != null) 
-				{
-					session.FlushPersistence();
-					session.EndTransaction();
-						
-					response.Status = session.Status;
-	                response.ErrorMessages = session.ErrorMessages;
-	                
-					if (session.Connection != null && !session.Connection.State.Equals(ConnectionState.Closed))
-	                {
-	                    session.Connection.Close();
-	                }	
-				}
-				
 				stopwatch.Stop();
 				Log.Debug(String.Format("{0} execution time : {1}", response.GetType().Name, stopwatch.Elapsed));
-                Log.Debug(String.Format("{0} SQL execution time : {1}", response.GetType().Name, session != null ? session.SqlExecutionTime : TimeSpan.Zero));
+				Log.Debug(String.Format("{0} SQL execution time : {1}", response.GetType().Name, session != null ? session.SqlExecutionTime : TimeSpan.Zero));
+                
+				if (session != null)
+				{
+					response.Status = session.Status;
+					response.Errors.Add(session.ErrorMessages.ListOf(ErrorLevel.Error));
+					response.Warnings.Add(session.ErrorMessages.ListOf(ErrorLevel.Warning));
+					response.Infos.Add(session.ErrorMessages.ListOf(ErrorLevel.Information));
+					response.Confirmations.Add(session.ErrorMessages.ListOf(ErrorLevel.Confirmation));
+					session.Dispose();
+				}
             }
 			
 			return response;

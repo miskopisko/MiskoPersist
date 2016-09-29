@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Reflection;
 using log4net;
@@ -28,8 +29,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public SqlitePersistence(Session session)
-			: base(session)
+		public SqlitePersistence(Session session, DbCommand command)
+			: base(session, command)
 		{
 		}
 

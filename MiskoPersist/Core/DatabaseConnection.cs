@@ -7,6 +7,7 @@ using MiskoPersist.Enums;
 using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 
+
 namespace MiskoPersist.Core
 {
 	public struct DatabaseConnection
@@ -75,23 +76,31 @@ namespace MiskoPersist.Core
 		
 		public DbConnection GetConnection()
 		{
+			DbConnection result = null;
+			
 			if (DatabaseType.Equals(DatabaseType.SQLite))
 			{
-				return new SQLiteConnection(ConnectionString);
+				result = new SQLiteConnection(ConnectionString);
 			}
-			if (DatabaseType.Equals(DatabaseType.MySql))
+			else if (DatabaseType.Equals(DatabaseType.MySql))
 			{
-				return new MySqlConnection(ConnectionString);
+				result = new MySqlConnection(ConnectionString);
 			}
-			if (DatabaseType.Equals(DatabaseType.Oracle))
+			else if (DatabaseType.Equals(DatabaseType.Oracle))
 			{
-				return new OracleConnection(ConnectionString);
+				result = new OracleConnection(ConnectionString);
 			}
-			if (DatabaseType.Equals(DatabaseType.FoxPro))
+			else if (DatabaseType.Equals(DatabaseType.FoxPro))
 			{
-				return new OleDbConnection(ConnectionString);
+				result = new OleDbConnection(ConnectionString);
 			}
-			return null;
+			
+			if (result != null)
+			{
+				result.Open();
+			}
+			
+			return result;
 		}
 		
 		#endregion

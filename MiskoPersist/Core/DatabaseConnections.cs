@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using log4net;
 using MiskoPersist.Enums;
 
@@ -29,9 +30,9 @@ namespace MiskoPersist.Core
 		
 		#region Static Methods
 
-		public static DatabaseConnection? GetDatabaseConnection(String name)
+		public static DbConnection GetConnection(String name)
 		{
-			return mConnections_.ContainsKey(name ?? "Default") ? mConnections_[name ?? "Default"] : (DatabaseConnection?)null;
+			return mConnections_.ContainsKey(name ?? "Default") ? mConnections_[name ?? "Default"].GetConnection() : null;
 		}
 		
 		public static IEnumerable<DatabaseConnection> GetConnections()
@@ -105,7 +106,7 @@ namespace MiskoPersist.Core
 			item.Datasource = datasource;
 			item.Username = null;
 			item.Password = null;
-			item.ConnectionString = "Data Source=" + datasource + ";Version=3;Pooling=True;";
+			item.ConnectionString = "Data Source=" + datasource + ";Version=3;Pooling=True;Max Pool Size=100;FailIfMissing=True;";
 
 			if (!mConnections_.ContainsKey(name))
 			{

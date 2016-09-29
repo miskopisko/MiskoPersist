@@ -109,26 +109,18 @@ namespace MiskoPersist.Message
 		{
 			get
 			{
-				Type wrapperClass;
-				String msgName;
-				String msgPath;
+				String msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
 				if (this is RequestMessage)
 				{
-					msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
-					msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
-					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+					String msgPath = GetType().FullName.Replace("Requests." + msgName + "RQ", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
-                else if (this is ResponseMessage)
+				if (this is ResponseMessage)
 				{
-					msgName = GetType().Name.Substring(0, GetType().Name.Length - 2);
-					msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
-					wrapperClass = Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
+					String msgPath = GetType().FullName.Replace("Responses." + msgName + "RS", "");
+					return Type.GetType(Assembly.CreateQualifiedName(GetType().Assembly.FullName, msgPath + msgName));
 				}
-                else
-                {
-                    wrapperClass = GetType();
-                }
-				return wrapperClass;
+				return GetType();
 			}
 		}
 

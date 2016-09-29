@@ -54,7 +54,8 @@ namespace MiskoPersist.Data.Stored
 		{
 		}
 
-		protected StoredData(Session session, Persistence persistence) : base(session, persistence)
+		protected StoredData(Session session, Persistence persistence) 
+			: base(session, persistence)
 		{
 		}
 
@@ -127,7 +128,7 @@ namespace MiskoPersist.Data.Stored
 				return;
 			}
 
-			Persistence persistence = Persistence.GetInstance(session);
+			Persistence persistence = session.GetPersistence();
 			persistence.ExecuteQuery(BuildSelectStatement(), Math.Abs(id.Value));
 			Set(session, persistence);
 			persistence.Close();

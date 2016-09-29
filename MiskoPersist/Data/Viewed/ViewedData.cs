@@ -26,7 +26,8 @@ namespace MiskoPersist.Data.Viewed
 		{
 		}
 
-		public ViewedData(Session session, Persistence persistence) : base(session, persistence)
+		public ViewedData(Session session, Persistence persistence) 
+			: base(session, persistence)
 		{
 		}
 		

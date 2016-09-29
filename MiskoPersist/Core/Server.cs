@@ -54,12 +54,12 @@ namespace MiskoPersist.Core
 		#region Fields
 		
 		private static Int32 mActive_ = 0;
+		private static Guid? mSessionToken_;
 		
 		private Thread mThread_;
 		private MessageCompleteHandler mSuccessHandler_;
 		private MessageCompleteHandler mErrorHandler_;
 		private RequestMessage mRequest_;
-		private Guid? mSessionToken_;
 		
 		#endregion
 		
@@ -164,7 +164,6 @@ namespace MiskoPersist.Core
 			Invoke(MessageSent);
 			
 			mThread_ = new Thread(new ThreadStart(Run));
-			mThread_.Name = mRequest_.GetType().Name;
 			mThread_.IsBackground = true;
 			mThread_.Start();
 		}
@@ -174,6 +173,16 @@ namespace MiskoPersist.Core
 			Invoke(Status, MessageStatus.Processing);
 			
             ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
+            
+            if (response is LogonRS)
+            {
+				mSessionToken_ = response.SessionToken;
+            }
+            
+            if (response is LogoffRS)
+            {
+				mSessionToken_ = null;
+            }
 			
             if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet))
 			{

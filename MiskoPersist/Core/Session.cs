@@ -2,50 +2,40 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.OleDb;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using log4net;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
 using MiskoPersist.Message.Requests;
+using MiskoPersist.Persistences;
 using MiskoPersist.Resources;
+using MySql.Data.MySqlClient;
+using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Core
 {
-	public sealed class Session
+	public sealed class Session : IDisposable
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Session));
 
 		#region Fields
-
+		
 		private readonly Object mLocker_ = new Object();
-
+		private readonly DbConnection mConnection_;
+		private DbTransaction mTransaction_;
+		
 		#endregion
 
 		#region Properties
-		
-		public DbConnection Connection
-		{
-			get;
-			private set;
-		}
 		
 		public List<Persistence> PersistencePool
 		{
 			get;
 			private set;
-		}
-		
-		public DbTransaction Transaction
-		{
-			get;
-			private set;
-		}
-		
-		public ErrorLevel Status
-		{
-			get;
-			set;
 		}
 		
 		public MessageMode MessageMode
@@ -60,6 +50,12 @@ namespace MiskoPersist.Core
 			private set;
 		}
 		
+		public ErrorLevel Status
+		{
+			get;
+			set;
+		}
+		
 		public TimeSpan SqlExecutionTime
 		{
 			get;
@@ -70,9 +66,9 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-        public Session(DatabaseConnection? databaseConnection)
+        public Session(DbConnection conn)
         {
-        	Connection = databaseConnection.HasValue ? databaseConnection.Value.GetConnection() : null;
+        	mConnection_ = conn;
             PersistencePool = new List<Persistence>();
             Status = ErrorLevel.Success;
             MessageMode = MessageMode.Normal;
@@ -83,6 +79,33 @@ namespace MiskoPersist.Core
 		#endregion
 
 		#region Public Methods
+		
+		public Persistence GetPersistence()
+		{
+			if (mConnection_ != null)
+			{
+				DbCommand command = mConnection_.CreateCommand();
+				command.Transaction = mTransaction_;
+				
+				if (mConnection_ is OracleConnection)
+				{
+					return new OraclePersistence(this, command);
+				}
+				if (mConnection_ is MySqlConnection)
+				{
+					return new MySqlPersistence(this, command);
+				}
+				if (mConnection_ is SQLiteConnection)
+				{
+					return new SqlitePersistence(this, command);
+				}
+				if (mConnection_ is OleDbConnection)
+				{
+					return new FoxProPersistence(this, command);
+				}
+			}
+			throw new MiskoException("Unable to get datatabe connection");
+		}
 
         public void BeginTransaction()
         {
@@ -93,25 +116,34 @@ namespace MiskoPersist.Core
 		{
 			lock (mLocker_)
 			{
-				if (Transaction != null)
+				if (mTransaction_ != null)
 				{
 					Error(ErrorLevel.Error, ErrorStrings.errTransactionAlreadyInProgress);
 				}
 				else
 				{
+					Status = ErrorLevel.Success;
+					
 					if (request != null)
 					{
+						Thread.CurrentThread.Name = request.WrapperClass.Name;
+						
 						MessageMode = request.MessageMode ?? MessageMode.Normal;
 						ErrorMessages.Add(request.Confirmations);
+						
+						if (SecurityPolicy.LoginRequired && request.SessionToken == null && !(request is LogonRQ))
+						{
+							throw new MiskoException("Application requires logon");
+						}
+						if (SecurityPolicy.LoginRequired && request.SessionToken != null)
+						{
+							// Validate security here
+						}
 					}
 					
-					if (Connection != null)
+					if (mConnection_ != null)
 					{
-						if (!Connection.State.Equals(ConnectionState.Open))
-						{
-							Connection.Open();
-						}
-						Transaction = Connection.BeginTransaction();
+						mTransaction_ = mConnection_.BeginTransaction();
 					}
 				}
 			}
@@ -121,17 +153,18 @@ namespace MiskoPersist.Core
 		{
 			lock (mLocker_)
 			{
-				if (Transaction != null)
+				if (mTransaction_ != null)
 				{
 					if (!Status.IsCommitable() || MessageMode.Equals(MessageMode.Trial))
 					{
-						Transaction.Rollback();
+						mTransaction_.Rollback();
 					}
 					else
 					{
-						Transaction.Commit();
+						mTransaction_.Commit();
 					}
-					Transaction = null;
+					mTransaction_.Dispose();
+					mTransaction_ = null;
 				}
 			}
 		}
@@ -146,7 +179,7 @@ namespace MiskoPersist.Core
 				}
 			}
 		}
-
+		
 		public void Error(ErrorLevel errorLevel, String message)
 		{
 			StackFrame stackFrame = new StackFrame(1, true);
@@ -184,6 +217,24 @@ namespace MiskoPersist.Core
 			}
 		}
 
+		#endregion
+		
+		#region IDisposable Implementation
+		
+		public void Dispose()
+		{
+			FlushPersistence();
+			EndTransaction();
+			
+			lock (mLocker_)
+			{
+				if (mConnection_ != null && !mConnection_.State.Equals(ConnectionState.Closed))
+				{
+					mConnection_.Close();
+				}
+			}
+		}
+		
 		#endregion
 	}
 }
