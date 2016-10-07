@@ -172,6 +172,11 @@ namespace MiskoPersist.Core
 		{
 			Invoke(Status, MessageStatus.Processing);
 			
+			if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
+			{
+            	Log.Info(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType, true));
+			}
+			
             ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
             
             if (response is LogonRS)
@@ -184,10 +189,9 @@ namespace MiskoPersist.Core
 				mSessionToken_ = null;
             }
 			
-            if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet))
+            if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
 			{
-            	Log.Debug(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType, true));
-				Log.Debug(Environment.NewLine + Serializer.Serialize(response, SerializationType, true));
+				Log.Info(Environment.NewLine + Serializer.Serialize(response, SerializationType, true));
 			}
 			
 			if (HandleErrors(response))

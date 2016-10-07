@@ -43,6 +43,12 @@ namespace MiskoPersist.Serialization
 				{
 					JObject jObject = JObject.Load(jr);
 					Type objectType = Type.GetType((String)jObject["Type"]);
+					
+					if (objectType == null)
+					{
+						throw new MiskoException("Unable to determine object type.");
+					}
+					
 					if (!objectType.IsSubclassOf(typeof(ViewedData)) && !(objectType.BaseType.IsGenericType && objectType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>))))
 					{
 						throw new MiskoException("Can only deserialize viewed data");

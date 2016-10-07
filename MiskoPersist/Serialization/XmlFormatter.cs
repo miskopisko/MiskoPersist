@@ -39,10 +39,17 @@ namespace MiskoPersist.Serialization
 			XmlDocument document = new XmlDocument();
 			document.Load(serializationStream);
 			Type objectType = Type.GetType(document.DocumentElement.Attributes["Type"].Value);
+			
+			if (objectType == null)
+			{
+				throw new MiskoException("Unable to determine object type.");
+			}
+			
             if (!objectType.IsSubclassOf(typeof(ViewedData)) && !(objectType.BaseType.IsGenericType && objectType.BaseType.GetGenericTypeDefinition().Equals(typeof(ViewedDataList<>))))
 			{
 				throw new MiskoException("Can only deserialize viewed data");
 			}
+            
 			o = InitializeObject(document.DocumentElement, objectType);			
 			stopwatch.Stop();
             Log.Debug(String.Format("{0} to {1} : {2}", SerializationType.Xml, o.GetType().Name, stopwatch.Elapsed));

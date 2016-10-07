@@ -16,7 +16,7 @@ using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Core
 {
-	public abstract class Persistence
+	public abstract class Persistence : IDisposable
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Persistence));
 
@@ -65,57 +65,6 @@ namespace MiskoPersist.Core
 		#endregion
 
 		#region Public Methods
-
-		public void Close()
-		{
-			try
-			{
-				Exception e = null;
-				try
-				{
-					if (mRs_ != null)
-					{
-						mRs_.Dispose();
-						mRs_ = null;
-					}
-				}
-				catch (Exception ex)
-				{
-					e = ex;
-					mRs_ = null;
-				}
-
-				try
-				{
-					if (mCommand_ != null)
-					{
-						mCommand_.Dispose();
-						mCommand_ = null;
-					}
-				}
-				catch (Exception ex)
-				{
-					if (e == null)
-					{
-						e = ex;
-					}
-					mCommand_ = null;
-				}
-
-				if (e != null)
-				{
-					throw e;
-				}
-			}
-			catch (Exception e)
-			{
-				throw new MiskoException("Error closing persistence", e);
-			}
-			finally
-			{
-				mSession_.PersistencePool.Remove(this);
-			}
-		}
 
 		public void Next()
 		{
@@ -180,8 +129,6 @@ namespace MiskoPersist.Core
 
 		public void ExecuteQuery(String sql, params Object[] parameters)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			mSql_ = sql;
 			if (parameters != null)
 			{
@@ -212,47 +159,46 @@ namespace MiskoPersist.Core
 		
 		public static Int32 ExecuteAutonomousUpdate(Session session, String sql, params Object[] parameters)
 		{
-			Session newSession = new Session(DatabaseConnections.GetConnection(null));
-			
-			Persistence persistence = newSession.GetPersistence();
-			Int32 result = persistence.ExecuteUpdate(sql, parameters);
-			persistence.Close();
-			persistence = null;
-			newSession.Dispose();
-			return result;
+			using (Session autonomousSession = new Session(session.DatabaseConnection))
+			{
+				autonomousSession.BeginTransaction();
+				using (Persistence persistence = autonomousSession.GetPersistence())
+				{
+					return persistence.ExecuteUpdate(sql, parameters);
+				}
+			}
 		}
 
 		public static Int32 ExecuteUpdate(Session session, String sql, params Object[] parameters)
 		{
-			Persistence persistence = session.GetPersistence();
-			Int32 result = persistence.ExecuteUpdate(sql, parameters);
-			persistence.Close();
-			persistence = null;
-			return result;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				return persistence.ExecuteUpdate(sql, parameters);
+			}
 		}
 
 		public static void ExecuteUpdate(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteUpdate(clazz, type);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteUpdate(clazz, type);
+			}
 		}
 
 		public static void ExecuteInsert(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteInsert(clazz, type);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteInsert(clazz, type);
+			}
 		}
 
 		public static void ExecuteDelete(Session session, StoredData clazz, Type type)
 		{
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteDelete(clazz, type);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteDelete(clazz, type);
+			}
 		}
 		
 		public void ExecuteRSFunction(String function)
@@ -262,8 +208,6 @@ namespace MiskoPersist.Core
 		
 		public void ExecuteRSFunction(String function, params Object[] parameters)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			mSql_ = function;
 			if (parameters != null)
 			{
@@ -294,8 +238,6 @@ namespace MiskoPersist.Core
 
 		private void ExecuteInsert(StoredData clazz, Type type)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			PrimaryKey newId = new PrimaryKey(0);
 			
 			GenerateInsertStatement(clazz, type);
@@ -338,8 +280,6 @@ namespace MiskoPersist.Core
 
 		private void ExecuteUpdate(StoredData clazz, Type type)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			if (type.BaseType.Equals(typeof(StoredData)))
 			{
 				clazz.RowVer++;
@@ -366,8 +306,6 @@ namespace MiskoPersist.Core
 
 		private void ExecuteDelete(StoredData clazz, Type type)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			GenerateDeleteStatement(clazz, type);
 			
 			mCommand_.Prepare();
@@ -389,8 +327,6 @@ namespace MiskoPersist.Core
 
 		private Int32 ExecuteUpdate(String sql, params Object[] parameters)
 		{
-			mSession_.PersistencePool.Add(this);
-
 			mSql_ = sql;
 			if (parameters != null)
 			{
@@ -425,6 +361,61 @@ namespace MiskoPersist.Core
 
 		#endregion
 		
+		#region IDisposable Implementation
+		
+		public void Dispose()
+		{
+			try
+			{
+				Exception e = null;
+				try
+				{
+					if (mRs_ != null)
+					{
+						mRs_.Dispose();
+						mRs_ = null;
+					}
+				}
+				catch (Exception ex)
+				{
+					e = ex;
+					mRs_ = null;
+				}
+
+				try
+				{
+					if (mCommand_ != null)
+					{
+						mCommand_.Dispose();
+						mCommand_ = null;
+					}
+				}
+				catch (Exception ex)
+				{
+					if (e == null)
+					{
+						e = ex;
+					}
+					mCommand_ = null;
+				}
+
+				if (e != null)
+				{
+					throw e;
+				}
+			}
+			catch (Exception e)
+			{
+				throw new MiskoException("Error closing persistence", e);
+			}
+			finally
+			{
+				mSession_.RemovePersistence(this);
+			}
+		}
+		
+		#endregion
+		
 		#region Public Helpers
 
 		public PrimaryKey GetPrimaryKey(String key)
@@ -438,7 +429,7 @@ namespace MiskoPersist.Core
 			Decimal? value = GetDecimal(key);
 			return value.HasValue ? new Money(value.Value) : Money.ZERO;
 		}
-
+		
 		public String GetString(String key)
 		{
 			try

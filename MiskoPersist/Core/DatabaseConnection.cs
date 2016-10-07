@@ -7,7 +7,6 @@ using MiskoPersist.Enums;
 using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 
-
 namespace MiskoPersist.Core
 {
 	public struct DatabaseConnection
@@ -16,7 +15,7 @@ namespace MiskoPersist.Core
 		
 		#region Fields
 
-		
+		public static readonly DatabaseConnection NULL = new DatabaseConnection();
 
 		#endregion
 
@@ -29,36 +28,6 @@ namespace MiskoPersist.Core
 		}
 		
 		public DatabaseType DatabaseType 
-		{ 
-			get; 
-			set; 
-		}
-		
-		public String Server 
-		{ 
-			get; 
-			set; 
-		}
-		
-		public Int32? Port 
-		{ 
-			get; 
-			set; 
-		}
-		
-		public String Datasource 
-		{ 
-			get; 
-			set; 
-		}
-		
-		public String Username 
-		{ 
-			get; 
-			set; 
-		}
-		
-		public String Password 
 		{ 
 			get; 
 			set; 

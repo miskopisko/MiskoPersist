@@ -128,11 +128,11 @@ namespace MiskoPersist.Data.Stored
 				return;
 			}
 
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteQuery(BuildSelectStatement(), Math.Abs(id.Value));
-			Set(session, persistence);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteQuery(BuildSelectStatement(), Math.Abs(id.Value));
+				Set(session, persistence);
+			}
 
 			if (IsSet && deep)
 			{

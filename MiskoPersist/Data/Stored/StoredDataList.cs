@@ -57,11 +57,11 @@ namespace MiskoPersist.Data.Stored
 
 		public void FetchAll(Session session)
 		{
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
-			Set(session, persistence);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteQuery("SELECT * FROM " + typeof(T).Name);
+				Set(session, persistence);
+			}
 		}
 
 		public void Add(StoredDataList<T> list)

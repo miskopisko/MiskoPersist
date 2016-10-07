@@ -27,12 +27,13 @@ namespace MiskoPersist.Core
 		private readonly Object mLocker_ = new Object();
 		private readonly DbConnection mConnection_;
 		private DbTransaction mTransaction_;
+		private List<Persistence> mPersistencePool_ = new List<Persistence>();
 		
 		#endregion
 
 		#region Properties
 		
-		public List<Persistence> PersistencePool
+		public DatabaseConnection DatabaseConnection
 		{
 			get;
 			private set;
@@ -66,14 +67,14 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-        public Session(DbConnection conn)
+        public Session(DatabaseConnection databaseConnection)
         {
-        	mConnection_ = conn;
-            PersistencePool = new List<Persistence>();
+			DatabaseConnection = databaseConnection;
             Status = ErrorLevel.Success;
             MessageMode = MessageMode.Normal;
             ErrorMessages = new ErrorMessages();
             SqlExecutionTime = TimeSpan.Zero;
+            mConnection_ = databaseConnection.GetConnection();
         }
 		
 		#endregion
@@ -86,25 +87,33 @@ namespace MiskoPersist.Core
 			{
 				DbCommand command = mConnection_.CreateCommand();
 				command.Transaction = mTransaction_;
+				Persistence result = null;
 				
 				if (mConnection_ is OracleConnection)
 				{
-					return new OraclePersistence(this, command);
+					result = new OraclePersistence(this, command);
 				}
 				if (mConnection_ is MySqlConnection)
 				{
-					return new MySqlPersistence(this, command);
+					result = new MySqlPersistence(this, command);
 				}
 				if (mConnection_ is SQLiteConnection)
 				{
-					return new SqlitePersistence(this, command);
+					result = new SqlitePersistence(this, command);
 				}
 				if (mConnection_ is OleDbConnection)
 				{
-					return new FoxProPersistence(this, command);
+					result = new FoxProPersistence(this, command);
 				}
+				mPersistencePool_.Add(result);
+				return result;
 			}
 			throw new MiskoException("Unable to get datatabe connection");
+		}
+		
+		public void RemovePersistence(Persistence persistence)
+		{
+			mPersistencePool_.Remove(persistence);
 		}
 
         public void BeginTransaction()
@@ -163,6 +172,7 @@ namespace MiskoPersist.Core
 					{
 						mTransaction_.Commit();
 					}
+					
 					mTransaction_.Dispose();
 					mTransaction_ = null;
 				}
@@ -173,9 +183,9 @@ namespace MiskoPersist.Core
 		{
 			lock (mLocker_)
 			{
-				while (PersistencePool.Count > 0)
+				while (mPersistencePool_.Count > 0)
 				{
-					PersistencePool[PersistencePool.Count - 1].Close();
+					mPersistencePool_[mPersistencePool_.Count - 1].Dispose();
 				}
 			}
 		}
@@ -231,6 +241,7 @@ namespace MiskoPersist.Core
 				if (mConnection_ != null && !mConnection_.State.Equals(ConnectionState.Closed))
 				{
 					mConnection_.Close();
+					mConnection_.Dispose();
 				}
 			}
 		}

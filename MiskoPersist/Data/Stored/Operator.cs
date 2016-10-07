@@ -4,6 +4,7 @@ using MiskoPersist.Attributes;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
+using MiskoPersist.Tools;
 
 namespace MiskoPersist.Data.Stored
 {
@@ -211,17 +212,17 @@ namespace MiskoPersist.Data.Stored
         
         public void FetchByUsername(Session session, String name)
         {
-			Persistence persistence = session.GetPersistence();
-			persistence.ExecuteQuery("SELECT * FROM Operator WHERE Username = ?", name);
-			Set(session, persistence);
-			persistence.Close();
-			persistence = null;
+			using (Persistence persistence = session.GetPersistence())
+			{
+				persistence.ExecuteQuery("SELECT * FROM Operator WHERE Username = ?", name);
+				Set(session, persistence);
+			}
         }
 
         public Guid Logon(Session session, String password)
         {
 			Guid newSessionToken = Guid.Empty;
-        	/*
+
 			if (Disabled)
         	{
 				session.Error(ErrorLevel.Error, "Account is disabled.");
@@ -257,6 +258,10 @@ namespace MiskoPersist.Data.Stored
 					SetPasswordExpired(session);
 					session.Error(ErrorLevel.Error, "Password change required.");
         		}
+        		else if (PasswordExpired)
+        		{
+        			session.Error(ErrorLevel.Error, "Password has expired.");
+        		}
         		else
         		{
 					newSessionToken = Guid.NewGuid();
@@ -270,11 +275,19 @@ namespace MiskoPersist.Data.Stored
         	{
 				LastLoginAttempt = DateTime.Now;
 				LoginAttempts++;
-				LockedOut = LoginAttempts == SecurityPolicy.LockOutAttempts;
+				LockedOut = LoginAttempts >= SecurityPolicy.LockOutAttempts;
 				SetLoginFalied(session);
-				session.Error(ErrorLevel.Error, "Login failed.");
+				
+				if (LockedOut)
+				{
+					session.Error(ErrorLevel.Error, "Account is locked out. Wait {0} minutes and try again.", (SecurityPolicy.LockOutDuration - DateTime.Now.Subtract(LastLoginAttempt).Minutes));
+				}
+				else
+				{
+					session.Error(ErrorLevel.Error, "Login failed.");
+				}
         	}
-        	*/
+        	
         	return newSessionToken;
         }
 

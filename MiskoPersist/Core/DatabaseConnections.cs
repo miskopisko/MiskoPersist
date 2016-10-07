@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SQLite;
 using log4net;
 using MiskoPersist.Enums;
+using MySql.Data.MySqlClient;
+using Oracle.ManagedDataAccess.Client;
 
 namespace MiskoPersist.Core
 {
@@ -29,20 +33,20 @@ namespace MiskoPersist.Core
 		#endregion
 		
 		#region Static Methods
-
-		public static DbConnection GetConnection(String name)
-		{
-			return mConnections_.ContainsKey(name ?? "Default") ? mConnections_[name ?? "Default"].GetConnection() : null;
-		}
 		
-		public static IEnumerable<DatabaseConnection> GetConnections()
+		public static DatabaseConnection GetDatabaseConnection(String name)
 		{
-			return mConnections_.Values;
+			return mConnections_.ContainsKey(name ?? "Default") ? mConnections_[name ?? "Default"] : DatabaseConnection.NULL;
 		}
 		
 		public static void Clear()
 		{
 			mConnections_.Clear();
+		}
+		
+		public static IEnumerable<DatabaseConnection> GetConnections()
+		{
+			return mConnections_.Values;
 		}
 		
 		public static void AddMySqlConnection(String server, String datasource, String username, String password)
@@ -55,12 +59,18 @@ namespace MiskoPersist.Core
 			DatabaseConnection item = new DatabaseConnection();
 			item.Name = name;
 			item.DatabaseType = DatabaseType.MySql;
-			item.Server = server;
-			item.Port = null;
-			item.Datasource = datasource;
-			item.Username = username;
-			item.Password = password;
-			item.ConnectionString = "SERVER=" + server + ";DATABASE=" + datasource + ";UID=" + username + ";PASSWORD=" + password + ";Pooling=True;ConvertZeroDateTime=True;";
+			
+			MySqlConnectionStringBuilder connectionstringBuilder = new MySqlConnectionStringBuilder();
+			connectionstringBuilder.Server = server;
+			connectionstringBuilder.Database = datasource;
+			connectionstringBuilder.UserID = username;
+			connectionstringBuilder.Password = password;
+			connectionstringBuilder.Pooling = true;
+			connectionstringBuilder.MaximumPoolSize = 10;
+			connectionstringBuilder.MinimumPoolSize = 5;
+			connectionstringBuilder.ConvertZeroDateTime = true;
+			
+			item.ConnectionString = connectionstringBuilder.ToString();
 
 			if (!mConnections_.ContainsKey(name))
 			{
@@ -78,12 +88,16 @@ namespace MiskoPersist.Core
 			DatabaseConnection item = new DatabaseConnection();
 			item.Name = name;
 			item.DatabaseType = DatabaseType.Oracle;
-			item.Server = host;
-			item.Port = port;
-			item.Datasource = datasource;
-			item.Username = username;
-			item.Password = password;
-			item.ConnectionString = "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=" + host + ")(PORT=" + port + ")))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=" + datasource + ")));User Id=" + username + ";Password=" + password + ";Pooling=True;";
+			
+			OracleConnectionStringBuilder connectionStringBuilder = new OracleConnectionStringBuilder();
+			connectionStringBuilder.Pooling = true;
+			connectionStringBuilder.MaxPoolSize = 10;
+			connectionStringBuilder.MinPoolSize = 5;
+			connectionStringBuilder.DataSource = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=" + host + ")(PORT=" + port + ")))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=" + datasource + ")))";
+			connectionStringBuilder.UserID = username;
+			connectionStringBuilder.Password = password;
+			
+			item.ConnectionString = connectionStringBuilder.ToString();
 
 			if (!mConnections_.ContainsKey(name))
 			{
@@ -101,12 +115,22 @@ namespace MiskoPersist.Core
 			DatabaseConnection item = new DatabaseConnection();
 			item.Name = name;
 			item.DatabaseType = DatabaseType.SQLite;
-			item.Server = null;
-			item.Port = null;
-			item.Datasource = datasource;
-			item.Username = null;
-			item.Password = null;
-			item.ConnectionString = "Data Source=" + datasource + ";Version=3;Pooling=True;Max Pool Size=100;FailIfMissing=True;";
+			
+			SQLiteConnectionStringBuilder connectionStringBuilder = new SQLiteConnectionStringBuilder();
+			connectionStringBuilder.FullUri = datasource;
+			connectionStringBuilder.DefaultIsolationLevel = IsolationLevel.ReadCommitted;
+			connectionStringBuilder.DateTimeFormatString = "yyyy-MM-dd HH:mm:ss";
+			connectionStringBuilder.DefaultTimeout = 10;
+			connectionStringBuilder.Pooling = true;
+			connectionStringBuilder.FailIfMissing = true;
+			connectionStringBuilder.LegacyFormat = false;
+			connectionStringBuilder.JournalMode = SQLiteJournalModeEnum.Wal;
+			connectionStringBuilder.SyncMode = SynchronizationModes.Normal;
+			connectionStringBuilder.DateTimeKind = DateTimeKind.Local;
+			connectionStringBuilder.ForeignKeys = true;
+			connectionStringBuilder.UseUTF16Encoding = true;
+			
+			item.ConnectionString = connectionStringBuilder.ToString();
 
 			if (!mConnections_.ContainsKey(name))
 			{
@@ -124,12 +148,12 @@ namespace MiskoPersist.Core
 			DatabaseConnection item = new DatabaseConnection();
 			item.Name = name;
 			item.DatabaseType = DatabaseType.FoxPro;
-			item.Server = null;
-			item.Port = null;
-			item.Datasource = datasource;
-			item.Username = null;
-			item.Password = null;
-			item.ConnectionString = "Provider=vfpoledb.1;Data Source=" + datasource + ";Exclusive=No;Collate=Machine;NULL=YES;";
+			
+			OleDbConnectionStringBuilder connectionStringBuilder = new OleDbConnectionStringBuilder();
+			connectionStringBuilder.Provider = "vfpoledb.1";
+			connectionStringBuilder.DataSource = datasource;
+
+			item.ConnectionString = connectionStringBuilder.ToString();
 			
 			if (!mConnections_.ContainsKey(name))
 			{
