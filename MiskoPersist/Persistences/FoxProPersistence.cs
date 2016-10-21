@@ -27,8 +27,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public FoxProPersistence(Session session, DbCommand command)
-			: base(session, command)
+		public FoxProPersistence(Session session, DbCommand command, Boolean autonomous)
+			: base(session, command, autonomous)
 		{
 		}
 

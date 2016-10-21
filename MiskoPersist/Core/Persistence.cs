@@ -29,6 +29,7 @@ namespace MiskoPersist.Core
 		protected List<Object> mParameters_ = new List<Object>();
 		protected Int32 mRecordCount_ = 0;
 		protected String mParameterString_;
+		protected Boolean mAutonomous_ = false;
 
 		#endregion
 
@@ -56,10 +57,13 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-		protected Persistence(Session session, DbCommand command)
+		protected Persistence(Session session, DbCommand command, Boolean autonomous)
 		{
 			mSession_ = session;
 			mCommand_ = command;
+			mAutonomous_ = autonomous;
+
+			mSession_.AddPersistence(this);
 		}
 
 		#endregion
@@ -110,15 +114,10 @@ namespace MiskoPersist.Core
 
 		#endregion
 
-		#region Execute Methods
+		#region Execute Query Methods
 
 		public void ExecuteQuery()
 		{
-			if (String.IsNullOrEmpty(mSql_))
-			{
-				mSession_.Error(ErrorLevel.Error, ErrorStrings.errSqlNotSet);
-			}
-
 			ExecuteQuery(mSql_, mParameters_.ToArray());
 		}
 
@@ -129,6 +128,11 @@ namespace MiskoPersist.Core
 
 		public void ExecuteQuery(String sql, params Object[] parameters)
 		{
+			if (String.IsNullOrEmpty(sql))
+			{
+				mSession_.Error(ErrorLevel.Error, ErrorStrings.errSqlNotSet);
+			}
+			
 			mSql_ = sql;
 			if (parameters != null)
 			{
@@ -140,6 +144,9 @@ namespace MiskoPersist.Core
 			
 			mCommand_.Prepare();
 			
+			Log.Debug("Command: " + mCommand_.CommandText);
+			Log.Debug("Parameters: " + mParameterString_);
+			
 			Stopwatch timer = Stopwatch.StartNew();
 			mRs_ = mCommand_.ExecuteReader();
 			IsEof = !mRs_.Read();
@@ -147,26 +154,29 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			Log.Debug("Command: " + mCommand_.CommandText);
-			Log.Debug("Parameters: " + mParameterString_);
 			Log.Debug("Execution Time: " + timer.Elapsed);
 		}
-
-		public static Int32 ExecuteUpdate(Session session, String sql)
+		
+		#endregion
+		
+		#region Execute Update Methods 
+		
+		public static Int32 ExecuteAutonomousUpdate(Session session, String sql)
 		{
-			return ExecuteUpdate(session, sql, null);
+			return ExecuteAutonomousUpdate(session, sql, null);
 		}
 		
 		public static Int32 ExecuteAutonomousUpdate(Session session, String sql, params Object[] parameters)
 		{
-			using (Session autonomousSession = new Session(session.DatabaseConnection))
+			using (Persistence persistence = session.GetPersistence(true))
 			{
-				autonomousSession.BeginTransaction();
-				using (Persistence persistence = autonomousSession.GetPersistence())
-				{
-					return persistence.ExecuteUpdate(sql, parameters);
-				}
+				return persistence.ExecuteUpdate(sql, parameters);
 			}
+		}
+		
+		public static Int32 ExecuteUpdate(Session session, String sql)
+		{
+			return ExecuteUpdate(session, sql, null);
 		}
 
 		public static Int32 ExecuteUpdate(Session session, String sql, params Object[] parameters)
@@ -174,6 +184,14 @@ namespace MiskoPersist.Core
 			using (Persistence persistence = session.GetPersistence())
 			{
 				return persistence.ExecuteUpdate(sql, parameters);
+			}
+		}
+		
+		public static void ExecuteAutonomousUpdate(Session session, StoredData clazz, Type type)
+		{
+			using (Persistence persistence = session.GetPersistence(true))
+			{
+				persistence.ExecuteUpdate(clazz, type);
 			}
 		}
 
@@ -184,12 +202,36 @@ namespace MiskoPersist.Core
 				persistence.ExecuteUpdate(clazz, type);
 			}
 		}
+		
+		#endregion
+		
+		#region Insert Methods
+		
+		public static void ExecuteAutonomousInsert(Session session, StoredData clazz, Type type)
+		{
+			using (Persistence persistence = session.GetPersistence(true))
+			{
+				persistence.ExecuteInsert(clazz, type);
+			}
+		}
 
 		public static void ExecuteInsert(Session session, StoredData clazz, Type type)
 		{
 			using (Persistence persistence = session.GetPersistence())
 			{
 				persistence.ExecuteInsert(clazz, type);
+			}
+		}
+		
+		#endregion
+		
+		#region Delete Methods
+		
+		public static void ExecuteAutonomousDelete(Session session,  StoredData clazz, Type type)
+		{
+			using (Persistence persistence = session.GetPersistence(true))
+			{
+				persistence.ExecuteDelete(clazz, type);
 			}
 		}
 
@@ -200,6 +242,10 @@ namespace MiskoPersist.Core
 				persistence.ExecuteDelete(clazz, type);
 			}
 		}
+		
+		#endregion
+		
+		#region Function methods
 		
 		public void ExecuteRSFunction(String function)
 		{
@@ -220,6 +266,9 @@ namespace MiskoPersist.Core
 			
 			mCommand_.Prepare();
 			
+			Log.Debug("Command: " + mSql_);
+			Log.Debug("Parameters: " + mParameterString_);
+			
 			Stopwatch timer = Stopwatch.StartNew();
 			mRs_ = mCommand_.ExecuteReader();
 			IsEof = !mRs_.Read();
@@ -227,8 +276,6 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			Log.Debug("Command: " + mSql_);
-			Log.Debug("Parameters: " + mParameterString_);
 			Log.Debug("Execution Time: " + timer.Elapsed);
 		}
 
@@ -243,6 +290,9 @@ namespace MiskoPersist.Core
 			GenerateInsertStatement(clazz, type);
 			
 			mCommand_.Prepare();
+			
+			Log.Debug("Command: " + mSql_);
+			Log.Debug("Parameters: " + mParameterString_);
 
 			Stopwatch timer = Stopwatch.StartNew();
 			if (mCommand_ is MySqlCommand || mCommand_ is SQLiteCommand)
@@ -268,8 +318,6 @@ namespace MiskoPersist.Core
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			Log.Debug("Command: " + mSql_);
-			Log.Debug("Parameters: " + mParameterString_);
 			Log.Debug("Execution Time: " + timer.Elapsed);
 			
 			if (mSession_.MessageMode.Equals(MessageMode.Normal))
@@ -288,14 +336,15 @@ namespace MiskoPersist.Core
 			GenerateUpdateStatement(clazz, type);
 			
 			mCommand_.Prepare();
+			
+			Log.Debug("Command: " + mSql_);
+			Log.Debug("Parameters: " + mParameterString_);
 
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			Log.Debug("Command: " + mSql_);
-			Log.Debug("Parameters: " + mParameterString_);
 			Log.Debug("Execution Time: " + timer.Elapsed);
 
 			if (result == 0)
@@ -310,13 +359,14 @@ namespace MiskoPersist.Core
 			
 			mCommand_.Prepare();
 
+			Log.Debug("Command: " + mSql_);
+			Log.Debug("Parameters: " + mParameterString_);
+			
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
 			
-			Log.Debug("Command: " + mSql_);
-			Log.Debug("Parameters: " + mParameterString_);
 			Log.Debug("Execution Time: " + timer.Elapsed);
 
 			if (result == 0)
@@ -336,15 +386,16 @@ namespace MiskoPersist.Core
 			mCommand_.CommandText = mSql_;
 			SetParameters();
 			
+			Log.Debug("Command: " + mSql_);
+			Log.Debug("Parameters: " + mParameterString_);
+			
 			mCommand_.Prepare();
 
 			Stopwatch timer = Stopwatch.StartNew();
 			Int32 result = mCommand_.ExecuteNonQuery();
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);
-
-			Log.Debug("Command: " + mSql_);
-			Log.Debug("Parameters: " + mParameterString_);
+			
 			Log.Debug("Execution Time: " + timer.Elapsed);
 			
 			return result;
@@ -384,6 +435,14 @@ namespace MiskoPersist.Core
 
 				try
 				{
+					if (mAutonomous_)
+					{
+						mCommand_.Transaction.Commit();
+						mCommand_.Transaction.Dispose();
+						mCommand_.Connection.Close();
+						mCommand_.Connection.Dispose();
+					}
+
 					if (mCommand_ != null)
 					{
 						mCommand_.Dispose();

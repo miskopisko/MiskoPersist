@@ -74,6 +74,7 @@ namespace MiskoPersist.Core
 
 			if (!mConnections_.ContainsKey(name))
 			{
+				item.IsSet = true;
 				mConnections_.Add(name, item);
 			}
 		}
@@ -101,6 +102,7 @@ namespace MiskoPersist.Core
 
 			if (!mConnections_.ContainsKey(name))
 			{
+				item.IsSet = true;
 				mConnections_.Add(name, item);
 			}
 		}
@@ -129,11 +131,13 @@ namespace MiskoPersist.Core
 			connectionStringBuilder.DateTimeKind = DateTimeKind.Local;
 			connectionStringBuilder.ForeignKeys = true;
 			connectionStringBuilder.UseUTF16Encoding = true;
+			connectionStringBuilder.BinaryGUID = false;
 			
 			item.ConnectionString = connectionStringBuilder.ToString();
 
 			if (!mConnections_.ContainsKey(name))
 			{
+				item.IsSet = true;
 				mConnections_.Add(name, item);
 			}
 		}
@@ -157,6 +161,7 @@ namespace MiskoPersist.Core
 			
 			if (!mConnections_.ContainsKey(name))
 			{
+				item.IsSet = true;
 				mConnections_.Add(name, item);
 			}
 		}

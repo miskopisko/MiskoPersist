@@ -1,28 +1,36 @@
 ﻿using System;
+using System.Configuration;
 using log4net;
 
 namespace MiskoPersist.Core
 {
-	public static class SecurityPolicy
+	public class SecurityPolicy : ConfigurationSection
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(SecurityPolicy));
 		
-		#region Fields
+		#region Fields	
 		
-		private static Boolean mLoginRequired_ = false;
-		private static Int16 mMinimumPasswordAge_ = 0;
-		private static Int16 mMaximumPasswordAge_ = 0;
-		private static Int16 mMinimumPasswordLength_ = 0;
-		private static Int16 mLockOutAttempts_ = 0;
-		private static Int16 mLockOutDuration_ = 0;
-		private static Int16 mResetLoginCount_ = 0;
-		private static Int16 mSessionTokenExpiry_ = 0;
+		private Boolean mLoginRequired_ = true;
+		
+		private static SecurityPolicy mInstance_;
 		
 		#endregion
 		
 		#region Properties
 		
-		public static Boolean LoginRequired
+		public static SecurityPolicy Instance
+		{
+			get
+			{
+				if (mInstance_ == null)
+				{
+					mInstance_ = ConfigurationManager.GetSection("SecurityPolicy") as SecurityPolicy ?? new SecurityPolicy();
+				}
+				return mInstance_;
+			}
+		}
+		
+		public Boolean LoginRequired
 		{
 			get
 			{
@@ -34,87 +42,94 @@ namespace MiskoPersist.Core
 			}
 		}
 		
-		public static Int16 MinimumPasswordAge
+		[ConfigurationProperty("MinimumPasswordAge", DefaultValue = (Int16)1, IsRequired = false)]
+		public Int16 MinimumPasswordAge
 		{
 			get
 			{
-				return mMinimumPasswordAge_;
+				return (Int16)this["MinimumPasswordAge"];
 			}
 			set
 			{
-				mMinimumPasswordAge_ = value;
+				this["MinimumPasswordAge"] = value;
 			}
 		}
 
-		public static Int16 MaximumPasswordAge
+		[ConfigurationProperty("MaximumPasswordAge", DefaultValue = (Int16)30, IsRequired = false)]
+		public Int16 MaximumPasswordAge
 		{
 			get
 			{
-				return mMaximumPasswordAge_;
+				return (Int16)this["MaximumPasswordAge"];
 			}
 			set
 			{
-				mMaximumPasswordAge_ = value;
+				this["MaximumPasswordAge"] = value;
 			}
 		}
 		
-		public static Int16 MinimumPasswordLength
+		[ConfigurationProperty("MinimumPasswordLength", DefaultValue = (Int16)8, IsRequired = false)]
+		public Int16 MinimumPasswordLength
 		{
 			get
 			{
-				return mMinimumPasswordLength_;
+				return (Int16)this["MinimumPasswordLength"];
 			}
 			set
 			{
-				mMinimumPasswordLength_ = value;
+				this["MinimumPasswordLength"] = value;
 			}
 		}
 		
-		public static Int16 LockOutAttempts
+		[ConfigurationProperty("LockOutAttempts", DefaultValue = (Int16)5, IsRequired = false)]
+		public Int16 LockOutAttempts
 		{
 			get
 			{
-				return mLockOutAttempts_;
+				return (Int16)this["LockOutAttempts"];
 			}
 			set
 			{
-				mLockOutAttempts_ = value;
+				this["LockOutAttempts"] = value;
 			}
 		}
 		
-		public static Int16 LockOutDuration
+		[ConfigurationProperty("LockOutDuration", DefaultValue = (Int16)15, IsRequired = false)]
+		public Int16 LockOutDuration
 		{
 			get
 			{
-				return mLockOutDuration_;
+				return (Int16)this["LockOutDuration"];
 			}
 			set
 			{
-				mLockOutDuration_ = value;
+				this["LockOutDuration"] = value;
 			}
 		}
 		
-		public static Int16 ResetLoginCount
+		[ConfigurationProperty("ResetLoginCount", DefaultValue = (Int16)15, IsRequired = false)]
+		public Int16 ResetLoginCount
 		{
 			get
 			{
-				return mResetLoginCount_;
+				return (Int16)this["ResetLoginCount"];
 			}
 			set
 			{
-				mResetLoginCount_ = value > 0 ? value : (Int16)1;
+				this["ResetLoginCount"] = value;
 			}
 		}
 		
-		public static Int16 SessionTokenExpiry
+		[ConfigurationProperty("SessionTokenExpiry", DefaultValue = (Int16)15, IsRequired = false)]
+		public Int16 SessionTokenExpiry
 		{
 			get
 			{
-				return mSessionTokenExpiry_;
+				return (Int16)this["SessionTokenExpiry"];
 			}
 			set
 			{
-				mSessionTokenExpiry_ = value;
+				this["SessionTokenExpiry"] = value;
 			}
 		}
 		

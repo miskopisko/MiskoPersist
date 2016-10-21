@@ -1,5 +1,6 @@
 -- MySql Table Definitions
 
+DROP TABLE IF EXISTS Operator;
 CREATE TABLE Operator 
 (
     Id 						int(10) NOT NULL AUTO_INCREMENT,
@@ -19,4 +20,22 @@ CREATE TABLE Operator
     DtModified 				datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     RowVer 					int(10) NOT NULL DEFAULT '0',
     PRIMARY KEY (Id)
+) ENGINE=InnoDB AUTO_INCREMENT=1000001 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS SessionLog;
+CREATE TABLE SessionLog 
+(
+	Id              	int(10) NOT NULL AUTO_INCREMENT,
+	SessionToken    	varchar(36) NOT NULL,
+	Operator        	int(10) NOT NULL,
+	LoggedOn        	datetime NOT NULL,
+	LoggedOff       	datetime,
+	LastTransmitted 	datetime NOT NULL,
+	Status 				int(3) NOT NULL,
+	DtCreated 			datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    DtModified 			datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    RowVer 				int(10) NOT NULL DEFAULT '0',
+    PRIMARY KEY (Id),
+    KEY Operator (Operator),
+    CONSTRAINT FK_SessionLogOperator FOREIGN KEY (Operator) REFERENCES Operator (Id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1000001 DEFAULT CHARSET=utf8;

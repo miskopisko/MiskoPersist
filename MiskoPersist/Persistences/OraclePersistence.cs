@@ -29,8 +29,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public OraclePersistence(Session session, DbCommand command)
-			: base(session, command)
+		public OraclePersistence(Session session, DbCommand command, Boolean autonomous)
+			: base(session, command, autonomous)
 		{
 		}
 

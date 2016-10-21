@@ -164,7 +164,7 @@ namespace MiskoPersist.Core
 			Invoke(MessageSent);
 			
 			mThread_ = new Thread(new ThreadStart(Run));
-			mThread_.IsBackground = true;
+			mThread_.Name = mRequest_.WrapperClass.Name;
 			mThread_.Start();
 		}
 		
@@ -179,16 +179,6 @@ namespace MiskoPersist.Core
 			
             ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
             
-            if (response is LogonRS)
-            {
-				mSessionToken_ = response.SessionToken;
-            }
-            
-            if (response is LogoffRS)
-            {
-				mSessionToken_ = null;
-            }
-			
             if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
 			{
 				Log.Info(Environment.NewLine + Serializer.Serialize(response, SerializationType, true));
@@ -198,6 +188,16 @@ namespace MiskoPersist.Core
 			{
 				if (!response.HasErrors && !response.HasUnconfirmed)
 				{
+					if (response is LogonRS)
+		            {
+						mSessionToken_ = response.SessionToken;
+		            }
+		            
+		            if (response is LogoffRS)
+		            {
+						mSessionToken_ = null;
+		            }
+					
 					Invoke(mSuccessHandler_, response);
 				}
 			}
@@ -272,9 +272,22 @@ namespace MiskoPersist.Core
 				{
 					Control control = d.Target as System.Windows.Forms.Control;
 					
-					if (control != null && control.InvokeRequired)
+					if (control != null)
 					{
-						control.Invoke(d, args);
+						if (control.IsDisposed || control.Disposing)
+						{
+							return;
+						}
+						
+						if (control.InvokeRequired)
+						{
+							IAsyncResult result = control.BeginInvoke(d, args);
+							control.EndInvoke(result);
+						}
+						else
+						{
+							d.DynamicInvoke(args);
+						}
 					}
 					else
 					{

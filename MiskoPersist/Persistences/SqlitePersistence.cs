@@ -29,8 +29,8 @@ namespace MiskoPersist.Persistences
 
 		#region Constructors
 
-		public SqlitePersistence(Session session, DbCommand command)
-			: base(session, command)
+		public SqlitePersistence(Session session, DbCommand command, Boolean autonomous)
+			: base(session, command, autonomous)
 		{
 		}
 

@@ -1,5 +1,4 @@
-﻿using System;
-using log4net;
+﻿using log4net;
 using MiskoPersist.Core;
 using MiskoPersist.Data.Stored;
 using MiskoPersist.Enums;
@@ -20,28 +19,28 @@ namespace MiskoPersist.Message
 		
 		#region Properties
 
-        public new LogonRQ Request { get { return (LogonRQ)base.Request; } }
-        public new LogonRS Response  { get { return (LogonRS)base.Response; } }
+		public new LogonRQ Request { get { return (LogonRQ)base.Request; } }
+		public new LogonRS Response  { get { return (LogonRS)base.Response; } }
 		
-        #endregion
+		#endregion
 
-        public Logon(LogonRQ request, LogonRS response) 
-        	: base(request, response)
-        {
-        }
+		public Logon(LogonRQ request, LogonRS response) 
+			: base(request, response)
+		{
+		}
 
-        public override void Execute(Session session)
-        {
-        	mOperator_.FetchByUsername(session, Request.Username);
-        	
-        	if(mOperator_.IsSet)
-        	{
-        		Response.SessionToken = mOperator_.Logon(session, Request.Password);
-        	}
- 			else
-            {
-                session.Error(ErrorLevel.Error, "Invalid username or password. Please try again.");
-            }
-        }
+		public override void Execute(Session session)
+		{
+			mOperator_.FetchByUsername(session, Request.Username);
+			
+			if(mOperator_.IsSet)
+			{
+				session.SessionToken = mOperator_.Logon(session, Request.Password);
+			}
+			else
+			{
+				session.Error(ErrorLevel.Error, "Invalid username or password.");
+			}
+		}
 	}
 }

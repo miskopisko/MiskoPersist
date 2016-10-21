@@ -52,6 +52,13 @@ namespace MiskoPersist.Data.Stored
 			get;
 			set;
 		}
+		
+		[Stored]
+		public SessionStatus Status
+		{
+			get;
+			set;
+		}
 
 		#endregion
 		
@@ -73,7 +80,7 @@ namespace MiskoPersist.Data.Stored
         public override StoredData Create(Session session)
         {
             PreSave(session, UpdateMode.Insert);
-            Persistence.ExecuteInsert(session, this, typeof(SessionLog));
+            Persistence.ExecuteAutonomousInsert(session, this, typeof(SessionLog));
             PostSave(session, UpdateMode.Insert);
             return this;
         }
@@ -81,14 +88,14 @@ namespace MiskoPersist.Data.Stored
         public override StoredData Store(Session session)
         {
             PreSave(session, UpdateMode.Update);
-            Persistence.ExecuteUpdate(session, this, typeof(SessionLog));
+            Persistence.ExecuteAutonomousUpdate(session, this, typeof(SessionLog));
             PostSave(session, UpdateMode.Update);
             return this;
         }
 
         public override StoredData Remove(Session session)
         {
-            Persistence.ExecuteDelete(session, this, typeof(SessionLog));
+            Persistence.ExecuteAutonomousDelete(session, this, typeof(SessionLog));
             PostSave(session, UpdateMode.Delete);
             return this;
         }
@@ -110,24 +117,37 @@ namespace MiskoPersist.Data.Stored
         #endregion
 
         #region Public Methods
-
         
+        public static SessionLog GetInstanceBySessionToken(Session session, Guid sessionToken)
+        {
+        	using (Persistence persistence = session.GetPersistence(true))
+        	{
+				persistence.ExecuteQuery("SELECT * FROM SessionLog WHERE SessionToken = ?", sessionToken);
+				return new SessionLog(session, persistence);
+        	}
+        }
+
+        public static Guid AddNew(Session session, PrimaryKey o)
+        {
+        	SessionLog sessionLog = new SessionLog();
+			sessionLog.SessionToken = Guid.NewGuid();
+			sessionLog.Operator = o;
+			sessionLog.LoggedOn = DateTime.Now;
+			sessionLog.LastTransmitted = DateTime.Now;
+			sessionLog.Status = SessionStatus.Active;
+			sessionLog.Save(session);
+			
+			return sessionLog.SessionToken;
+        }
+        
+        public static void LogOff(Session session)
+        {
+        	using (Persistence persistence = session.GetPersistence())
+        	{
+        		persistence.ExecuteQuery("UPDATE SessionLog SET Status = ?, LoggedOff = ? WHERE SessionToken = ?", SessionStatus.Closed, DateTime.Now, session.SessionToken);
+        	}
+        }
 
         #endregion
 	}
-	
-	/* SQLITE 
-	CREATE TABLE SessionLog 
-	(
-    Id              INTEGER  PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-    SessionToken    VARCHAR (36) NOT NULL,
-    Operator        INTEGER  NOT NULL,
-    LoggedOn        DATE     NOT NULL,
-    LoggedOff       DATETIME,
-    LastTransmitted DATETIME NOT NULL,
-    DtCreated       DATETIME NOT NULL DEFAULT (DATETIME('NOW') ),
-    DtModified      DATETIME NOT NULL DEFAULT (DATETIME('NOW') ),
-    RowVer          INTEGER  NOT NULL DEFAULT (0) 
-	);
-	*/
 }

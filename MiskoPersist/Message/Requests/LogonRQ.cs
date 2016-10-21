@@ -16,5 +16,17 @@ namespace MiskoPersist.Message.Requests
 		public String Password { get; set; }
 
 		#endregion
+
+		#region Other Properties
+
+		public override Boolean SecurityExempt
+		{
+			get
+			{
+				return true;
+			}
+		}
+
+		#endregion
 	}
 }

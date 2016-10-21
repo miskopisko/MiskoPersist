@@ -57,7 +57,8 @@ namespace MiskoPersist.Core
 	                while (ex != null);
 	            }
 				finally
-				{                
+				{
+					response.SessionToken = session.SessionToken;					
 					response.Status = session.Status;
 					response.Errors.Add(session.ErrorMessages.ListOf(ErrorLevel.Error));
 					response.Warnings.Add(session.ErrorMessages.ListOf(ErrorLevel.Warning));

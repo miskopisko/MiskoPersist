@@ -54,6 +54,20 @@ namespace MiskoPersist.Data.Viewed
 		
 		#endregion
 		
+		#region Constructors
+		
+		public ViewedDataList()
+		{
+		}
+		
+		public ViewedDataList(Session session, Persistence persistence)
+		{
+			Set(session, persistence);
+		}
+		
+		
+		#endregion
+		
 		#region Override Methods
 		
 		protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)

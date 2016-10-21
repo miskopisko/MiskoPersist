@@ -21,6 +21,12 @@ namespace MiskoPersist.Core
 
 		#region Properties
 
+		public Boolean IsSet
+		{
+			get;
+			set;
+		}
+
 		public String Name 
 		{ 
 			get; 
@@ -43,25 +49,28 @@ namespace MiskoPersist.Core
 		
 		#region Public Methods
 		
-		public DbConnection GetConnection()
+		public DbConnection Connect()
 		{
 			DbConnection result = null;
 			
-			if (DatabaseType.Equals(DatabaseType.SQLite))
+			if (IsSet)
 			{
-				result = new SQLiteConnection(ConnectionString);
-			}
-			else if (DatabaseType.Equals(DatabaseType.MySql))
-			{
-				result = new MySqlConnection(ConnectionString);
-			}
-			else if (DatabaseType.Equals(DatabaseType.Oracle))
-			{
-				result = new OracleConnection(ConnectionString);
-			}
-			else if (DatabaseType.Equals(DatabaseType.FoxPro))
-			{
-				result = new OleDbConnection(ConnectionString);
+				if (DatabaseType.Equals(DatabaseType.SQLite))
+				{
+					result = new SQLiteConnection(ConnectionString);
+				}
+				else if (DatabaseType.Equals(DatabaseType.MySql))
+				{
+					result = new MySqlConnection(ConnectionString);
+				}
+				else if (DatabaseType.Equals(DatabaseType.Oracle))
+				{
+					result = new OracleConnection(ConnectionString);
+				}
+				else if (DatabaseType.Equals(DatabaseType.FoxPro))
+				{
+					result = new OleDbConnection(ConnectionString);
+				}	
 			}
 			
 			if (result != null)

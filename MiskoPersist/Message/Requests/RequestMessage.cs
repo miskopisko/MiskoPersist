@@ -39,5 +39,19 @@ namespace MiskoPersist.Message.Requests
 		}
 
 		#endregion
+
+		#region Other Properties
+
+		public virtual Boolean SecurityExempt
+		{
+			get
+			{
+				return false;
+			}
+		}
+
+		#endregion
 	}
 }
+
+

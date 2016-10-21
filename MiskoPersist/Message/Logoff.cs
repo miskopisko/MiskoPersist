@@ -1,6 +1,6 @@
-﻿using System;
-using log4net;
+﻿using log4net;
 using MiskoPersist.Core;
+using MiskoPersist.Data.Stored;
 using MiskoPersist.Message.Requests;
 using MiskoPersist.Message.Responses;
 
@@ -24,6 +24,7 @@ namespace MiskoPersist.Message
 
         public override void Execute(Session session)
         {
+			SessionLog.LogOff(session);
         }
 	}
 }

@@ -8,10 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace MiskoPersist.Resources {
-	using System;
-	
-	
+namespace MiskoPersist.Resources
+{
+
+
 	/// <summary>
 	///   A strongly-typed resource class, for looking up localized strings, etc.
 	/// </summary>

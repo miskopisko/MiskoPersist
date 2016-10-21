@@ -6,8 +6,8 @@ using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Reflection;
-using System.Threading;
 using log4net;
+using MiskoPersist.Data.Stored;
 using MiskoPersist.Data.Viewed;
 using MiskoPersist.Enums;
 using MiskoPersist.Message.Requests;
@@ -25,6 +25,7 @@ namespace MiskoPersist.Core
 		#region Fields
 		
 		private readonly Object mLocker_ = new Object();
+		private readonly DatabaseConnection mDatabaseConnection_;
 		private readonly DbConnection mConnection_;
 		private DbTransaction mTransaction_;
 		private List<Persistence> mPersistencePool_ = new List<Persistence>();
@@ -33,31 +34,31 @@ namespace MiskoPersist.Core
 
 		#region Properties
 		
-		public DatabaseConnection DatabaseConnection
-		{
-			get;
-			private set;
-		}
-		
-		public MessageMode MessageMode
-		{
-			get;			
-			private set;
-		}
-		
-		public ErrorMessages ErrorMessages
-		{
-			get;
-			private set;
-		}
-		
-		public ErrorLevel Status
+		internal Guid? SessionToken
 		{
 			get;
 			set;
 		}
 		
-		public TimeSpan SqlExecutionTime
+		internal MessageMode MessageMode
+		{
+			get;			
+			private set;
+		}
+		
+		internal ErrorMessages ErrorMessages
+		{
+			get;
+			private set;
+		}
+		
+		internal ErrorLevel Status
+		{
+			get;
+			set;
+		}
+		
+		internal TimeSpan SqlExecutionTime
 		{
 			get;
 			set;
@@ -67,59 +68,73 @@ namespace MiskoPersist.Core
 
 		#region Constructors
 
-        public Session(DatabaseConnection databaseConnection)
-        {
-			DatabaseConnection = databaseConnection;
-            Status = ErrorLevel.Success;
-            MessageMode = MessageMode.Normal;
-            ErrorMessages = new ErrorMessages();
-            SqlExecutionTime = TimeSpan.Zero;
-            mConnection_ = databaseConnection.GetConnection();
-        }
+		public Session(DatabaseConnection databaseConnection)
+		{
+			mDatabaseConnection_ = databaseConnection;
+			mConnection_ = databaseConnection.Connect();
+			
+			Status = ErrorLevel.Success;
+			MessageMode = MessageMode.Normal;
+			ErrorMessages = new ErrorMessages();
+			SqlExecutionTime = TimeSpan.Zero;
+		}
 		
 		#endregion
 
 		#region Public Methods
 		
-		public Persistence GetPersistence()
+		public Persistence GetPersistence(Boolean isAutonomous = false)
 		{
-			if (mConnection_ != null)
+			if (mDatabaseConnection_.IsSet)
 			{
-				DbCommand command = mConnection_.CreateCommand();
-				command.Transaction = mTransaction_;
-				Persistence result = null;
+				DbCommand command;
 				
+				if (isAutonomous)
+				{
+					DbConnection autonomousConnection = mDatabaseConnection_.Connect();
+					command = autonomousConnection.CreateCommand();
+					command.Transaction = autonomousConnection.BeginTransaction();
+				}
+				else
+				{
+					command = mConnection_.CreateCommand();
+					command.Transaction = mTransaction_;	
+				}
+								
 				if (mConnection_ is OracleConnection)
 				{
-					result = new OraclePersistence(this, command);
+					return new OraclePersistence(this, command, isAutonomous);
 				}
 				if (mConnection_ is MySqlConnection)
 				{
-					result = new MySqlPersistence(this, command);
+					return new MySqlPersistence(this, command, isAutonomous);
 				}
 				if (mConnection_ is SQLiteConnection)
 				{
-					result = new SqlitePersistence(this, command);
+					return new SqlitePersistence(this, command, isAutonomous);
 				}
 				if (mConnection_ is OleDbConnection)
 				{
-					result = new FoxProPersistence(this, command);
+					return new FoxProPersistence(this, command, isAutonomous);
 				}
-				mPersistencePool_.Add(result);
-				return result;
 			}
 			throw new MiskoException("Unable to get datatabe connection");
 		}
-		
-		public void RemovePersistence(Persistence persistence)
+
+		internal void AddPersistence(Persistence persistence)
+		{
+			mPersistencePool_.Add(persistence);
+		}
+
+		internal void RemovePersistence(Persistence persistence)
 		{
 			mPersistencePool_.Remove(persistence);
 		}
 
-        public void BeginTransaction()
-        {
+		public void BeginTransaction()
+		{
 			BeginTransaction(null);
-        }
+		}
 
 		public void BeginTransaction(RequestMessage request)
 		{
@@ -135,18 +150,37 @@ namespace MiskoPersist.Core
 					
 					if (request != null)
 					{
-						Thread.CurrentThread.Name = request.WrapperClass.Name;
-						
 						MessageMode = request.MessageMode ?? MessageMode.Normal;
 						ErrorMessages.Add(request.Confirmations);
+						SessionToken = request.SessionToken;
 						
-						if (SecurityPolicy.LoginRequired && request.SessionToken == null && !(request is LogonRQ))
+						if (SecurityPolicy.Instance.LoginRequired && !SessionToken.HasValue && !request.SecurityExempt)
 						{
-							throw new MiskoException("Application requires logon");
+							Error(ErrorLevel.Error, "Invalid session token.");
 						}
-						if (SecurityPolicy.LoginRequired && request.SessionToken != null)
+						if (SecurityPolicy.Instance.LoginRequired && SessionToken.HasValue && !request.SecurityExempt)
 						{
-							// Validate security here
+							SessionLog sessionLog = SessionLog.GetInstanceBySessionToken(this, SessionToken.Value);
+							
+							if (sessionLog.IsSet && sessionLog.Status.Equals(SessionStatus.Active))
+							{
+								if (SecurityPolicy.Instance.SessionTokenExpiry > 0 && DateTime.Now.Subtract(sessionLog.LastTransmitted).Minutes > SecurityPolicy.Instance.SessionTokenExpiry)
+								{
+									sessionLog.LastTransmitted = DateTime.Now;
+									sessionLog.LoggedOff = DateTime.Now;
+									sessionLog.Status = SessionStatus.Expired;
+									sessionLog.Save(this);
+									
+									Error(ErrorLevel.Error, "Invalid session token.");
+								}
+								
+								sessionLog.LastTransmitted = DateTime.Now;
+								sessionLog.Save(this);
+							}
+							else
+							{
+								Error(ErrorLevel.Error, "Invalid session token.");
+							}
 						}
 					}
 					
@@ -179,7 +213,7 @@ namespace MiskoPersist.Core
 			}
 		}
 
-		public void FlushPersistence()
+		internal void FlushPersistence()
 		{
 			lock (mLocker_)
 			{
