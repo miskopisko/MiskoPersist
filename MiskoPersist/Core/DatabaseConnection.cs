@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Data.OleDb;
 using System.Data.SQLite;
 using log4net;
 using MiskoPersist.Enums;
@@ -66,10 +65,6 @@ namespace MiskoPersist.Core
 				else if (DatabaseType.Equals(DatabaseType.Oracle))
 				{
 					result = new OracleConnection(ConnectionString);
-				}
-				else if (DatabaseType.Equals(DatabaseType.FoxPro))
-				{
-					result = new OleDbConnection(ConnectionString);
 				}	
 			}
 			

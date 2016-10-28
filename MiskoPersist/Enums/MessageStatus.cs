@@ -14,7 +14,7 @@ namespace MiskoPersist.Enums
 		private static readonly MessageStatus mConfirmation_ = new MessageStatus(4, "", "Confirm?");
 		private static readonly MessageStatus mSuccess_ = new MessageStatus(5, "", "Success!");
 
-		private static readonly MessageStatus[] mElements_ = new[]
+		private static readonly MessageStatus[] mElements_ =
 		{
 			mNULL_, mProcessing_, mError_, mWarning_, mInformation_, mConfirmation_, mSuccess_
 		};

@@ -113,7 +113,7 @@ namespace MiskoPersist.Core
 			set; 
 		}
 
-        #endregion
+		#endregion
 		
 		#region Constructors
 		
@@ -125,11 +125,16 @@ namespace MiskoPersist.Core
 			mSuccessHandler_ = successHandler;
 			mErrorHandler_ = errorHandler;
 			
-			if (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online))
+			if (Location == null || !Location.IsSet)
+			{
+				throw new MiskoException("Server location must be set.");
+			}
+			
+			if (Location.Equals(ServerLocation.Online))
 			{
 				if (String.IsNullOrEmpty(Host))
 				{
-					throw new MiskoException("Server location is online but host is not defined");
+					throw new MiskoException("Server location is online but host is not defined.");
 				}
 				
 				if (Port == 0)
@@ -144,10 +149,10 @@ namespace MiskoPersist.Core
 				
 				if (String.IsNullOrEmpty(Script))
 				{
-					throw new MiskoException("Server location is online but script is not defined");
+					throw new MiskoException("Server location is online but script is not defined.");
 				}
 				
-				if (SerializationType == null || SerializationType.IsNotSet)
+				if (SerializationType == null || !SerializationType.IsSet)
 				{
 					throw new MiskoException("Serialization type is not defined");
 				}
@@ -174,12 +179,12 @@ namespace MiskoPersist.Core
 			
 			if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
 			{
-            	Log.Info(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType, true));
+				Log.Info(Environment.NewLine + Serializer.Serialize(mRequest_, SerializationType, true));
 			}
 			
-            ResponseMessage response = (Location != null && Location.IsSet && Location.Equals(ServerLocation.Online)) ? SendToServer() : MessageProcessor.Process(mRequest_);
-            
-            if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
+			ResponseMessage response = Location.Equals(ServerLocation.Online) ? SendToServer() : MessageProcessor.Process(mRequest_);
+			
+			if (WriteMessagesToLog && (SerializationType != null && SerializationType.IsSet) && Log.IsInfoEnabled)
 			{
 				Log.Info(Environment.NewLine + Serializer.Serialize(response, SerializationType, true));
 			}
@@ -188,15 +193,7 @@ namespace MiskoPersist.Core
 			{
 				if (!response.HasErrors && !response.HasUnconfirmed)
 				{
-					if (response is LogonRS)
-		            {
-						mSessionToken_ = response.SessionToken;
-		            }
-		            
-		            if (response is LogoffRS)
-		            {
-						mSessionToken_ = null;
-		            }
+					mSessionToken_ = response.SessionToken;
 					
 					Invoke(mSuccessHandler_, response);
 				}
@@ -297,13 +294,13 @@ namespace MiskoPersist.Core
 			}
 			catch (Exception ex)
 			{
-                do
-                {
-                    Log.Error("Unexpected Error: (" + ex.Message + ") @ " + d.Method.DeclaringType.Name + "." + d.Method.Name, ex);
-                    Invoke(Error, new ErrorMessage(ex));
-                    ex = ex.InnerException;
-                }
-                while (ex != null);
+				do
+				{
+					Log.Error("Unexpected Error: (" + ex.Message + ") @ " + d.Method.DeclaringType.Name + "." + d.Method.Name, ex);
+					Invoke(Error, new ErrorMessage(ex));
+					ex = ex.InnerException;
+				}
+				while (ex != null);
 			}
 		}
 		
@@ -311,44 +308,44 @@ namespace MiskoPersist.Core
 		{
 			ResponseMessage responseMessage = null;
 
-            try
-            {
-            	Uri uri = new Uri((UseSSL ? "https://" : "http://") + Host + ":" + Port + Script);
-                String request = Serializer.Serialize(mRequest_, SerializationType);
+			try
+			{
+				Uri uri = new Uri((UseSSL ? "https://" : "http://") + Host + ":" + Port + Script);
+				String request = Serializer.Serialize(mRequest_, SerializationType);
 
-                WebRequest webRequest = WebRequest.Create(uri);
-                webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
-                webRequest.Method = "POST";
-                webRequest.ContentType = SerializationType.ToHttpContentType();
-                webRequest.Timeout = Timeout * 1000;
-                webRequest.ContentLength = Serializer.Encoding.GetByteCount(request);
+				WebRequest webRequest = WebRequest.Create(uri);
+				webRequest.Proxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+				webRequest.Method = "POST";
+				webRequest.ContentType = SerializationType.ToHttpContentType();
+				webRequest.Timeout = Timeout * 1000;
+				webRequest.ContentLength = Serializer.Encoding.GetByteCount(request);
 
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                using (StreamWriter writer = new StreamWriter(webRequest.GetRequestStream(), Serializer.Encoding))
-                {
-                    writer.Write(request);
+				Stopwatch stopwatch = Stopwatch.StartNew();
+				using (StreamWriter writer = new StreamWriter(webRequest.GetRequestStream(), Serializer.Encoding))
+				{
+					writer.Write(request);
 				}
 
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    webRequest.GetResponse().GetResponseStream().CopyTo(ms);
-                    responseMessage = Serializer.Deserialize(ms) as ResponseMessage;
-                }
-                stopwatch.Stop();
-                Log.Debug(String.Format("{0} round trip from {1} : {2}", mRequest_.WrapperClass.Name, uri, stopwatch.Elapsed));
+				using (MemoryStream ms = new MemoryStream())
+				{
+					webRequest.GetResponse().GetResponseStream().CopyTo(ms);
+					responseMessage = Serializer.Deserialize(ms) as ResponseMessage;
+				}
+				stopwatch.Stop();
+				Log.Debug(String.Format("{0} round trip from {1} : {2}", mRequest_.WrapperClass.Name, uri, stopwatch.Elapsed));
 			}
 			catch (Exception ex)
 			{
 				responseMessage = (ResponseMessage)Activator.CreateInstance(mRequest_.ResponseClass);
 				responseMessage.Status = ErrorLevel.Error;
 
-                do
-                {
-                    Log.Error("Unexpected Error: (" + ex.Message + ")", ex);
-                    responseMessage.Errors.Add(new ErrorMessage(ex));
-                    ex = ex.InnerException;
-                }
-                while (ex != null);
+				do
+				{
+					Log.Error("Unexpected Error: (" + ex.Message + ")", ex);
+					responseMessage.Errors.Add(new ErrorMessage(ex));
+					ex = ex.InnerException;
+				}
+				while (ex != null);
 			}
 			
 			return responseMessage;

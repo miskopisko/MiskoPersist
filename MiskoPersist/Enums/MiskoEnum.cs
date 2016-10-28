@@ -32,14 +32,6 @@ namespace MiskoPersist.Enums
 			}
 		}
 
-		public Boolean IsNotSet
-		{
-			get
-			{
-				return !IsSet;
-			}
-		}
-
 		#endregion
 
 		#region Constructors

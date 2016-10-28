@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -310,10 +309,6 @@ namespace MiskoPersist.Core
 				mCommand_.ExecuteNonQuery();
 
 				newId = new PrimaryKey(Convert.ToInt64(lastId.Value));
-			}
-			else if (mCommand_ is OleDbCommand)
-			{
-				// FoxPro INSERT is done on a class by class basis by overriding the Create method
 			}
 			timer.Stop();
 			mSession_.SqlExecutionTime = mSession_.SqlExecutionTime.Add(timer.Elapsed);

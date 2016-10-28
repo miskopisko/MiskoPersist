@@ -204,6 +204,11 @@ namespace MiskoPersist.Data.Stored
 
 		#region Public Methods
 		
+		public Boolean ValidatePassword(String password)
+		{
+			return PasswordHash.ScryptHashStringVerify(Password, password);
+		}
+		
 		public void FetchByUsername(Session session, String name)
 		{
 			using (Persistence persistence = session.GetPersistence())
@@ -213,10 +218,8 @@ namespace MiskoPersist.Data.Stored
 			}
 		}
 
-		public Guid Logon(Session session, String password)
+		public void Logon(Session session, String password)
 		{
-			Guid newSessionToken = Guid.Empty;
-
 			if (Disabled)
 			{
 				session.Error(ErrorLevel.Error, "Account is disabled.");
@@ -245,7 +248,7 @@ namespace MiskoPersist.Data.Stored
 				ResetLoginAttempts(session);
 			}
 
-			if (PasswordHash.ScryptHashStringVerify(Password, password))
+			if (ValidatePassword(password))
 			{
 				PasswordExpired = PasswordExpired || (!PasswordNeverExpires && SecurityPolicy.Instance.MaximumPasswordAge > 0 && DateTime.Now.Subtract(PasswordChangeDate).Days > SecurityPolicy.Instance.MaximumPasswordAge); 
 				
@@ -260,7 +263,7 @@ namespace MiskoPersist.Data.Stored
 					LastLoginAttempt = DateTime.Now;
 					LoginAttempts = 0;
 					SetLoginPassed(session);
-					newSessionToken = SessionLog.AddNew(session, Id);
+					session.SessionToken = SessionLog.AddNew(session, Id);
 				}
 			}
 			else
@@ -279,11 +282,9 @@ namespace MiskoPersist.Data.Stored
 					session.Error(ErrorLevel.Error, "Login failed.");
 				}
 			}
-			
-			return newSessionToken;
 		}
 		
-		public void ChangePassword(Session session, String oldPassword, String newPassword, String confirmPassword)
+		public void SetPassword(Session session, String newPassword, String confirmPassword)
 		{
 			if (!IsSet)
 			{
@@ -300,11 +301,6 @@ namespace MiskoPersist.Data.Stored
 			if (!IsSet)
 			{
 				session.Error(ErrorLevel.Error, "Operator not found.");
-			}
-			
-			if (!String.Equals(Password, oldPassword))
-			{
-				session.Error(ErrorLevel.Error, "Invalid password.");
 			}
 			
 			if (String.Equals(newPassword, confirmPassword))

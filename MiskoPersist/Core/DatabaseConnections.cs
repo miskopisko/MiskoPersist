@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
 using System.Data.SQLite;
 using log4net;
 using MiskoPersist.Enums;
@@ -135,30 +134,6 @@ namespace MiskoPersist.Core
 			
 			item.ConnectionString = connectionStringBuilder.ToString();
 
-			if (!mConnections_.ContainsKey(name))
-			{
-				item.IsSet = true;
-				mConnections_.Add(name, item);
-			}
-		}
-
-		public static void AddFoxProConnection(String datasource)
-		{
-			AddFoxProConnection("Default", datasource);
-		}
-
-		public static void AddFoxProConnection(String name, String datasource)
-		{
-			DatabaseConnection item = new DatabaseConnection();
-			item.Name = name;
-			item.DatabaseType = DatabaseType.FoxPro;
-			
-			OleDbConnectionStringBuilder connectionStringBuilder = new OleDbConnectionStringBuilder();
-			connectionStringBuilder.Provider = "vfpoledb.1";
-			connectionStringBuilder.DataSource = datasource;
-
-			item.ConnectionString = connectionStringBuilder.ToString();
-			
 			if (!mConnections_.ContainsKey(name))
 			{
 				item.IsSet = true;

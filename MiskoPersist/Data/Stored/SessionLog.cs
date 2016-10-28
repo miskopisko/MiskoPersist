@@ -145,6 +145,7 @@ namespace MiskoPersist.Data.Stored
         	using (Persistence persistence = session.GetPersistence())
         	{
         		persistence.ExecuteQuery("UPDATE SessionLog SET Status = ?, LoggedOff = ? WHERE SessionToken = ?", SessionStatus.Closed, DateTime.Now, session.SessionToken);
+				session.SessionToken = null;
         	}
         }
 

@@ -11,11 +11,10 @@ namespace MiskoPersist.Enums
 		private static readonly DatabaseType mMySql_ = new DatabaseType(1, "", "MySql");
 		private static readonly DatabaseType mOracle_ = new DatabaseType(2, "", "Oracle");
 		private static readonly DatabaseType mPostgres_ = new DatabaseType(3, "", "Postgres");
-		private static readonly DatabaseType mFoxPro_ = new DatabaseType(4, "", "FoxPro");
 
 		private static readonly DatabaseType[] mElements_ = new[]
 		{
-			mNULL_, mSQLite_, mMySql_, mOracle_, mPostgres_, mFoxPro_
+			mNULL_, mSQLite_, mMySql_, mOracle_, mPostgres_
 		};
 
 		#endregion
@@ -28,7 +27,6 @@ namespace MiskoPersist.Enums
 		public static DatabaseType MySql { get { return mMySql_; } }
 		public static DatabaseType Oracle { get { return mOracle_; } }
 		public static DatabaseType Postgres { get { return mPostgres_; } }
-		public static DatabaseType FoxPro { get { return mFoxPro_; } }
 
 		#endregion
 

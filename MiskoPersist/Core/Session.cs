@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Reflection;
@@ -112,10 +111,6 @@ namespace MiskoPersist.Core
 				if (mConnection_ is SQLiteConnection)
 				{
 					return new SqlitePersistence(this, command, isAutonomous);
-				}
-				if (mConnection_ is OleDbConnection)
-				{
-					return new FoxProPersistence(this, command, isAutonomous);
 				}
 			}
 			throw new MiskoException("Unable to get datatabe connection");
