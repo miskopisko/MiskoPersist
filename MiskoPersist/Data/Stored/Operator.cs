@@ -165,7 +165,12 @@ namespace MiskoPersist.Data.Stored
 			{
 				session.Error(ErrorLevel.Error, "Last name cannot be blank");
 			}
-		}
+
+            if (String.IsNullOrEmpty(Password))
+            {
+                session.Error(ErrorLevel.Error, "Password cannot be blank");
+            }
+        }
 
 		public override void PostSave(Session session, UpdateMode mode)
 		{
@@ -285,24 +290,7 @@ namespace MiskoPersist.Data.Stored
 		}
 		
 		public void SetPassword(Session session, String newPassword, String confirmPassword)
-		{
-			if (!IsSet)
-			{
-				if (Id.IsSet)
-				{
-					FetchById(session, Id);
-				}
-				else if (!String.IsNullOrEmpty(Username))
-				{
-					FetchByUsername(session, Username);
-				}
-			}
-			
-			if (!IsSet)
-			{
-				session.Error(ErrorLevel.Error, "Operator not found.");
-			}
-			
+		{			
 			if (String.Equals(newPassword, confirmPassword))
 		    {
 				if (SecurityPolicy.Instance.MinimumPasswordAge > 0 && (DateTime.Now.Subtract(PasswordChangeDate).Days < SecurityPolicy.Instance.MinimumPasswordAge))
