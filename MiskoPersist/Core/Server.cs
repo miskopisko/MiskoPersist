@@ -29,13 +29,13 @@ namespace MiskoPersist.Core
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public delegate void StatusHandler(MessageStatus status);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public delegate void ErrorHandler(ErrorMessage message);
+		public delegate void ErrorHandler(String message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public delegate void WarningHandler(ErrorMessage message);
+		public delegate void WarningHandler(String message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public delegate void InfoHandler(ErrorMessage message);
+		public delegate void InfoHandler(String message);
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public delegate void ConfirmHandler(ErrorMessage message, ConfirmationEventArgs args);
+		public delegate void ConfirmHandler(String message, ConfirmationEventArgs args);
 		
 		#endregion
 		
@@ -214,19 +214,19 @@ namespace MiskoPersist.Core
 			foreach (ErrorMessage error in response.Errors) 
 			{
 				Invoke(Status, MessageStatus.Error);
-				Invoke(Error, error);
+				Invoke(Error, error.ToString());
 			}
 			
 			foreach (ErrorMessage warning in response.Warnings) 
 			{
 				Invoke(Status, MessageStatus.Warning);
-				Invoke(Warning, warning);
+				Invoke(Warning, warning.ToString());
 			}
 			
 			foreach (ErrorMessage info in response.Infos) 
 			{
 				Invoke(Status, MessageStatus.Information);
-				Invoke(Info, info);
+				Invoke(Info, info.ToString());
 			}
 			
 			foreach (ErrorMessage confirmation in response.Confirmations) 
@@ -235,7 +235,7 @@ namespace MiskoPersist.Core
 				{
 					Invoke(Status, MessageStatus.Confirmation);
 					ConfirmationEventArgs args = new ConfirmationEventArgs();
-					Invoke(Confirm, confirmation, args);
+					Invoke(Confirm, confirmation.ToString(), args);
 					
 					if (args.Confirmed)
 					{
@@ -297,7 +297,8 @@ namespace MiskoPersist.Core
 				do
 				{
 					Log.Error("Unexpected Error: (" + ex.Message + ") @ " + d.Method.DeclaringType.Name + "." + d.Method.Name, ex);
-					Invoke(Error, new ErrorMessage(ex));
+                    ErrorMessage errorMessage = new ErrorMessage(ex);
+                    Invoke(Error, errorMessage.ToString());
 					ex = ex.InnerException;
 				}
 				while (ex != null);
